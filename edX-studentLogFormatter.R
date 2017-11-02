@@ -54,7 +54,7 @@ require("zoo")        #dataPrep
 require("stringr")    #string parsing
 require("tcltk2")     #for OS independant GUI file and folder selection
 
-####Meta Process Functions
+####Functions
 #logFormatter 
 ##The logFormatter function is a modification of code provided by Purdue University team
 ##to allow mass extracting individual set of student logs based on known set of student IDs for an 
@@ -136,23 +136,40 @@ logFormatter <- function(fileList,path){
     ##Extract or recreate module ID from the log data as appropriate to known cases
     #Problem events (problem_check, save_problem_success, showanswer) and Openassessmentblock events (all but .upload_file)
     data$module.key <- paste0(data$context.module.usage_key)
+    
+    #Non-learning object page events
+    #Identifies events that do not relate to course information
+    if(length(data[grepl('\\{\\}', data$event)==T & grepl('info',data$event_type)==T,]) > 0 ){
+      data[grepl('\\{\\}', data$event)==T & grepl('info',data$event_type)==T,]$module.key <- 
+        paste0("block-v1:",courseID,"type@info")
+        }
+    #Identifies events that do not relate to a students progress
+        if(length(data[grepl('\\{\\}', data$event)==T & grepl('progress',data$event_type)==T,]) > 0 ){
+       data[grepl('\\{\\}', data$event)==T & grepl('progress',data$event_type)==T,]$module.key <- 
+         paste0("block-v1:",courseID,"type@progress")
+        }
+    #Identifies events that do not relate to a course wiki pages
+    if(length(data[grepl('\\{\\}', data$event)==T & grepl('wiki',data$event_type)==T,]) > 0 ){
+      data[grepl('\\{\\}', data$event)==T & grepl('wiki',data$event_type)==T,]$module.key <- 
+        paste0("block-v1:",courseID,"type@wiki")
+        }
     #Problem_show events
     if(length(data[grepl('problem_show',data$event_type)==T,])>0){
       data[grepl('problem\\_show',data$event_type)==T,]$module.key <- 
         paste0(vapply(strsplit(as.character(data[grepl('problem\\_show',data$event_type)==T,]$event), '\\"'),'[',4,FUN.VALUE=character(1)))
-    }
+      }
     #Videos (seek, load, play, stop, speed)
     if(length(data[grepl('\\w\\_video',data$event_type)==T,]$event) > 0){
       #Extracts module ID number and creates module ids for video watching and speed change events
       data[grepl('\\w\\_video',data$event_type)==T,]$module.key <- 
         paste0("block-v1:",courseID,"type@video+block@",str_extract(data[grepl('\\w\\_video',data$event_type)==T,]$event,"[:alnum:]{32}"))
-    }
+      }
     #video Transcripts
     if(length(data[grepl('\\w\\_transcript',data$event_type)==T,]$event) > 0){
       #Extracts module ID number and creates module ids for video transcript events
       data[grepl('\\w\\_transcript',data$event_type)==T,]$module.key <- 
         paste0("block-v1:",courseID,"type@video+block@",str_extract(data[grepl('\\w\\_transcript',data$event_type)==T,]$event,"[:alnum:]{32}"))
-    }
+      }
     #HTML Blocks (Level 2 and 3)
     if(length(data[grepl('/courseware',data$event_type)==T,])>0){
       #Extracts module ID number and creates ids for courseware events (highlevel modules)
@@ -161,7 +178,7 @@ logFormatter <- function(fileList,path){
       #generates child reference for module (all of these modules should be level 2 or 3 of course hierarchy)
       #event to go with first child of lowest left decendants
       data[grepl('/courseware',data$event_type)==T,]$mod.child.ref <- 1
-    }
+      }
     #Seq navigation - Goto
     if(length(data[grepl('\\,\\s\\"widget_placement\\"',data$event)==T,]$event) > 0 ){
       #Extracts parent module ids for sequential Goto events (which have a different parsed log format than other two sequence events)
@@ -170,7 +187,7 @@ logFormatter <- function(fileList,path){
       #Extracts child leaf for sequential Goto events at lower level of hiearchy (current state)
       data[grepl('\\,\\s\\"widget_placement\\"',data$event)==T,]$mod.child.ref <-
         paste0(vapply(strsplit(as.character(data[grepl('\\,\\s\\"widget_placement\\"',data$event)==T,]$event),'\\"'),'[',9,FUN.VALUE=character(1)))
-    }
+      }
     #Seq navigation - Prev Next
     if(length(data[grepl('\\{\\"widget_placement',data$event)==T,]$event) > 0 ){
       #Extracts parent module ids for sequential Prev and Next events (which have a different parsed log format than other two sequence events)
@@ -179,7 +196,7 @@ logFormatter <- function(fileList,path){
       #Extracts child leaf for sequential Prev & Next events at lower level of hiearchy (current state)
       data[grepl('\\{\\"widget_placement',data$event)==T,]$mod.child.ref <-
         paste0(vapply(strsplit(as.character(data[grepl('\\{\\"widget_placement',data$event)==T,]$event),'\\"'),'[',13,FUN.VALUE=character(1)))
-    }
+      }
     #Cleans up module child references, removing puntuation and spaces from the field
     data$mod.child.ref <- str_replace_all(data$mod.child.ref,"[^[:alnum:]]","") 
     
