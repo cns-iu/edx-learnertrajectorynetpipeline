@@ -1,8 +1,8 @@
-## ====================================================================================== ##
-# Title:        Processing and formatting student's edX events logs for analysis           
+## ====================================================================================================== ##
+# Title:        Processing and formatting student's edX events logs for analysis v          
 # Project:      edX user trajectory analysis
 # 
-#     Copyright 2017 Michael Ginda
+#     Copyright 2018 Michael Ginda
 #     Licensed under the Apache License, Version 2.0 (the "License");
 #     you may not use this file except in compliance with the License.
 #     You may obtain a copy of the License at
@@ -68,7 +68,7 @@
 #   2018.02.02  Cleaned-up script for sharing and added function to manually select user
 #               ID list.
 #
-## ====================================================================================== ##
+## ====================================================================================================== ##
 
 ######### Setup ########## 
 ## _Clean the environment ####
@@ -495,10 +495,11 @@ rm(users)
 
 #Load course structure data
 #CSV of course modules data extracted from the Course St {org}-{course}-{run}-course_structure-{site}-analytics.json 
-courseStr <- getData()
+getData()
 
 #Extracts course identifier
-courseID <- courseStr$courseID
+courseID <- strsplit(as.character(data$courseID[1]),split="\\:")[[1]][2]
+courseID <- substr(courseID,1,nchar(courseID)-1)
 
 ##Log Capture function for list of users
 logFormatter(fileList=fileList[579:1574], courseStr=courseStr, 
