@@ -39,7 +39,7 @@
 #   2017.09.29. Updating file for sharing
 #   2017.10.19. Updated file create function to produce event trajectory logs from a list of student IDs
 #   2017.10.31. Updated function to maintain only relevant fields
-#   2018.02.05. Cleaned Up script
+#   2018.02.05. Cleaned Up script and added a manual user list selection function
 #
 ## ===================================================== ##
 
@@ -55,7 +55,20 @@ require("jsonlite")   #for working with JSON files (esp. read and write)
 require("ndjson")     #needed to read the non-standard JSON log files (NDJSON format)
 require("tcltk2")     #for OS independent GUI file and folder selection
 
-####Functions 
+####Functions
+#getData
+##The getData is a function used to select a CSV file listing student identifiers/course structure 
+#to be CSV is placed in the variable 'data' in the global environment
+getData <- function() {
+  name <- tclvalue(tkgetOpenFile(
+    filetypes = "{ {CSV Files} {.csv} } { {All Files} * }"))
+  if (name == "")
+    return(data.frame()) # Return an empty data frame if no file was selected
+  data <- read.csv(name)
+  assign("data", data, envir = .GlobalEnv)
+  cat("The imported data are in csv_data\n")
+}
+
 #logCapture 
 ##The logCapture function is a modification of code provided by Purdue University team
 ##to allow mass extracting individual student's event logs from course event logs, based on known set 
@@ -111,8 +124,9 @@ path_data = tclvalue(tkchooseDirectory())
 path_output = paste0(tclvalue(tkchooseDirectory()),"/")
 
 #List of Users IDs extracted from student user database
-d <- read.csv("FILENAME",header=T)
-curUserIDS <-d$id #this converts dataframe of user ids to integer list needed for the function
+getData()
+names(data) <- "id" 
+curUserIDS <- data$id #this converts dataframe of user ids to integer list needed for the function
 eventLog <- NULL
 
 ## _Build list of all event files for course####
