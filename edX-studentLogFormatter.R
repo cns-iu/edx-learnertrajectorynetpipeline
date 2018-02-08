@@ -1,5 +1,5 @@
 ## ====================================================================================================== ##
-# Title:        Processing and formatting student's edX events logs for analysis v          
+# Title:        Processing and formatting student's edX events logs for analysis          
 # Project:      edX user trajectory analysis
 # 
 #     Copyright 2018 Michael Ginda
@@ -85,7 +85,7 @@ require("tcltk2")     #for OS independent GUI file and folder selection
 #getData
 ##The getData is a function used to select a CSV file listing student identifiers/course structure 
 #to be CSV is placed in the variable 'data' in the global environment
-getData <- function() {
+getCSVData <- function() {
   name <- tclvalue(tkgetOpenFile(
     filetypes = "{ {CSV Files} {.csv} } { {All Files} * }"))
   if (name == "")
@@ -116,6 +116,8 @@ getData <- function() {
 # @param filelist Filelist contains a list of filenames of individual user's EdX logs.
 # @param courseStr is a processed version of a course's module structure (tree)
 # @param path is the sets the path for where output files will be saved.
+# Qparam time is a numeric value setting the number of minutes that must pass for a  
+#        temporal session (tsess) to have ended; automatically set at 60 minute threshold.
 # @param subZ is the directory name set by a user for where logs with zero events are saved.
 # @param subN is the directory name set by a user for where logs with no usable events are saved.
 # @param NC indicates whether non-content module pages in an EdX course (e.g Course Information, 
@@ -125,13 +127,13 @@ getData <- function() {
 # @param VID vid indicates video events associated with infrequent use (transcript and closed 
 #        caption evnts), and video load events, which do not show meaningful use of content module.
 
-logFormatter <- logFormatter <- function(fileList,courseStr,path,subZ,subN,nc,pse,vid){
+logFormatter <- logFormatter <- function(fileList,courseStr,path,time=60,subZ,subN,nc,pse,vid){
   numLogs <- length(fileList)
   for(i in 1:numLogs){
     message("Processing log file ", i, " of ", numLogs)
     print(proc.time() - start)
     #Load data set
-    data <- read.csv(fileList[i])
+    data <- read.csv(fileList[119])
     
     if(nrow(data)==0){
       data <- as.data.frame(matrix(data=NA,nrow=1,ncol=14))
@@ -163,10 +165,10 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,subZ,subN,nc,ps
       #Calc made in minutes
       rbind(as.data.frame(as.numeric(difftime(data[2:nrow(data),]$time,data[1:nrow(data)-1,]$time,units="mins"))),NA) -> period
       c("period") -> names(period)
-      #Updates all records where period is above 1 hour (60 minutes) 
+      #Updates all records where period is greater than or equal to the time break set by user (or automatically of 60 minutes) 
 			#This needs to be updated to change the value from a rounded 60 to another more meaningful value
 			#For example, the value equals the mean time period measured for the module or event type.
-      period[period>60 & !is.na(period), ] <- 60 
+      period[period >= time & !is.na(period), ] <- as.numeric(time)
       period[nrow(period), ]<- mean(period$period,na.rm=T)
       data <- cbind(data,period)
       rm(period)
@@ -176,10 +178,10 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,subZ,subN,nc,ps
       #Searches for outliers periods to demarcate the end of a user session, 
       #id set by seq from 1 to max periods identified; if no max values are found,
       #it is assumed there was only one session.
-      if(nrow(data[data$period >= 60,])>1){
-        data[data$period >= 60,]$tsess <- seq(from=1,to=nrow(data[data$period >= 60,]))
+      if(nrow(data[data$period >= time,])>1){
+        data[data$period >= time,]$tsess <- seq(from=1,to=nrow(data[data$period >= time,]))
       } else(data$tsess <- 1)
-      #For sessions with multiple ids, there is a chance that the last event is a blank
+      #For logs with multiple sessions ids, there is a chance that the last event has a blank
       #tsess value, and needs to have a final session ID provided.
       if(is.na(data[nrow(data),]$tsess)){
         fs <- max(data$tsess,na.rm=T)+1
@@ -192,6 +194,8 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,subZ,subN,nc,ps
       #Backfills tsess session ids to all events after determining all sessions were 
       #identified
       data$tsess <- na.locf(data$tsess,fromLast=T)
+      
+      ##WORKING Revise value of tsess breaks (events over user set time break should be revised down )
       
       #Backfill fix for server events without a session ID; events to be removed.
       data<-rbind(data,NA)
@@ -387,8 +391,8 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,subZ,subN,nc,ps
         #Looks up each sequential block module ID and finds module ID of first child or known child leaf
         #Known child leaf numbers are taken from the seq_[goto,prev,next] events (1:N), other courseware events given child leaf 1
         for(i in 1:nrow(look)){
-          if(length(courseStr[courseStr$modparent_childlevel==look[i,]$childref,]$child.full)>0){
-            look[i,]$replace <- as.character(courseStr[courseStr$modparent_childlevel==look[i,]$childref,]$child.full)
+          if(length(courseStr[courseStr$modparent_childlevel==look[i,]$childref,]$id)>0){
+            look[i,]$replace <- as.character(courseStr[courseStr$modparent_childlevel==look[i,]$childref,]$id)
             look[i,]$level <- courseStr[courseStr$modparent_childlevel==look[i,]$childref,]$treelevel
           } 
           else {
@@ -405,8 +409,8 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,subZ,subN,nc,ps
         
         #Performs the final module ID look-up
         for(i in 1:nrow(look)){
-          if(length(courseStr[courseStr$modparent_childlevel==look[i,]$childref,]$child.full)>0){
-            look[i,]$replace <- as.character(courseStr[courseStr$modparent_childlevel==look[i,]$childref,]$child.full) 
+          if(length(courseStr[courseStr$modparent_childlevel==look[i,]$childref,]$id)>0){
+            look[i,]$replace <- as.character(courseStr[courseStr$modparent_childlevel==look[i,]$childref,]$id) 
             look[i,]$level <- courseStr[courseStr$modparent_childlevel==look[i,]$childref,]$treelevel
           } else {
             look[i,]$replace <- NA
@@ -428,7 +432,7 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,subZ,subN,nc,ps
         data$module_type <- do.call(rbind,strsplit(as.character(data$module.key ),'\\@'))[,2]    
         
         #Adds module order in course sequence logs and sequence page 
-        data <- join(data,courseStr[,c(1,8,9)],by="mod_hex_id")
+        data <- join(data,courseStr[,c(2,7,13)],by="mod_hex_id")
         
         #Removes events where the order cannot be found in the course structure.
         #The modules may have been removed for a variety of reasons, although students 
@@ -437,13 +441,14 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,subZ,subN,nc,ps
            data <- data[!is.na(data$order),]
          }
         
-        ##Updates Event_type field for non-typed event module visits.
+        ##Updates event_type field for non-typed event module visits.
         #converts records where events_types have a module URL to a generic access event "mod_access"
         levels <- levels(data$event_type)
         levels[length(levels)+1] <- "mod_access"
         data$event_type <- factor(data$event_type, level=levels)
-        data[grepl("course-v1",as.character(data$event_type))==T, ]$event_type <- c("mod_access")
-        
+        if(nrow(data[grepl("course-v1",as.character(data$event_type))==T, ])>0){
+           data[grepl("course-v1",as.character(data$event_type))==T, ]$event_type <- c("mod_access")
+        }
         
         #Maintain only fields that are needed for analysis
         data <- data[,c(3,19,21,22,20,6,7,16,9,17,12:15)]
@@ -466,9 +471,9 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,subZ,subN,nc,ps
 start <- proc.time() #save the time (to compute elapsed time of script)
 
 #Generic Set up
-#Assigns a path used to locate directory for research data sets and save processing outputs
+#Assigns a path used to locate directory with the set of unprocessed student logs
 path_data = tclvalue(tkchooseDirectory())
-#Assigns a path to save output files.
+#Assigns a path to save processing output files.
 path_output = tclvalue(tkchooseDirectory())
 #Assigns a path to save user lists created by the output script
 path_users = tclvalue(tkchooseDirectory())
@@ -477,47 +482,46 @@ path_users = tclvalue(tkchooseDirectory())
 #students with zero events on load and those with zero events after post-data processing 
 subDir = c("zeroEvents", "noEventsProc")
 for(i in 1:length(subDir)){
-  if(!file_test("-d", file.path(path_out, subDir[i]))){
-    if(file_test("-f", file.path(path_out, subDir[i]))){
+  if(!file_test("-d", file.path(path_output, subDir[i]))){
+    if(file_test("-f", file.path(path_output, subDir[i]))){
       stop("Path can't be created because a file with that name already exists.")
     } else {
-      dir.create(file.path(path_out, subDir[i]))
+      dir.create(file.path(path_output, subDir[i]))
     }
   }
 }
 
 #Creates list of files for student event log processing
 #Load in CSV of students IDs
-getData()
+getCSVData()
 names(data) <- "id" 
 fileList <- paste0(path_data,"/",data$id,".csv")
-rm(users)
 
-#Load course structure data
-#CSV of course modules data extracted from the Course St {org}-{course}-{run}-course_structure-{site}-analytics.json 
-getData()
-
+#Load course structure data module-lookup
+#CSV of course modules data extracted from the Course Structure, found in the
+#edX student user database file: {org}-{course}-{run}-module-lookup.csv
+getCSVData()
 #Extracts course identifier
-courseID <- strsplit(as.character(data$courseID[1]),split="\\:")[[1]][2]
-courseID <- substr(courseID,1,nchar(courseID)-1)
+courseID <- as.character(data$courseID[1])
+courseStr <- data
 
-##Log Capture function for list of users
-logFormatter(fileList=fileList[579:1574], courseStr=courseStr, 
-             path=path_out, subZ=subDir[1], subN=subDir[2], 
+##Log Capture function for list of users, set up to 
+logFormatter(fileList=fileList, time=60, courseStr=courseStr, 
+             path=path_output, subZ=subDir[1], subN=subDir[2], 
              nc=FALSE, pse=FALSE, vid=FALSE)
 
 ##Saves out list of user IDs for students with usable logs and unusable logs
-users <- list.files(path=paste0(path_out),pattern=".csv")
+users <- list.files(path=paste0(path_output),pattern=".csv")
 users <- data.frame(do.call('rbind',strsplit(users,"\\.")))
 names(users) <- c("userID","v")
 write.csv(x=users[,1], file=paste0(path_users,"/",courseID,"-user_ids-events.csv"),row.names = F)
 
-users <- list.files(path=paste0(path_out,"/",subDir[1]),pattern=".csv")
+users <- list.files(path=paste0(path_output,"/",subDir[1]),pattern=".csv")
 users <- data.frame(do.call('rbind',strsplit(users,"\\.")))
 names(users) <- c("userID","v")
 write.csv(x=users[,1], file=paste0(path_users,"/",courseID,"-user_ids-noEvents.csv"),row.names = F)
 
-users<- list.files(path=paste0(path_out,"/",subDir[2]),pattern=".csv")
+users<- list.files(path=paste0(path_output,"/",subDir[2]),pattern=".csv")
 users <- data.frame(do.call('rbind',strsplit(users,"\\.")))
 names(users) <- c("userID","v")
 write.csv(x=users[,1], file=paste0(path_users,"/",courseID,"-user_ids-unsuableEvents.csv"),row.names = F)
