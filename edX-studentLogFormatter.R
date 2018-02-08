@@ -19,15 +19,20 @@
 # Affiliation:  Indiana University
 # 
 # Description:  This script processes a user's activity from the edX event log CSV
-#               file. The script cleans and reformat student event logs for 
+#               file. The script cleans and reformat student event logs for learner
 #               trajectory analysis and modeling.
 #                 
 # File input stack: 
-#               1) Course structure
-#               2) Set of known UserIDs
-#               3) Directory contining one or more "*.csv" event log file(s) - 
-#                  extracted by script "edX-1-eventLogFormatter.R" from course
-#                  edX event logs
+#               1) Course structure module list output by script "edX-courseStructureMeta.R"
+#                  Files named format: 
+#                     {org}+{course}+{term}-module-lookup.csv
+#               2) Set of known UserIDs from a course: full list found in edX course user list
+#                  A course user list are found in the course user state database, and 
+#                  use the name format: 
+#                     {org}+{course}+{term}-auth_user-{site}-analytics.sql
+#               3) Directory containing one or more student "{user-id}.csv" event log file(s) 
+#                  extracted by script "edX-1-eventLogFormatter.R" based on course
+#                  edX event logs.
 # 
 # Package dependencies: zoo, magrittr, stringr, plyr, tcltk
 #
@@ -67,6 +72,8 @@
 #               the module was not found in the final course module structure. 
 #   2018.02.02  Cleaned-up script for sharing and added function to manually select user
 #               ID list.
+#   2018.02.08  Aligned logFormatter function with outputs of the "edX-courseStructureMeta.R"
+#               script; added parameter to allow user to set manual time length for tsess field.
 #
 ## ====================================================================================================== ##
 
