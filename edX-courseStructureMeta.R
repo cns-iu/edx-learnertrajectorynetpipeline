@@ -2,7 +2,7 @@
 # Title:        Extracting edX course metadata and structural dat
 # Project:      edX user trajectory analysis
 # 
-# Copyright 2017 Michael Ginda & Krishna Madhavan
+#     Copyright 2017 Michael Ginda
 #     Licensed under the Apache License, Version 2.0 (the "License");
 #     you may not use this file except in compliance with the License.
 #     You may obtain a copy of the License at
@@ -27,7 +27,9 @@
 #               process student event logs and create learner trajectory networks.
 #  
 # File input stack: 
-#            1) A folder contining one "*.json" course structure file (source: edX)
+#            1) A folder contining one "*.json" course structure file:
+#               {org}-{course Identifier}-{term}-course_structure-{server}-analytics.json
+#               (source: edX research documentation)
 # 
 # Package dependencies: jsonlite, reshape2, plry, and tcltk
 #
@@ -35,6 +37,8 @@
 #   2017.11.13. Initial Code
 #   2018.02.06. Course structure extracted and formatting 
 #   2018.02.07. Working version of code created
+#   2018.02.08. Fixed sorting for vertical modules, removed numeric sort columns, 
+#               added courseID field to align with the student event log formatter script.
 ## ====================================================================================================== ##
 
 ######### Setup ########## 
@@ -181,7 +185,8 @@ courseStrMeta <- function(fileList,path){
   modList$chpModPar <- factor(modList$chpModPar,levels=levels(modList$mod_hex_id))
   
   #Parent Module - Child Order Look-Up Fields for Ordering
-  modList$vrtOrdSet <- modList$seqOrdSet <- modList$chpOrdSet <- 0
+  modList$contentOrdSet <- modList$vrtOrdSet <- modList$seqOrdSet <- modList$chpOrdSet <- 0
+  
   #Assigning Parent Chapters Module Child Order to Child Branches and Leaves
   moduleID <- modList[modList$level==1,]$mod_hex_id
   for(i in 1:length(moduleID)){
@@ -197,18 +202,23 @@ courseStrMeta <- function(fileList,path){
   for(i in 1:length(moduleID)){
     modList[!is.na(modList$vrtModPar) & modList$vrtModPar==moduleID[i],]$vrtOrdSet <- modList[modList$mod_hex_id==moduleID[i],]$childOrd
   }
-  #Order Rows in data set to sequence order
-  modList <- modList[order(modList$chpOrdSet,modList$seqOrdSet,modList$vrtOrdSet,modList$childOrder,decreasing = F),]
-  rownames(modList) <- 1:nrow(modList)
+  #Fourth Level sorting (to distinguish vertical and content mods)
+  modList[modList$level==4,]$contentOrdSet <- 1
   
-  #Adds Look-up Column for student event log processing
-  modList$modparent_childlevel <- paste0(modList$parent,"/",modList$childOrder)
+  #Order Rows in data set to sequence order
+  modList <- modList[order(modList$chpOrdSet,modList$seqOrdSet,modList$vrtOrdSet,modList$contentOrdSet,modList$childOrder,decreasing = F),]
+  rownames(modList) <- 1:nrow(modList)
   modList$order <- seq(modList$id)
+  #Removes Ordering Fields (redundant)
+  modList <- modList[,-c(12:15)]
+  #Adds a modparrent child lookup, used in processing student event logs
+  modList$modparent_childlevel <- paste0(modList$parent,"/",modList$childOrder)
+  modList$course <- id
   #Reorder columns
-  modList <- modList[,c(1,7,2:4,8,16,12:14,6,9:11,5,15)]
-  names(modList) <- c("id","mod_hex_id","mod_type","name","markdown","order",
-                      "treelevel","chpOrdSet","seqOrdSet","vrtOrdSet","childOrder",
-                      "chpModPar","seqModPar","vrtModPar","parent","modparent_childlevel")
+  modList <- modList[,c(1,7,14,2:4,12,6,8,9:11,5,13)]
+  names(modList) <- c("id","mod_hex_id","courseID","mod_type","name","markdown","order",
+                      "childOrder","treelevel","chpModPar","seqModPar","vrtModPar",
+                      "parent","modparent_childlevel")
   write.csv(modList,file=paste0(path_output,"/",id,"-module-lookup.csv"),row.names = F)
 }
 
