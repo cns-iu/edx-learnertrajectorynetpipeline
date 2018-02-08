@@ -1,5 +1,5 @@
 ## ====================================================================================================== ##
-# Title:        Extracting edX course metadata and structural dat
+# Title:        Extracting edX course metadata and course structure ordered by content sequencing 
 # Project:      edX user trajectory analysis
 # 
 #     Copyright 2017 Michael Ginda
@@ -31,7 +31,7 @@
 #               {org}-{course Identifier}-{term}-course_structure-{server}-analytics.json
 #               (source: edX research documentation)
 # 
-# Package dependencies: jsonlite, reshape2, plry, and tcltk
+# Package dependencies: jsonlite, reshape2, plyr, and tcltk
 #
 # Changelog:
 #   2017.11.13. Initial Code
@@ -58,7 +58,7 @@ require("tcltk2")     #for OS independant GUI file and folder selection
 #courseMeta
 # @param filelist is the file location of course structure data
 # @param path indicates the path used to save course metadata
-#        The funcion returns a json anyway. If this parameter is set it will also be saved into the file
+#        The function returns a JSON anyway. If this parameter is set it will also be saved into the file
 ##The courseMeta function is reads in edX Course Structure JSON files and extracts course metadata
 ##Specifically it captures the module type of the root node (verifying course data is captured);
 ##course enrollment and run dates.
