@@ -1,5 +1,5 @@
 ## ====================================================================================================== ##
-# Title:        Extracting edX course metadata and course structure ordered by content sequencing 
+# Title:        Extracting edX course metadata, course structure, and content module sequencing
 # Project:      edX user trajectory analysis
 # 
 #     Copyright 2017 Michael Ginda
@@ -19,15 +19,20 @@
 # Authors:      Michael Ginda
 # Affiliation:  Indiana University
 # 
-# Description:  This script extracts EdX Course structure and metadata. The script
-#               reads in a JSON formated data set and creates a data frame version of the 
-#               structure to order records based on the data's tree structure. The
-#               script also extracts course metadata to identify the period the course was 
-#               offered and course identifiers. The reformatted course structure is used to
-#               process student event logs and create learner trajectory networks.
+# Description:  This script extracts metadata that describes EdX course administration, and builds 
+#               data frame of course modules (structural and content) based on the module metadata,
+#               which is used in subsequent processing of student logs to look up parent-child 
+#               relationships between modules; to create a node list for the learner trajectory networks;
+#               and to aggregate analysis of module access patterns by students in a course.
+#
+#               The script first reads in an edX course's course structure hierarchy, which comes as 
+#               JSON formatted file. The file is processed to extract the course level administrative data. 
+#               Next, a data frame is created that list all modules found in the course hiearachy. The 
+#               script identifies and orders course modules based on identified organizational structure
+#               and sequence of content module.
 #  
 # File input stack: 
-#            1) A folder contining one "*.json" course structure file:
+#            1) An edX course data package directory contining one "*.json" course structure file:
 #               {org}-{course Identifier}-{term}-course_structure-{server}-analytics.json
 #               (source: edX research documentation)
 # 
@@ -39,6 +44,8 @@
 #   2018.02.07. Working version of code created
 #   2018.02.08. Fixed sorting for vertical modules, removed numeric sort columns, 
 #               added courseID field to align with the student event log formatter script.
+#   2018.04.04  Clean-up of project description, title, alignment across edX course data processing
+#              pipeline.
 ## ====================================================================================================== ##
 
 ######### Setup ########## 
@@ -57,8 +64,7 @@ require("tcltk2")     #for OS independant GUI file and folder selection
 ####Functions 
 #courseMeta
 # @param filelist is the file location of course structure data
-# @param path indicates the path used to save course metadata
-#        The function returns a JSON anyway. If this parameter is set it will also be saved into the file
+# @param path indicates the path used to save outputs files
 ##The courseMeta function is reads in edX Course Structure JSON files and extracts course metadata
 ##Specifically it captures the module type of the root node (verifying course data is captured);
 ##course enrollment and run dates.
