@@ -1,5 +1,5 @@
 ## ====================================================================================================== ##
-# Title:        Extracting edX events logs for multiple, individual users 
+# Title:        Extracts edX events logs for idenfitied multiple, individual student users 
 # Project:      edX user trajectory analysis
 # 
 #     Copyright 2017 Michael Ginda & Krishna Madhavan
@@ -18,11 +18,12 @@
 # Authors:      Michael Ginda^, Krishna Madhavan*, & Taylor Williams*
 # Affiliation:  ^Indiana University, *Purdue University
 # 
-# Description:  A daily event log for edX course participants (students and instructors) are 
+# Description:  A daily event log for edX course participants (students) are 
 #               created by this script using an edX course's daily combined event logs and a 
-#                list of users enrolled in the course, that are provided in a edX Data Package.
+#               list of users enrolled in the course, that are provided in a edX Data Package.
 #
-#               The script takes a list of course participants, and with a user's edX identifier,
+#               The script takes a list of course participants and identifies students within a 
+#               course and saves this list of users.  Using the student's edX identifier, the script
 #               loops through the daily event logs to identify all logged activity (e.g server, 
 #               browser, and mobile device event) made by the user. The resulting individual 
 #               participants logs are saved as a CSV file.
