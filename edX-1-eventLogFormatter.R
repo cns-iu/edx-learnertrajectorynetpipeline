@@ -1,8 +1,8 @@
-## ===================================================== ##
-# Title:        Extracting all edX events for multiple users ####
+## ====================================================================================================== ##
+# Title:        Extracting edX events logs for multiple, individual users 
 # Project:      edX user trajectory analysis
 # 
-# Copyright 2017 Michael Ginda & Krishna Madhavan
+#     Copyright 2017 Michael Ginda & Krishna Madhavan
 #     Licensed under the Apache License, Version 2.0 (the "License");
 #     you may not use this file except in compliance with the License.
 #     You may obtain a copy of the License at
@@ -14,19 +14,27 @@
 #     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #     See the License for the specific language governing permissions and
 #     limitations under the License.
-#      
 #
-# Authors:      Michael Ginda, Krishna Madhavan, Kerrie Douglas, Taylor Williams
-# Affiliation:  Indiana University, Purdue University
-#
+# Authors:      Michael Ginda^, Krishna Madhavan*, & Taylor Williams*
+# Affiliation:  ^Indiana University, *Purdue University
 # 
-# Description:  This script extracts all of a user's activity from the edX event log files in a user 
-#               selected folder.  It outputs the resulting data (all events tied to a single user's ID) 
-#               as a standard a CSV file. 
+# Description:  A daily event log for edX course participants (students and instructors) are 
+#               created by this script using an edX course's daily combined event logs and a 
+#                list of users enrolled in the course, that are provided in a edX Data Package.
+#
+#               The script takes a list of course participants, and with a user's edX identifier,
+#               loops through the daily event logs to identify all logged activity (e.g server, 
+#               browser, and mobile device event) made by the user. The resulting individual 
+#               participants logs are saved as a CSV file.
 #               (*NOTE: the edX provided logs are in NDJSON format, not the typical JSON format.)
 #  
 # File input stack: 
-#            1) A folder contining one or more "*.log.gz" event log file(s)    (source: edX)
+#            1) A folder contining one or more "*.log.gz" event log file(s)    
+#               (source: edX research documentation)
+#            2) edX course authenticated users data frame:
+#               {org}-{course Identifier}-{term}-auth_user-{server}-analytics.sql
+#            3) edX course authenticated users profile data frame:
+#               {org}-{course Identifier}-{term}-auth_userprofile-{server}-analytics.sql
 # 
 # Package dependencies: jsonlite, ndjson, tcltk
 #
@@ -39,9 +47,11 @@
 #   2017.09.29. Updating file for sharing
 #   2017.10.19. Updated file create function to produce event trajectory logs from a list of student IDs
 #   2017.10.31. Updated function to maintain only relevant fields
-#   2018.02.05. Cleaned Up script and added a manual user list selection function
+#   2018.02.05. Cleaned-Up script to list all fields perserved in final logs CSV files
+#   2018.04.04. Description, title, and file input stack corrections; 
+#               updated function parameter definitions; creates lists of users for extraction for course
 #
-## ===================================================== ##
+## ====================================================================================================== ##
 
 ######### Setup ########## 
 ## _Clean the environment ####
@@ -54,22 +64,14 @@ start <-  proc.time() #save the time (to compute elapsed time of script)
 require("jsonlite")   #for working with JSON files (esp. read and write)
 require("ndjson")     #needed to read the non-standard JSON log files (NDJSON format)
 require("tcltk2")     #for OS independent GUI file and folder selection
-
-####Functions
-#getData
-##The getData is a function used to select a CSV file listing student identifiers/course structure 
-#to be CSV is placed in the variable 'data' in the global environment
-getData <- function() {
-  name <- tclvalue(tkgetOpenFile(
-    filetypes = "{ {CSV Files} {.csv} } { {All Files} * }"))
-  if (name == "")
-    return(data.frame()) # Return an empty data frame if no file was selected
-  data <- read.csv(name)
-  assign("data", data, envir = .GlobalEnv)
-  cat("The imported data are in csv_data\n")
-}
-
+require("plyr")       #for joining user tables together
+require("stringr")    #for string manipulation
+####Functions 
 #logCapture 
+# @param curUserIDS is the file location of course structure data
+# @param eventLog==NULL sets a dummy eventLog dataframe
+# @param filelist a list of daily event logs from a course's edX Data Package
+# @param path indicates the path used to save outputs files
 ##The logCapture function is a modification of code provided by Purdue University team
 ##to allow mass extracting individual student's event logs from course event logs, based on known set 
 ##of student IDs for an edX course. The function creates a unique log file for each student ID in the list, 
@@ -119,14 +121,37 @@ logCapture <- function(curUserIDS,eventLog,fileList,path){
 }
 
 ######### Main ########## 
-#Creates paths used to locate directory for research data sets and save processing outputs
+#Assigns path where R may read in events logs from the edX data package 
 path_data = tclvalue(tkchooseDirectory())
+
+#Assigns path where R saves processing outputs for user logs
 path_output = paste0(tclvalue(tkchooseDirectory()),"/")
 
-#List of Users IDs extracted from student user database
-getData()
-names(data) <- "id" 
-curUserIDS <- data$id #this converts dataframe of user ids to integer list needed for the function
+##Identifying student users from an edX course
+#List of authenticated users extracted from edX course data package
+userList <- list.files(full.names = TRUE, recursive = FALSE, 
+                       path = path_data,
+                       pattern = "auth_user")
+users <- read.csv(userList[1],sep = '\t',header=T)[,c(1,7:11)]
+userProf <- read.csv(userList[2],sep = '\t',header=T)[,c(2,8,10:14)]
+names(userProf)[1] <- 'id'
+users <- join(users,userProf,by="id")
+#Subset users to remove non-students from the list
+users <- users[users$is_staff==0,]
+str(users)
+
+#Saves the list of students for the analysis
+userFileName <- sapply(str_split(userList[1],pattern="/"),tail,1)
+userFileName <- str_split(userFileName,pattern="-")
+userFileName <- paste(userFileName[[1]][1],userFileName[[1]][2],userFileName[[1]][3],userFileName[[1]][4],"students",sep="-")
+write.csv(users,file=paste0(path_output,"userlists/",userFileName,".csv"), row.names=F)
+
+#Sets ID list for processing
+curUserIDS <-users$id #this converts dataframe of user ids to integer list needed for the function
+#Removes user list related objects
+rm(userList,users,userProf,userFileName)
+
+#dummy eventLog object used in logCapture function
 eventLog <- NULL
 
 ## _Build list of all event files for course####
