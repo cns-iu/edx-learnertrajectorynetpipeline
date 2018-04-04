@@ -143,6 +143,7 @@ str(users)
 #Saves the list of students for the analysis
 userFileName <- sapply(str_split(userList[1],pattern="/"),tail,1)
 userFileName <- str_split(userFileName,pattern="-")
+#Sets file name for edX course user list (uses format {org}-{course Identifier}-{term}-auth_user-students)
 userFileName <- paste(userFileName[[1]][1],userFileName[[1]][2],userFileName[[1]][3],userFileName[[1]][4],"students",sep="-")
 write.csv(users,file=paste0(path_output,"userlists/",userFileName,".csv"), row.names=F)
 
