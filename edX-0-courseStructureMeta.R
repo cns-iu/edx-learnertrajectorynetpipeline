@@ -31,7 +31,8 @@
 #               and sequence of content module.
 #
 #               The output file is used in the edX learner trajectory analysis data processing script(s): 
-#
+#                   * edX-3-studentLogFormatter.R
+#                   
 #  
 # File input stack: 
 #            1) An containing one "*.json" course structure file:
@@ -48,6 +49,9 @@
 #               added courseID field to align with the student event log formatter script.
 #   2018.04.04  Clean-up of project description, title, alignment across edX course data processing
 #               pipeline.
+#   2018.04.05  Update description to indicate where outputs are used later in pipeline; added directory
+#               structure creation for data processing and analysis pipeline.
+#
 ## ====================================================================================================== ##
 
 ######### Setup ########## 
@@ -69,10 +73,21 @@ path_data = tclvalue(tkchooseDirectory())
 #Assigns path where R may save processing outputs
 path_output = setwd(tclvalue(tkchooseDirectory()))
 
-#Creates data processing and analysis directory structure
-
-##ISSUE 2
-
+##Create data processing output sub-directories for learner trajectory analysis pipeline
+#user lists are where lists of user IDs are maintained for a project; studentevents and 
+#studentevents_processed are directories for student event logs; networks holds the trajectory
+#networks derived from the student event logs, and analysis is where results of analysis and 
+#visualization are kept.
+subDir = c("userlists","studentevents","studentevents_processed","networks","analysis")
+for(i in 1:length(subDir)){
+  if(!file_test("-d", file.path(path_output, subDir[i]))){
+    if(file_test("-f", file.path(path_output, subDir[i]))){
+      stop("Path can't be created because a file with that name already exists.")
+    } else {
+      dir.create(file.path(path_output, subDir[i]))
+    }
+  }
+}
 
 ####Functions 
 #courseMeta
