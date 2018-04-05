@@ -129,12 +129,12 @@ path_output = paste0(tclvalue(tkchooseDirectory()),"/")
 
 #Identifies the output of the student user list for an edX course. 
 #The pattern parameter identifies the outputs of the edX-1-studentUserList.R script
-fileList <- list.files(full.names = F, recursive = FALSE, 
+fileList <- list.files(full.names = T, recursive = FALSE, 
                        path = paste0(path_output,"userlists"),
                        pattern = "auth_user-students.csv")
-
+users <- read.csv(fileList,header=T)[1]
 #Alternative userlists
-users <- read.csv(paste0(path_output,"/userlists/students-missingLogs-20180404.csv"),header=T)
+#users <- read.csv(file="PATH/FILENAME",header=T)
 
 #Sets ID list for processing
 curUserIDS <- users$id #this converts dataframe of user ids to integer list needed for the function
