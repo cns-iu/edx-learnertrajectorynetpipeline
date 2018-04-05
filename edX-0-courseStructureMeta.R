@@ -32,7 +32,7 @@
 #
 #               The output file is used in the edX learner trajectory analysis data processing script(s): 
 #                   * edX-3-studentLogFormatter.R
-#                   
+#                   *
 #  
 # File input stack: 
 #            1) An containing one "*.json" course structure file:
@@ -78,7 +78,7 @@ path_output = setwd(tclvalue(tkchooseDirectory()))
 #studentevents_processed are directories for student event logs; networks holds the trajectory
 #networks derived from the student event logs, and analysis is where results of analysis and 
 #visualization are kept.
-subDir = c("userlists","studentevents","studentevents_processed","networks","analysis")
+subDir = c("course","userlists","studentevents","studentevents_processed","networks","analysis")
 for(i in 1:length(subDir)){
   if(!file_test("-d", file.path(path_output, subDir[i]))){
     if(file_test("-f", file.path(path_output, subDir[i]))){
@@ -118,7 +118,7 @@ courseStrMeta <- function(fileList,path){
   coursemeta[,6] <- as.POSIXct(coursemeta[,6], tz="EST",format='%Y-%m-%dT%H:%M:%SZ')
   coursemeta[,7] <- as.POSIXct(coursemeta[,7], tz="EST",format='%Y-%m-%dT%H:%M:%SZ')
   #Saves metadata
-  write.csv(coursemeta,file=paste0(path_output,"/",id,"-meta.csv"),row.names = F)
+  write.csv(coursemeta,file=paste0(path_output,"/course/",id,"-meta.csv"),row.names = F)
   rm(coursemeta,cols)
   
   #Creates Module list dataframe
@@ -253,11 +253,10 @@ courseStrMeta <- function(fileList,path){
   names(modList) <- c("id","mod_hex_id","courseID","mod_type","name","markdown","order",
                       "childOrder","treelevel","chpModPar","seqModPar","vrtModPar",
                       "parent","modparent_childlevel")
-  write.csv(modList,file=paste0(path_output,"/",id,"-module-lookup.csv"),row.names = F)
+  write.csv(modList,file=paste0(path_output,"/course/",id,"-module-lookup.csv"),row.names = F)
 }
 
 ######### Main ########## 
-
 ## Build list of all event files for course####
 #Store all the filenames of JSON formatted edX event logs within a user selected directory 
 # (files ending with ".log.gz").
