@@ -33,9 +33,9 @@
 #               of users are students in the enrolled in the course. The file is saved as a CSV file:
 #               {org}-{course Identifier}-{term}-auth_user-students.csv. The output file is used in the 
 #               edX learner trajectory analysis data processing script(s): 
-#                   * edX-2-eventLogFormatter.R
-#                   
-#  
+#                   * edX-2-eventLogExtractor.R
+#                   * edX-3-eventLogFormatter.R           
+#                     
 # File input stack: 
 #            1) edX course authenticated users data frame:
 #               {org}-{course Identifier}-{term}-auth_user-{server}-analytics.sql
