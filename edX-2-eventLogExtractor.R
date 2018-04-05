@@ -25,9 +25,12 @@
 #               The script takes a list of course participants and identifies students within a 
 #               course and saves this list of users.  Using the student's edX identifier, the script
 #               loops through the daily event logs to identify all logged activity (e.g server, 
-#               browser, and mobile device event) made by the user. The resulting individual 
-#               participants logs are saved as a CSV file.
-#               (*NOTE: the edX provided logs are in NDJSON format, not the typical JSON format.)
+#               browser, and mobile device event) made by the user.
+#               (*NOTE: the edX provided logs are in NDJSON format, not the typical JSON format.) 
+#
+#               The resulting individual student logs are participants logs are saved as a CSV file,
+#               and processed by the script:
+#                   * edX-3-eventLogFormatter.R
 #  
 # File input stack: 
 #            1) A folder containing one or more "*.log.gz" event log file(s)    
@@ -67,18 +70,18 @@ require("tcltk2")     #for OS independent GUI file and folder selection
 require("plyr")       #for joining user tables together
 require("stringr")    #for string manipulation
 ####Functions 
-#logCapture 
+#logExtractor 
 # @param curUserIDS is the file location of course structure data
 # @param eventLog==NULL sets a dummy eventLog dataframe
 # @param filelist a list of daily event logs from a course's edX Data Package
 # @param path indicates the path used to save outputs files
-##The logCapture function is a modification of code provided by Purdue University team
+##The logExtractor function is a modification of code provided by Purdue University team
 ##to allow mass extracting individual student's event logs from course event logs, based on known set 
 ##of student IDs for an edX course. The function creates a unique log file for each student ID in the list, 
 ##saved as either a JSON or CSV formatted file. The function currently set up to save as CSV,
 ##alternatively can be set for user defined action such as format=T csv if format=F, JSON set up possible.
 
-logCapture <- function(curUserIDS,eventLog,fileList,path){      
+logExtractor <- function(curUserIDS,eventLog,fileList,path){      
   numStudents <- length(curUserIDS)
   numLogFiles <- length(fileList) 
   for(j in 1:numStudents){
@@ -152,7 +155,7 @@ fileList <- list.files(full.names = TRUE, recursive = FALSE,
                        pattern = ".log.gz$")
 
 #Log Capture function for list of users
-logCapture(curUserIDS,eventLog,fileList,path=paste0(path_output,"studentevents/"))
+logExtractor(curUserIDS,eventLog,fileList,path=paste0(path_output,"studentevents/"))
 
 ######### Finishing Details ########## 
 #Indicate completion
