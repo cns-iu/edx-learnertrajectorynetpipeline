@@ -30,7 +30,7 @@
 #                      1) interaction is with non-course content modules or enrollment activity;
 #                      2) event provided redundant information (e.g. problem module 
 #                         browser events and server responses) and partial data;
-#                         OR did not show meaningul interactions (e.g load_video events);
+#                         OR did not show meaningful interactions (e.g load_video events);
 #                         OR were infrequently used by students in courses;
 #               see in line comments for purpose of event removal. See logFormatter function 
 #               parameters for details for selecting events that are appropriate for removal.
@@ -38,16 +38,18 @@
 #               After non-relevant event records are removed,
 #
 # File input stack: 
-#               1) Course structure module list output by script "edX-courseStructureMeta.R"
+#               1) Course structure and content module list, extracted from the course
+#				   edX course data package state directory, with the script "edX-courseStructureMeta.R"
 #                  Files named format: 
 #                     {org}+{course}+{term}-module-lookup.csv
-#               2) Set of known UserIDs from a course: full list found in edX course user list
-#                  A course user list are found in the course user state database, and 
-#                  use the name format: 
-#                     {org}+{course}+{term}-auth_user-{site}-analytics.sql
-#               3) Directory containing one or more student "{user-id}.csv" event log file(s) 
-#                  extracted by script "edX-1-eventLogFormatter.R" based on course
-#                  edX event logs.
+#               2) Set of known student users from an edX course, extracted from the daily 
+#                  course logs, with the script "edX-1-studentUserList.R"
+#				   The file name format: 
+#                     {org}-{course}-{term}-auth_user-students.csv
+#               3) Directory (studentevents) containing one or more extracted student event log file(s)
+#                  with the script "edX-2-eventLogExtractor.R" based on course
+#                  edX event logs. File name format: 
+#					  {user-id}.csv
 # 
 # Package dependencies: zoo, magrittr, stringr, plyr, tcltk
 #
@@ -89,6 +91,9 @@
 #               ID list.
 #   2018.02.08  Aligned logFormatter function with outputs of the "edX-courseStructureMeta.R"
 #               script; added parameter to allow user to set manual time length for tsess field.
+#   2018.04.05  Update paths used to collect data, removed the getCSVdata function, updated to read and save
+#               files in correct output directories; updated description text; update time calculations for
+#               session events with times of 60 minutes or greater.
 #
 ## ====================================================================================================== ##
 
@@ -216,8 +221,6 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,time=60,subZ,su
       #Backfills tsess session ids to all events after determining all sessions were 
       #identified
       data$tsess <- na.locf(data$tsess,fromLast=T)
-      
-      ##WORKING Revise value of tsess breaks (events over user set time break should be revised down )
       
       #Backfill fix for server events without a session ID; events to be removed.
       data<-rbind(data,NA)
@@ -472,6 +475,10 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,time=60,subZ,su
           data[grepl("course-v1",as.character(data$event_type))==T, ]$event_type <- c("mod_access")
         }
         
+        #Update time estimate for events where gap is greater than or less than 60 minutes
+        ##ISSUE 1
+        
+        
         #Maintain only fields that are needed for analysis
         data <- data[,c(3,19,21,22,20,6,7,16,9,17,12:15)]
         names(data) <- c("user_id","mod_hex_id","order","mod_parent_id","module_type","event_type",
@@ -533,20 +540,20 @@ logFormatter(fileList=fileList, time=60, courseStr=courseStr,
              nc=FALSE, pse=FALSE, vid=FALSE)
 
 ##Saves out list of user IDs for students with usable logs and unusable logs
-users <- list.files(path=paste0(path_output),pattern=".csv")
+users <- list.files(path=paste0(path_output,"/studentevents_processed/"),pattern=".csv")
 users <- data.frame(do.call('rbind',strsplit(users,"\\.")))
 names(users) <- c("userID","v")
-write.csv(x=users[,1], file=paste0(path_users,"/",courseID,"-user_ids-events.csv"),row.names = F)
+write.csv(x=users[,1], file=paste0(path_output,"/userlists/",courseID,"-auth_user-students-events.csv"),row.names = F)
 
-users <- list.files(path=paste0(path_output,"/",subDir[1]),pattern=".csv")
+users <- list.files(path=paste0(path_output,"/studentevents_processed/",subDir[1]),pattern=".csv")
 users <- data.frame(do.call('rbind',strsplit(users,"\\.")))
 names(users) <- c("userID","v")
-write.csv(x=users[,1], file=paste0(path_users,"/",courseID,"-user_ids-noEvents.csv"),row.names = F)
+write.csv(x=users[,1], file=paste0(path_output,"/userlists/",courseID,"-auth_user-students-noEvents.csv"),row.names = F)
 
-users<- list.files(path=paste0(path_output,"/",subDir[2]),pattern=".csv")
+users<- list.files(path=paste0(path_output,"/studentevents_processed/",subDir[2]),pattern=".csv")
 users <- data.frame(do.call('rbind',strsplit(users,"\\.")))
 names(users) <- c("userID","v")
-write.csv(x=users[,1], file=paste0(path_users,"/",courseID,"-user_ids-unsuableEvents.csv"),row.names = F)
+write.csv(x=users[,1], file=paste0(path_output,"/userlists/",courseID,"-auth_user-students-unsuableEvents.csv"),row.names = F)
 
 ######### Finishing Details ########## 
 #Indicate completion
