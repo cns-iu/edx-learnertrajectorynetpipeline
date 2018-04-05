@@ -1,6 +1,6 @@
 ## ====================================================================================================== ##
 # Title:        Extracts edX events logs for idenfitied multiple, individual student users 
-# Project:      edX user trajectory analysis
+# Project:      edX learner trajectory analysis
 # 
 #     Copyright 2017 Michael Ginda & Krishna Madhavan
 #     Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,14 +30,11 @@
 #               (*NOTE: the edX provided logs are in NDJSON format, not the typical JSON format.)
 #  
 # File input stack: 
-#            1) A folder contining one or more "*.log.gz" event log file(s)    
-#               (source: edX research documentation)
-#            2) edX course authenticated users data frame:
-#               {org}-{course Identifier}-{term}-auth_user-{server}-analytics.sql
-#            3) edX course authenticated users profile data frame:
-#               {org}-{course Identifier}-{term}-auth_userprofile-{server}-analytics.sql
+#            1) A folder containing one or more "*.log.gz" event log file(s)    
+#            2) A data frame edX course authenticated list of students:
+#               {org}-{course Identifier}-{term}-auth_user-students.csv
 # 
-# Package dependencies: jsonlite, ndjson, tcltk
+# Package dependencies: jsonlite, ndjson, plry, tcltk
 #
 # Changelog:
 #   2017.08.11. Initial Code
@@ -51,6 +48,8 @@
 #   2018.02.05. Cleaned-Up script to list all fields perserved in final logs CSV files
 #   2018.04.04. Description, title, and file input stack corrections; 
 #               updated function parameter definitions; creates lists of users for extraction for course
+#   2018.04.05. Forked the user list creation to a new script, simplifying package dependencies, file stack
+#               and data input sources. Path_output now are used for loading results of prior scripts.
 #
 ## ====================================================================================================== ##
 
@@ -128,28 +127,17 @@ path_data = tclvalue(tkchooseDirectory())
 #Assigns path where R saves processing outputs for user logs
 path_output = paste0(tclvalue(tkchooseDirectory()),"/")
 
-##Identifying student users from an edX course
-#List of authenticated users extracted from edX course data package
-userList <- list.files(full.names = TRUE, recursive = FALSE, 
-                       path = path_data,
-                       pattern = "auth_user")
-users <- read.csv(userList[1],sep = '\t',header=T)[,c(1,7:11)]
-userProf <- read.csv(userList[2],sep = '\t',header=T)[,c(2,8,10:14)]
-names(userProf)[1] <- 'id'
-users <- join(users,userProf,by="id")
-#Subset users to remove non-students from the list
-users <- users[users$is_staff==0,]
-str(users)
+#Identifies the output of the student user list for an edX course. 
+#The pattern parameter identifies the outputs of the edX-1-studentUserList.R script
+fileList <- list.files(full.names = F, recursive = FALSE, 
+                       path = paste0(path_output,"userlists"),
+                       pattern = "auth_user-students.csv")
 
-#Saves the list of students for the analysis
-userFileName <- sapply(str_split(userList[1],pattern="/"),tail,1)
-userFileName <- str_split(userFileName,pattern="-")
-#Sets file name for edX course user list (uses format {org}-{course Identifier}-{term}-auth_user-students)
-userFileName <- paste(userFileName[[1]][1],userFileName[[1]][2],userFileName[[1]][3],userFileName[[1]][4],"students",sep="-")
-write.csv(users,file=paste0(path_output,"userlists/",userFileName,".csv"), row.names=F)
+#Alternative userlists
+users <- read.csv(paste0(path_output,"/userlists/students-missingLogs-20180404.csv"),header=T)
 
 #Sets ID list for processing
-curUserIDS <-users$id #this converts dataframe of user ids to integer list needed for the function
+curUserIDS <- users$id #this converts dataframe of user ids to integer list needed for the function
 #Removes user list related objects
 rm(userList,users,userProf,userFileName)
 
@@ -164,7 +152,7 @@ fileList <- list.files(full.names = TRUE, recursive = FALSE,
                        pattern = ".log.gz$")
 
 #Log Capture function for list of users
-logCapture(curUserIDS,eventLog,fileList,path=path_output)
+logCapture(curUserIDS,eventLog,fileList,path=paste0(path_output,"studentevents/"))
 
 ######### Finishing Details ########## 
 #Indicate completion
