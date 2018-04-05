@@ -16,7 +16,7 @@
 #     limitations under the License.
 #
 # Authors:      Michael Ginda
-# Affiliation:  ^Indiana University, *Purdue University
+# Affiliation:  Indiana University
 # 
 # Description:  This script creates a list of active students users in an edX course, based on 
 #               authenticated user and user profile tables provided in a edX Data Package.
@@ -34,6 +34,7 @@
 #               {org}-{course Identifier}-{term}-auth_user-students.csv. The output file is used in the 
 #               edX learner trajectory analysis data processing script(s): 
 #                   * edX-2-eventLogFormatter.R
+#                   
 #  
 # File input stack: 
 #            1) edX course authenticated users data frame:

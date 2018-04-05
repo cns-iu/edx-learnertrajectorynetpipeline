@@ -1,6 +1,6 @@
 ## ====================================================================================================== ##
 # Title:        Extracting edX course metadata, course structure, and content module sequencing
-# Project:      edX user trajectory analysis
+# Project:      edX learner trajectory analysis
 # 
 #     Copyright 2017 Michael Ginda
 #     Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +14,6 @@
 #     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #     See the License for the specific language governing permissions and
 #     limitations under the License.
-#      
 #
 # Authors:      Michael Ginda
 # Affiliation:  Indiana University
@@ -30,9 +29,12 @@
 #               Next, a data frame is created that list all modules found in the course hiearachy. The 
 #               script identifies and orders course modules based on identified organizational structure
 #               and sequence of content module.
+#
+#               The output file is used in the edX learner trajectory analysis data processing script(s): 
+#
 #  
 # File input stack: 
-#            1) An edX course data package directory contining one "*.json" course structure file:
+#            1) An containing one "*.json" course structure file:
 #               {org}-{course Identifier}-{term}-course_structure-{server}-analytics.json
 #               (source: edX research documentation)
 # 
@@ -45,7 +47,7 @@
 #   2018.02.08. Fixed sorting for vertical modules, removed numeric sort columns, 
 #               added courseID field to align with the student event log formatter script.
 #   2018.04.04  Clean-up of project description, title, alignment across edX course data processing
-#              pipeline.
+#               pipeline.
 ## ====================================================================================================== ##
 
 ######### Setup ########## 
@@ -60,6 +62,17 @@ require("jsonlite")   #for working with JSON files (esp. read and write)
 require("reshape2")   #for melting data
 require("plyr")       #for Join
 require("tcltk2")     #for OS independant GUI file and folder selection
+
+#Assigns path where R may read in files from the edX data package 
+path_data = tclvalue(tkchooseDirectory())
+
+#Assigns path where R may save processing outputs
+path_output = setwd(tclvalue(tkchooseDirectory()))
+
+#Creates data processing and analysis directory structure
+
+##ISSUE 2
+
 
 ####Functions 
 #courseMeta
@@ -229,12 +242,8 @@ courseStrMeta <- function(fileList,path){
 }
 
 ######### Main ########## 
-#Assigns path to read in data sets 
-path_data = tclvalue(tkchooseDirectory())
-#Assigns path to save processing outputs
-path_output = tclvalue(tkchooseDirectory())
 
-## _Build list of all event files for course####
+## Build list of all event files for course####
 #Store all the filenames of JSON formatted edX event logs within a user selected directory 
 # (files ending with ".log.gz").
 fileList <- list.files(full.names = TRUE, recursive = FALSE, 
