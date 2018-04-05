@@ -1,6 +1,6 @@
 ## ====================================================================================================== ##
 # Title:        Processing and formatting student's edX events logs for analysis          
-# Project:      edX user trajectory analysis
+# Project:      edX learner trajectory analysis
 # 
 #     Copyright 2018 Michael Ginda
 #     Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,13 +15,28 @@
 #     See the License for the specific language governing permissions and
 #     limitations under the License.
 #
-# Authors:      Michael Ginda,
+# Authors:      Michael Ginda
 # Affiliation:  Indiana University
 # 
-# Description:  This script processes a user's activity from the edX event log CSV
-#               file. The script cleans and reformat student event logs for learner
-#               trajectory analysis and modeling.
-#                 
+# Description:  This script processes the raw student event logs event extracted from an edX
+#               course's daily event logs, provided in an edX Data Package. The script cleans
+#               and reformat student event logs for learner trajectory analysis and modeling.
+#
+#               The scripts uses a custom function to identify the different event log use cases 
+#               (e.g. students with no events; students who do not access content modules;
+#               and active students); calculates time between events, identifies user sessions
+#               based on threshold for temporal gaps; the script then creates a white list of 
+#               event records to keep, records are removed for two type reasons:
+#                      1) interaction is with non-course content modules or enrollment activity;
+#                      2) event provided redundant information (e.g. problem module 
+#                         browser events and server responses) and partial data;
+#                         OR did not show meaningul interactions (e.g load_video events);
+#                         OR were infrequently used by students in courses;
+#               see in line comments for purpose of event removal. See logFormatter function 
+#               parameters for details for selecting events that are appropriate for removal.
+# 
+#               After non-relevant event records are removed,
+#
 # File input stack: 
 #               1) Course structure module list output by script "edX-courseStructureMeta.R"
 #                  Files named format: 
@@ -103,7 +118,7 @@ getCSVData <- function() {
 }
 
 #logFormatter 
-##The logFormatter function is a modification of code provided by Purdue University team
+##The logFormatter function is a modification of code provided
 ##to allow mass extracting individual set of student logs based on known set of student IDs for an 
 ##edX course. The function creates a unique log file for each student ID in the list, 
 ##saved as either a JSON or CSV formatted file. The function currently set up to save as CSV,
@@ -140,7 +155,7 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,time=60,subZ,su
     message("Processing log file ", i, " of ", numLogs)
     print(proc.time() - start)
     #Load data set
-    data <- read.csv(fileList[119])
+    data <- read.csv(fileList[i])
     
     if(nrow(data)==0){
       data <- as.data.frame(matrix(data=NA,nrow=1,ncol=14))
@@ -173,8 +188,8 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,time=60,subZ,su
       rbind(as.data.frame(as.numeric(difftime(data[2:nrow(data),]$time,data[1:nrow(data)-1,]$time,units="mins"))),NA) -> period
       c("period") -> names(period)
       #Updates all records where period is greater than or equal to the time break set by user (or automatically of 60 minutes) 
-			#This needs to be updated to change the value from a rounded 60 to another more meaningful value
-			#For example, the value equals the mean time period measured for the module or event type.
+      #This needs to be updated to change the value from a rounded 60 to another more meaningful value
+      #For example, the value equals the mean time period measured for the module or event type.
       period[period >= time & !is.na(period), ] <- as.numeric(time)
       period[nrow(period), ]<- mean(period$period,na.rm=T)
       data <- cbind(data,period)
@@ -444,9 +459,9 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,time=60,subZ,su
         #Removes events where the order cannot be found in the course structure.
         #The modules may have been removed for a variety of reasons, although students 
         # may have had access to the content during the course run. 
-         if(nrow(data[is.na(data$order),])>0){
-           data <- data[!is.na(data$order),]
-         }
+        if(nrow(data[is.na(data$order),])>0){
+          data <- data[!is.na(data$order),]
+        }
         
         ##Updates event_type field for non-typed event module visits.
         #converts records where events_types have a module URL to a generic access event "mod_access"
@@ -454,7 +469,7 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,time=60,subZ,su
         levels[length(levels)+1] <- "mod_access"
         data$event_type <- factor(data$event_type, level=levels)
         if(nrow(data[grepl("course-v1",as.character(data$event_type))==T, ])>0){
-           data[grepl("course-v1",as.character(data$event_type))==T, ]$event_type <- c("mod_access")
+          data[grepl("course-v1",as.character(data$event_type))==T, ]$event_type <- c("mod_access")
         }
         
         #Maintain only fields that are needed for analysis
@@ -462,8 +477,8 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,time=60,subZ,su
         names(data) <- c("user_id","mod_hex_id","order","mod_parent_id","module_type","event_type",
                          "time","period","session","tsess","event.attempts","event.grade",
                          "event.max_grade","event.success")
-       
-        #Writes processed logfile user ID for file saving
+        
+        #Writes processed logfile user ID for file saving 
         write.csv(x = data, file = paste0(path,"/",uid,".csv"),
                   row.names = F)
       }
