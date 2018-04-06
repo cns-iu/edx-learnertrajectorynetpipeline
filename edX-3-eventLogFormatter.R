@@ -100,6 +100,7 @@
 ######### Setup ########## 
 ## _Clean the environment ####
 rm(list=ls()) 
+#rm(courseStr,courseID,curUserIDS,eventLog,fileList,start,studentLogs,subDir,logExtractor,i)
 
 ## _Load required packages #####
 require("magrittr")   #Pipe tool
@@ -109,19 +110,6 @@ require("plyr")       #DPLYR
 require("tcltk2")     #for OS independent GUI file and folder selection
 
 ####Functions
-#getData
-##The getData is a function used to select a CSV file listing student identifiers/course structure 
-#to be CSV is placed in the variable 'data' in the global environment
-getCSVData <- function() {
-  name <- tclvalue(tkgetOpenFile(
-    filetypes = "{ {CSV Files} {.csv} } { {All Files} * }"))
-  if (name == "")
-    return(data.frame()) # Return an empty data frame if no file was selected
-  data <- read.csv(name)
-  assign("data", data, envir = .GlobalEnv)
-  cat("The imported data are in csv_data\n")
-}
-
 #logFormatter 
 ##The logFormatter function is a modification of code provided
 ##to allow mass extracting individual set of student logs based on known set of student IDs for an 
@@ -168,9 +156,9 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,time=60,subZ,su
                        "time","period","session","tsess","event.attempts","event.grade",
                        "event.max_grade","event.success")
       fileName <- as.data.frame(strsplit(fileList[i], split="\\/"))
-      write.csv(x=data, file=paste0(path,"/",subZ,"/",fileName[nrow(fileName),]), row.names = F)
+      write.csv(x=data, file=paste0(path,"/studentevents_processed/",subZ,"/",fileName[nrow(fileName),]), row.names = F)
       data <- NULL
-      
+      paste0(path_output,"/studentEvents_processed",subZ)
     } else {
       
       #Creates a course ID by removing "course-v1:" text, which is not used in the module ID.
@@ -330,7 +318,7 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,time=60,subZ,su
       #the field checks, the file is saved to a special directory for these cases. Else processing will continue 
       #to 
       if(k == 0){
-        write.csv(x = data, file = paste0(path,"/",subN,"/",uid,".csv"),
+        write.csv(x = data, file = paste0(path,"/studentevents_processed/",subN,"/",uid,".csv"),
                   row.names = F)
       } else {
         ##Extracts or recreate module ID from the log fields for various known modules cases (if not removed by user)
@@ -486,7 +474,7 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,time=60,subZ,su
                          "event.max_grade","event.success")
         
         #Writes processed logfile user ID for file saving 
-        write.csv(x = data, file = paste0(path,"/",uid,".csv"),
+        write.csv(x = data, file = paste0(path,"/studentevents_processed/",uid,".csv"),
                   row.names = F)
       }
     }
@@ -500,39 +488,40 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,time=60,subZ,su
 start <- proc.time() #save the time (to compute elapsed time of script)
 
 #Generic Set up
-#Assigns a path used to locate directory with the set of unprocessed student logs
-path_data = tclvalue(tkchooseDirectory())
-#Assigns a path to save processing output files.
+#Assigns a path to open prior script outputs and to save new processing output files.
 path_output = tclvalue(tkchooseDirectory())
-#Assigns a path to save user lists created by the output script
-path_users = tclvalue(tkchooseDirectory())
 
 ##Create data processing output sub-directories for student without events
 #students with zero events on load and those with zero events after post-data processing 
 subDir = c("zeroEvents", "noEventsProc")
 for(i in 1:length(subDir)){
-  if(!file_test("-d", file.path(path_output, subDir[i]))){
-    if(file_test("-f", file.path(path_output, subDir[i]))){
+  if(!file_test("-d", file.path(paste0(path_output,"/studentevents_processed/"), subDir[i]))){
+    if(file_test("-f", file.path(paste0(path_output,"/studentevents_processed/"), subDir[i]))){
       stop("Path can't be created because a file with that name already exists.")
     } else {
-      dir.create(file.path(path_output, subDir[i]))
+      dir.create(file.path(paste0(path_output,"/studentevents_processed/"), subDir[i]))
     }
   }
 }
 
 #Creates list of files for student event log processing
 #Load in CSV of students IDs
-getCSVData()
-names(data) <- "id" 
-fileList <- paste0(path_data,"/",data$id,".csv")
+fileList <- list.files(full.names = TRUE, recursive = FALSE, 
+                       path = paste0(path_output,"/userlists/"),
+                       pattern = "auth_user-students.csv$")
+fileList <- read.csv(file=fileList,header=T)[1]
+fileList <- paste0(path_output,"/studentevents/",fileList$id,".csv")
 
 #Load course structure data module-lookup
 #CSV of course modules data extracted from the Course Structure, found in the
 #edX student user database file: {org}-{course}-{run}-module-lookup.csv
-getCSVData()
+courseStr <- list.files(full.names = TRUE, recursive = FALSE, 
+                       path = paste0(path_output,"/course/"),
+                       pattern = "module-lookup.csv")
+courseStr <- read.csv(file=courseStr, header=T)
 #Extracts course identifier
-courseID <- as.character(data$courseID[1])
-courseStr <- data
+courseID <- as.character(courseStr $courseID[1])
+courseID <- gsub("\\+","-",courseID)
 
 ##Log Capture function for list of users, set up to 
 logFormatter(fileList=fileList, time=60, courseStr=courseStr, 
