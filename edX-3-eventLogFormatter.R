@@ -49,7 +49,7 @@
 #               3) Directory (studentevents) containing one or more extracted student event log file(s)
 #                  with the script "edX-2-eventLogExtractor.R" based on course
 #                  edX event logs. File name format: 
-#					  {user-id}.csv
+#					            {user-id}.csv
 # 
 # Package dependencies: zoo, magrittr, stringr, plyr, tcltk
 #
@@ -92,8 +92,7 @@
 #   2018.02.08  Aligned logFormatter function with outputs of the "edX-courseStructureMeta.R"
 #               script; added parameter to allow user to set manual time length for tsess field.
 #   2018.04.05  Update paths used to collect data, removed the getCSVdata function, updated to read and save
-#               files in correct output directories; updated description text; update time calculations for
-#               session events with times of 60 minutes or greater.
+#               files in correct output directories; updated description text
 #
 ## ====================================================================================================== ##
 
