@@ -472,72 +472,163 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,timeB=60,subZ,s
           data[grepl("course-v1",as.character(data$event_type))==T, ]$event_type <- c("mod_access")
         }
         
-        #Update time estimate for events where gap is greater than or less than 60 minutes
-        if(timeBEst==TRUE){
-          if(nrow(data[data$period==timeB,])>0){
-            if(nrow(data[data$period==timeB & data$event_type==c('page_close'),])>0){
-              median(data[data$period<timeB & data$event_type==c('page_close'),]$period) -> data[data$period==timeB & data$event_type==c('page_close'),]$period
-            }
-            if(nrow(data[data$period==timeB & data$event_type==c('mod_access'),])>0){
-              median(data[data$period<timeB & data$event_type==c('mod_access'),]$period) -> data[data$period==timeB & data$event_type==c('mod_access'),]$period
-            }
-              #Video event outliar time estimates
-              if(nrow(data[data$period==timeB & data$event_type==c('pause_video'),])>0){
-                median(data[data$period<timeB & data$event_type==c('pause_video'),]$period) -> data[data$period==timeB & data$event_type==c('pause_video'),]$period
-              }
-            if(nrow(data[data$period==timeB & data$event_type==c('play_video'),])>0){
-              median(data[data$period<timeB & data$event_type==c('play_video'),]$period) -> data[data$period==timeB & data$event_type==c('play_video'),]$period
-            }
-            if(nrow(data[data$period==timeB & data$event_type==c('seek_video'),])>0){
-              median(data[data$period<timeB & data$event_type==c('seek_video'),]$period) -> data[data$period==timeB & data$event_type==c('seek_video'),]$period
-            }
-            if(nrow(data[data$period==timeB & data$event_type==c('stop_video'),])>0){
-              median(data[data$period<timeB & data$event_type==c('stop_video'),]$period) -> data[data$period==timeB & data$event_type==c('stop_video'),]$period
-            }
-            #Problem events outliar time estimates
-            if(nrow(data[data$period==timeB & data$event_type==c('problem_check'),])>0){
-              median(data[data$period<timeB & data$event_type==c('problem_check'),]$period) -> data[data$period==timeB & data$event_type==c('problem_check'),]$period
-            }
-            if(nrow(data[data$period==timeB & data$event_type==c('problem_show'),])>0){
-              median(data[data$period<timeB & data$event_type==c('problem_show'),]$period) -> data[data$period==timeB & data$event_type==c('problem_show'),]$period
-            }
-            #Open Assessment event outliar time estimages
-            if(nrow(data[data$period==timeB & data$event_type==c('openassessmentblock.create_submission'),])>0){
-              median(data[data$period<timeB & data$event_type==c('openassessmentblock.create_submission'),]$period) -> data[data$period==timeB & data$event_type==c('openassessmentblock.create_submission'),]$period
-            }
-            if(nrow(data[data$period==timeB & data$event_type==c('openassessmentblock.get_peer_submission'),])>0){
-              median(data[data$period<timeB & data$event_type==c('openassessmentblock.get_peer_submission'),]$period) -> data[data$period==timeB & data$event_type==c('openassessmentblock.get_peer_submission'),]$period
-            }
-            if(nrow(data[data$period==timeB & data$event_type==c('openassessmentblock.save_submission'),])>0){
-              median(data[data$period<timeB & data$event_type==c('openassessmentblock.save_submission'),]$period) -> data[data$period==timeB & data$event_type==c('openassessmentblock.save_submission'),]$period
-            }
-            if(nrow(data[data$period==timeB & data$event_type==c('openassessmentblock.peer_assess'),])>0){
-              median(data[data$period<timeB & data$event_type==c('openassessmentblock.peer_assess'),]$period) -> data[data$period==timeB & data$event_type==c('openassessmentblock.peer_assess'),]$period
-            }
-            if(nrow(data[data$period==timeB & data$event_type==c('openassessmentblock.self_assess'),])>0){
-              median(data[data$period<timeB & data$event_type==c('openassessmentblock.self_assess'),]$period) -> data[data$period==timeB & data$event_type==c('openassessmentblock.self_assess'),]$period
-            }
-            if(nrow(data[data$period==timeB & data$event_type==c('openassessmentblock.submit_feedback_on_assessments'),])>0){
-              median(data[data$period<timeB & data$event_type==c('openassessmentblock.submit_feedback_on_assessments'),]$period) -> data[data$period==timeB & data$event_type==c('openassessmentblock.submit_feedback_on_assessments'),]$period
-            }
-            #Navigation Events
-            if(nrow(data[data$period==timeB & data$event_type==c('seq_next'),])>0){
-              median(data[data$period<timeB & data$event_type==c('seq_next'),]$period) -> data[data$period==timeB & data$event_type==c('seq_next'),]$period
-            }
-            if(nrow(data[data$period==timeB & data$event_type==c('seq_goto'),])>0){
-              median(data[data$period<timeB & data$event_type==c('seq_goto'),]$period) -> data[data$period==timeB & data$event_type==c('seq_goto'),]$period
-            }
-            if(nrow(data[data$period==timeB & data$event_type==c('seq_prev'),])>0){
-              median(data[data$period<timeB & data$event_type==c('seq_prev'),]$period) -> data[data$period==timeB & data$event_type==c('seq_prev'),]$period
-            }
-          }
-        }
-        
         #Maintain only fields that are needed for analysis
         data <- data[,c(3,19,21,22,20,6,7,16,9,17,12:15)]
         names(data) <- c("user_id","mod_hex_id","order","mod_parent_id","module_type","event_type",
                          "time","period","session","tsess","event.attempts","event.grade",
                          "event.max_grade","event.success")
+        
+        #Update time estimate for events where gap is greater than or less than 60 minutes
+        if(timeBEst==TRUE){
+          if(nrow(data[data$period==timeB,])>0){
+            
+            # if(nrow(data[data$period==timeB & data$event_type==c('page_close'),])>0){
+            #   med <- median(data[data$period<timeB & data$event_type==c('page_close'),]$period) 
+            #   if(is.na(med)==F) {
+            #     med -> data[data$period==timeB & data$event_type==c('page_close'),]$period}
+            #   else {
+            #     median(data[data$period<timeB & data$module_type==c('html+block'),]$period) -> data[data$period==timeB & data$event_type==c('page_close'),]$period 
+            #   }
+            # }
+            #Generic Module Access outlier events time estimation
+            if(nrow(data[data$period==timeB & data$event_type==c('mod_access'),])>0){
+                 med<- median(data[data$period<timeB & data$event_type==c('mod_access'),]$period) 
+               if(is.na(med)==F){
+                 med -> data[data$period==timeB & data$event_type==c('mod_access'),]$period
+               } else {
+                 median(data[data$period<timeB & data$module_type==c('html+block'),]$period) -> data[data$period==timeB & data$event_type==c('mod_access'),]$period
+               }
+            }
+            
+            #Video event outlier time estimates
+            if(nrow(data[data$period==timeB & data$event_type==c('pause_video'),])>0){
+              med <- median(data[data$period<timeB & data$event_type==c('pause_video'),]$period) 
+              if(is.na(med)==F) {
+                med -> data[data$period==timeB & data$event_type==c('pause_video'),]$period
+              } else {
+                median(data[data$period<timeB & data$module_type==c('video+block'),]$period) -> data[data$period==timeB & data$event_type==c('pause_video'),]$period
+              }
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('play_video'),])>0){
+              med <- median(data[data$period<timeB & data$event_type==c('play_video'),]$period) 
+              if(is.na(med)==F) {
+                med -> data[data$period==timeB & data$event_type==c('play_video'),]$period
+              } else {
+                median(data[data$period<timeB & data$module_type==c('video+block'),]$period) -> data[data$period==timeB & data$event_type==c('play_video'),]$period
+              }
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('seek_video'),])>0){
+              med <- median(data[data$period<timeB & data$event_type==c('seek_video'),]$period) 
+              if(is.na(med)==F) {
+                med -> data[data$period==timeB & data$event_type==c('seek_video'),]$period
+              } else {
+                median(data[data$period<timeB & data$module_type==c('video+block'),]$period) -> data[data$period==timeB & data$event_type==c('seek_video'),]$period
+              }
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('stop_video'),])>0){
+              med <- median(data[data$period<timeB & data$event_type==c('stop_video'),]$period) 
+              if(is.na(med)==F) {
+                med -> data[data$period==timeB & data$event_type==c('stop_video'),]$period
+              } else {
+                median(data[data$period<timeB & data$module_type==c('video+block'),]$period) -> data[data$period==timeB & data$event_type==c('stop_video'),]$period
+              }
+            }
+            
+            #Problem events outlier time estimates
+            if(nrow(data[data$period==timeB & data$event_type==c('problem_check'),])>0){
+              med <- median(data[data$period<timeB & data$event_type==c('problem_check'),]$period) 
+              if(is.na(med)==F) {
+                med -> data[data$period==timeB & data$event_type==c('problem_check'),]$period
+              } else {
+                median(data[data$period<timeB & data$module_type==c('problem+block'),]$period) -> data[data$period==timeB & data$event_type==c('problem_check'),]$period
+              }
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('problem_show'),])>0){
+              med <- median(data[data$period<timeB & data$event_type==c('problem_show'),]$period) 
+              if(is.na(med)==F) {
+                med -> data[data$period==timeB & data$event_type==c('problem_show'),]$period
+              } else {
+                median(data[data$period<timeB & data$module_type==c('problem+block'),]$period) -> data[data$period==timeB & data$event_type==c('problem_show'),]$period
+              }
+            }
+            
+            #Open Assessment event outlier time estimages
+            if(nrow(data[data$period==timeB & data$event_type==c('openassessmentblock.create_submission'),])>0){
+              med <- median(data[data$period<timeB & data$event_type==c('openassessmentblock.create_submission'),]$period) 
+              if(is.na(med)==F) {
+                med -> data[data$period==timeB & data$event_type==c('openassessmentblock.create_submission'),]$period
+              } else {
+                median(data[data$period<timeB & data$module_type==c('openassessment+block'),]$period) -> data[data$period==timeB & data$event_type==c('openassessmentblock.create_submission'),]$period
+              }
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('openassessmentblock.get_peer_submission'),])>0){
+              med <- median(data[data$period<timeB & data$event_type==c('openassessmentblock.get_peer_submission'),]$period) 
+              if(is.na(med)==F) {
+                med -> data[data$period==timeB & data$event_type==c('openassessmentblock.get_peer_submission'),]$period
+              } else {
+                median(data[data$period<timeB & data$module_type==c('openassessment+block'),]$period) -> data[data$period==timeB & data$event_type==c('openassessmentblock.get_peer_submission'),]$period
+              }
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('openassessmentblock.save_submission'),])>0){
+              med <- median(data[data$period<timeB & data$event_type==c('openassessmentblock.save_submission'),]$period) 
+              if(is.na(med)==F) {
+                med -> data[data$period==timeB & data$event_type==c('openassessmentblock.save_submission'),]$period
+              } else {
+                median(data[data$period<timeB & data$module_type==c('openassessment+block'),]$period) -> data[data$period==timeB & data$event_type==c('openassessmentblock.save_submission'),]$period
+              }
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('openassessmentblock.peer_assess'),])>0){
+              med <- median(data[data$period<timeB & data$event_type==c('openassessmentblock.peer_assess'),]$period) 
+              if(is.na(med)==F) {
+                med -> data[data$period==timeB & data$event_type==c('openassessmentblock.peer_assess'),]$period
+              } else {
+                median(data[data$period<timeB & data$module_type==c('openassessment+block'),]$period) -> data[data$period==timeB & data$event_type==c('openassessmentblock.peer_assess'),]$period
+              }
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('openassessmentblock.self_assess'),])>0){
+              med <- median(data[data$period<timeB & data$event_type==c('openassessmentblock.self_assess'),]$period) 
+              if(is.na(med)==F) {
+                med -> data[data$period==timeB & data$event_type==c('openassessmentblock.self_assess'),]$period
+              } else {
+                median(data[data$period<timeB & data$module_type==c('openassessment+block'),]$period) -> data[data$period==timeB & data$event_type==c('openassessmentblock.self_assess'),]$period
+              }
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('openassessmentblock.submit_feedback_on_assessments'),])>0){
+              med <- median(data[data$period<timeB & data$event_type==c('openassessmentblock.submit_feedback_on_assessments'),]$period) 
+              if(is.na(med)==F) {
+                med -> data[data$period==timeB & data$event_type==c('openassessmentblock.submit_feedback_on_assessments'),]$period
+              } else {
+                median(data[data$period<timeB & data$module_type==c('openassessment+block'),]$period) -> data[data$period==timeB & data$event_type==c('openassessmentblock.submit_feedback_on_assessments'),]$period
+              }
+            }
+            
+            #Navigation Events
+            if(nrow(data[data$period==timeB & data$event_type==c('seq_next'),])>0){
+              med <- median(data[data$period<timeB & data$event_type==c('seq_next'),]$period) 
+              if(is.na(med)==F) {
+                med -> data[data$period==timeB & data$event_type==c('seq_next'),]$period
+              } else {
+                median(data[data$period<timeB & data$module_type==c('html+block'),]$period) -> data[data$period==timeB & data$event_type==c('seq_next'),]$period
+              }
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('seq_goto'),])>0){
+              med <- median(data[data$period<timeB & data$event_type==c('seq_goto'),]$period) 
+              if(is.na(med)==F) {
+                med -> data[data$period==timeB & data$event_type==c('seq_goto'),]$period
+              } else {
+                median(data[data$period<timeB & data$module_type==c('html+block'),]$period) -> data[data$period==timeB & data$event_type==c('seq_goto'),]$period
+              }
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('seq_prev'),])>0){
+              med <- median(data[data$period<timeB & data$event_type==c('seq_prev'),]$period) 
+              if(is.na(med)==F) {
+                med -> data[data$period==timeB & data$event_type==c('seq_prev'),]$period
+              } else {
+                median(data[data$period<timeB & data$module_type==c('html+block'),]$period) -> data[data$period==timeB & data$event_type==c('seq_prev'),]$period
+              }
+            }
+          }
+        }
         
         #Writes processed logfile user ID for file saving 
         write.csv(x = data, file = paste0(path,"/studentevents_processed/",uid,".csv"),
