@@ -39,17 +39,17 @@
 #
 # File input stack: 
 #               1) Course structure and content module list, extracted from the course
-#				   edX course data package state directory, with the script "edX-courseStructureMeta.R"
-#                  Files named format: 
+#                  edX course data package state directory, with the script "edX-courseStructureMeta.R"
+#                  Files name format: 
 #                     {org}+{course}+{term}-module-lookup.csv
 #               2) Set of known student users from an edX course, extracted from the daily 
 #                  course logs, with the script "edX-1-studentUserList.R"
-#				   The file name format: 
+#                  File name format: 
 #                     {org}-{course}-{term}-auth_user-students.csv
 #               3) Directory (studentevents) containing one or more extracted student event log file(s)
 #                  with the script "edX-2-eventLogExtractor.R" based on course
 #                  edX event logs. File name format: 
-#					            {user-id}.csv
+#                     {user-id}.csv
 # 
 # Package dependencies: zoo, magrittr, stringr, plyr, tcltk
 #
@@ -91,8 +91,13 @@
 #               ID list.
 #   2018.02.08  Aligned logFormatter function with outputs of the "edX-courseStructureMeta.R"
 #               script; added parameter to allow user to set manual time length for tsess field.
-#   2018.04.05  Update paths used to collect data, removed the getCSVdata function, updated to read and save
-#               files in correct output directories; updated description text
+#   2018.04.05  Update paths used to collect data, removed the getCSVdata function, updated to 
+#               read and save files in correct output directories; updated description text.
+#   2018.04.09  Update filenames for saved lists of student 
+#               activity use cases (e.g from noEvents to inactive, from unusableEvents to 
+#               unusableActivity, events and active).
+#   2018.04.30  Update time calculations for session events with times of 60 minutes or greater 
+#               for students with usable activity
 #
 ## ====================================================================================================== ##
 
@@ -130,7 +135,7 @@ require("tcltk2")     #for OS independent GUI file and folder selection
 # @param filelist Filelist contains a list of filenames of individual user's EdX logs.
 # @param courseStr is a processed version of a course's module structure (tree)
 # @param path is the sets the path for where output files will be saved.
-# Qparam time is a numeric value setting the number of minutes that must pass for a  
+# Qparam timeB is a numeric value setting the number of minutes that must pass for a  
 #        temporal session (tsess) to have ended; automatically set at 60 minute threshold.
 # @param subZ is the directory name set by a user for where logs with zero events are saved.
 # @param subN is the directory name set by a user for where logs with no usable events are saved.
@@ -140,8 +145,13 @@ require("tcltk2")     #for OS independent GUI file and folder selection
 #        showanswer and save_problem_success events, are maintained in analysis.
 # @param VID vid indicates video events associated with infrequent use (transcript and closed 
 #        caption evnts), and video load events, which do not show meaningful use of content module.
+# @param timeBEst timeBEst is a logical parameter that indicates if processing script
+#        should provide updated time period estimates for events where the period is equal to or greater 
+#        than the timeB (temporal session break) parameter; events with large periods are updated with
+#        the median period value that is calculcated based on events with the same type found in a
+#        given student's log. 
 
-logFormatter <- logFormatter <- function(fileList,courseStr,path,time=60,subZ,subN,nc,pse,vid){
+logFormatter <- logFormatter <- function(fileList,courseStr,path,timeB=60,subZ,subN,nc,pse,vid,timeBEst=TRUE){
   numLogs <- length(fileList)
   for(i in 1:numLogs){
     message("Processing log file ", i, " of ", numLogs)
@@ -182,18 +192,18 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,time=60,subZ,su
       #Updates all records where period is greater than or equal to the time break set by user (or automatically of 60 minutes) 
       #This needs to be updated to change the value from a rounded 60 to another more meaningful value
       #For example, the value equals the mean time period measured for the module or event type.
-      period[period >= time & !is.na(period), ] <- as.numeric(time)
+      period[period >= timeB & !is.na(period), ] <- as.numeric(timeB)
       period[nrow(period), ]<- mean(period$period,na.rm=T)
       data <- cbind(data,period)
       rm(period)
-      
+
       #Creates temporal session based on the outliers in the period field.
       data$tsess <- NA
       #Searches for outliers periods to demarcate the end of a user session, 
       #id set by seq from 1 to max periods identified; if no max values are found,
       #it is assumed there was only one session.
-      if(nrow(data[data$period >= time,])>1){
-        data[data$period >= time,]$tsess <- seq(from=1,to=nrow(data[data$period >= time,]))
+      if(nrow(data[data$period >= timeB,])>1){
+        data[data$period >= timeB,]$tsess <- seq(from=1,to=nrow(data[data$period >= timeB,]))
       } else(data$tsess <- 1)
       #For logs with multiple sessions ids, there is a chance that the last event has a blank
       #tsess value, and needs to have a final session ID provided.
@@ -221,7 +231,7 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,time=60,subZ,su
       
       #Removes dummy row from session fix
       data <- data[-nrow(data),]
-      
+
       #Creates a dummy column to ID events without course module identifiers, events are kept if value is 1
       data["kp"] <- 1
       
@@ -463,8 +473,65 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,time=60,subZ,su
         }
         
         #Update time estimate for events where gap is greater than or less than 60 minutes
-        ##ISSUE 1
-        
+        if(timeBEst==TRUE){
+          if(nrow(data[data$period==timeB,])>0){
+            if(nrow(data[data$period==timeB & data$event_type==c('page_close'),])>0){
+              median(data[data$period<timeB & data$event_type==c('page_close'),]$period) -> data[data$period==timeB & data$event_type==c('page_close'),]$period
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('mod_access'),])>0){
+              median(data[data$period<timeB & data$event_type==c('mod_access'),]$period) -> data[data$period==timeB & data$event_type==c('mod_access'),]$period
+            }
+              #Video event outliar time estimates
+              if(nrow(data[data$period==timeB & data$event_type==c('pause_video'),])>0){
+                median(data[data$period<timeB & data$event_type==c('pause_video'),]$period) -> data[data$period==timeB & data$event_type==c('pause_video'),]$period
+              }
+            if(nrow(data[data$period==timeB & data$event_type==c('play_video'),])>0){
+              median(data[data$period<timeB & data$event_type==c('play_video'),]$period) -> data[data$period==timeB & data$event_type==c('play_video'),]$period
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('seek_video'),])>0){
+              median(data[data$period<timeB & data$event_type==c('seek_video'),]$period) -> data[data$period==timeB & data$event_type==c('seek_video'),]$period
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('stop_video'),])>0){
+              median(data[data$period<timeB & data$event_type==c('stop_video'),]$period) -> data[data$period==timeB & data$event_type==c('stop_video'),]$period
+            }
+            #Problem events outliar time estimates
+            if(nrow(data[data$period==timeB & data$event_type==c('problem_check'),])>0){
+              median(data[data$period<timeB & data$event_type==c('problem_check'),]$period) -> data[data$period==timeB & data$event_type==c('problem_check'),]$period
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('problem_show'),])>0){
+              median(data[data$period<timeB & data$event_type==c('problem_show'),]$period) -> data[data$period==timeB & data$event_type==c('problem_show'),]$period
+            }
+            #Open Assessment event outliar time estimages
+            if(nrow(data[data$period==timeB & data$event_type==c('openassessmentblock.create_submission'),])>0){
+              median(data[data$period<timeB & data$event_type==c('openassessmentblock.create_submission'),]$period) -> data[data$period==timeB & data$event_type==c('openassessmentblock.create_submission'),]$period
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('openassessmentblock.get_peer_submission'),])>0){
+              median(data[data$period<timeB & data$event_type==c('openassessmentblock.get_peer_submission'),]$period) -> data[data$period==timeB & data$event_type==c('openassessmentblock.get_peer_submission'),]$period
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('openassessmentblock.save_submission'),])>0){
+              median(data[data$period<timeB & data$event_type==c('openassessmentblock.save_submission'),]$period) -> data[data$period==timeB & data$event_type==c('openassessmentblock.save_submission'),]$period
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('openassessmentblock.peer_assess'),])>0){
+              median(data[data$period<timeB & data$event_type==c('openassessmentblock.peer_assess'),]$period) -> data[data$period==timeB & data$event_type==c('openassessmentblock.peer_assess'),]$period
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('openassessmentblock.self_assess'),])>0){
+              median(data[data$period<timeB & data$event_type==c('openassessmentblock.self_assess'),]$period) -> data[data$period==timeB & data$event_type==c('openassessmentblock.self_assess'),]$period
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('openassessmentblock.submit_feedback_on_assessments'),])>0){
+              median(data[data$period<timeB & data$event_type==c('openassessmentblock.submit_feedback_on_assessments'),]$period) -> data[data$period==timeB & data$event_type==c('openassessmentblock.submit_feedback_on_assessments'),]$period
+            }
+            #Navigation Events
+            if(nrow(data[data$period==timeB & data$event_type==c('seq_next'),])>0){
+              median(data[data$period<timeB & data$event_type==c('seq_next'),]$period) -> data[data$period==timeB & data$event_type==c('seq_next'),]$period
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('seq_goto'),])>0){
+              median(data[data$period<timeB & data$event_type==c('seq_goto'),]$period) -> data[data$period==timeB & data$event_type==c('seq_goto'),]$period
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('seq_prev'),])>0){
+              median(data[data$period<timeB & data$event_type==c('seq_prev'),]$period) -> data[data$period==timeB & data$event_type==c('seq_prev'),]$period
+            }
+          }
+        }
         
         #Maintain only fields that are needed for analysis
         data <- data[,c(3,19,21,22,20,6,7,16,9,17,12:15)]
@@ -525,23 +592,23 @@ courseID <- gsub("\\+","-",courseID)
 ##Log Capture function for list of users, set up to 
 logFormatter(fileList=fileList, time=60, courseStr=courseStr, 
              path=path_output, subZ=subDir[1], subN=subDir[2], 
-             nc=FALSE, pse=FALSE, vid=FALSE)
+             nc=FALSE, pse=FALSE, vid=FALSE, timeBEst = TRUE)
 
 ##Saves out list of user IDs for students with usable logs and unusable logs
 users <- list.files(path=paste0(path_output,"/studentevents_processed/"),pattern=".csv")
 users <- data.frame(do.call('rbind',strsplit(users,"\\.")))
 names(users) <- c("userID","v")
-write.csv(x=users[,1], file=paste0(path_output,"/userlists/",courseID,"-auth_user-students-events.csv"),row.names = F)
+write.csv(x=users[,1], file=paste0(path_output,"/userlists/",courseID,"-auth_user-students-active.csv"),row.names = F)
 
 users <- list.files(path=paste0(path_output,"/studentevents_processed/",subDir[1]),pattern=".csv")
 users <- data.frame(do.call('rbind',strsplit(users,"\\.")))
 names(users) <- c("userID","v")
-write.csv(x=users[,1], file=paste0(path_output,"/userlists/",courseID,"-auth_user-students-noEvents.csv"),row.names = F)
+write.csv(x=users[,1], file=paste0(path_output,"/userlists/",courseID,"-auth_user-students-inactive.csv"),row.names = F)
 
 users<- list.files(path=paste0(path_output,"/studentevents_processed/",subDir[2]),pattern=".csv")
 users <- data.frame(do.call('rbind',strsplit(users,"\\.")))
 names(users) <- c("userID","v")
-write.csv(x=users[,1], file=paste0(path_output,"/userlists/",courseID,"-auth_user-students-unsuableEvents.csv"),row.names = F)
+write.csv(x=users[,1], file=paste0(path_output,"/userlists/",courseID,"-auth_user-students-unusableActivity.csv"),row.names = F)
 
 ######### Finishing Details ########## 
 #Indicate completion
