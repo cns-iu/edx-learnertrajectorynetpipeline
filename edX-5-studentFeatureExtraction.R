@@ -40,7 +40,7 @@
 #               data and verifiedaggregating  student activity variables for 
 #               analysis and visualization. Exported data sets to csv files.
 #   2018.04.30  Update code to align data input and output directories and finding correct
-#               files (course ID, student demographic data, logs).
+#               files (course ID, student demographic data, logs). Remove unused data function.
 #
 ## ====================================================================================================== ##
 ######### Setup ########## 
@@ -61,23 +61,8 @@ require("igraph")     #network formatting
 require("tcltk2")     #for OS independant GUI file and folder selection
 require("jsonlite")   #Exporting networkfiles as JSON formatted objects for visualization
 
-####Functions
-#getData
-##The getData is a function used to select a CSV file listing student identifiers/course structure 
-#to be CSV is placed in the variable 'data' in the global environment
-getData <- function() {
-  name <- tclvalue(tkgetOpenFile(
-    filetypes = "{ {CSV Files} {.csv} } { {All Files} * }"))
-  if (name == "")
-    return(data.frame()) # Return an empty data frame if no file was selected
-  data <- read.csv(name)
-  assign("data", data, envir = .GlobalEnv)
-  cat("The imported data are in csv_data\n")
-}
-
-
 ######### Main ########## 
-#Creates paths used to locate coures data
+#Creates paths used to locate unprocessed course data
 path_data = tclvalue(tkchooseDirectory())
 
 #Assign path for project processing and analysis results
@@ -109,7 +94,7 @@ rm(courseStr)
 #Read in list of relevant students
 students <- read.csv(list.files(full.names = TRUE, recursive = FALSE, 
                                 path = paste0(path_output,"/userlists/"),
-                                pattern = "auth_user-students-active.csv"))
+                                pattern = "auth_user-students-hasNet.csv"))
 names(students) <- "id"
 
 #Read in user table from course learner activity database
@@ -387,8 +372,7 @@ for(i in 1:numLogs){
                            seqGotoTime = sum(period),
                            meanSeqGotoTime = mean(period),
                            meanSeqGotoDis = mean(dis),
-                           sdSeqGotoDis = sd(dis)
-    )[2:6])
+                           sdSeqGotoDis = sd(dis))[2:6])
   } else {
     nav <- cbind(nav,matrix(0,nrow=1,ncol=5))
     names(nav)[12:16] <- c("seqGotoEvents","seqGotoTime","meanSeqGotoTime","meanSeqGotoDis","sdSeqGotoDis")
@@ -400,8 +384,7 @@ for(i in 1:numLogs){
                            modAccessTime = sum(period),
                            meanModAccessTime = mean(period),
                            meanModAccessDis = mean(dis),
-                           sdModAccessDis = sd(dis)
-    )[2:6])
+                           sdModAccessDis = sd(dis))[2:6])
   } else {
     nav <- cbind(nav,matrix(0,nrow=1,ncol=5))
     names(nav)[17:21] <- c("modAccessEvents","modAccessTime","meanModAccessTime","meanModAccessDis","sdModAccessDis")
