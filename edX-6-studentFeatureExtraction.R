@@ -53,11 +53,9 @@
 #               and added navigation headers to script.
 #
 ## ====================================================================================================== ##
-
 #### Clean the environment ####
 rm(list=ls()) 
 options(scipen=90)
-
 # start timer to track how long the script takes to execute
 start <-  proc.time() #save the time (to compute elapsed time of script)
 
@@ -68,7 +66,6 @@ require("tcltk2")     #for OS independant GUI file and folder selection
 #### Create paths to raw data and processed data outputs ####
 #Creates paths used to locate unprocessed course data (High level directory housing directory of edX courses)
 path_data = tclvalue(tkchooseDirectory())
-
 #Assign path for project processing and analysis results (Directory of a course level analysis)
 path_output = tclvalue(tkchooseDirectory())
 
@@ -155,7 +152,6 @@ students$level_of_education <- factor(students$level_of_education,levels=c("hs",
 rm(cert,demo)
 #Updates names of student demographi and performance data
 names(students)[c(3,7,8)] <- c("cert_status","yob","loe")
-
 
 #### Creates list paths to laod individual student event logs ####
 logFiles <- paste0(path_output,"/studentevents_processed/",students$user_id,".csv")
