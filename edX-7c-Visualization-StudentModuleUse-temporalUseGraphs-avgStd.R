@@ -22,10 +22,10 @@
 # Description:  This script creates visualizations to compare the average student use 
 #               time of a course's module to the use times estimated by a course 
 #               instructor. As edX courses do not capture instructor time estimates,
-#               these were pulled from the course chapter and page desciptions.
+#               these were pulled from the course chapter and page description.
 #               Average student use time for modules at the lowest level of the
-#               edX course hiearchy are summed based on their parent chapter and 
-#               (verticle) page module identifier. The script combines the estimated 
+#               edX course hierarchy are summed based on their parent chapter and 
+#               (vertical) page module identifier. The script combines the estimated 
 #               and summed average student use times, and creates two sets of figures,
 #               one for chapter modules and the other for page modules. 
 #               
@@ -45,7 +45,7 @@
 #
 # Package dependencies: tcltk2, colorspace, ddply, plyr, data.table, ggplot2
 #
-# Changelog:
+# Change log:
 #   2018.05.17. Initial Code - Environment Set up, load in data for module 
 #               analysis, created initial set of visualizations for Page Modules
 #   2018.05.18. Updated bar graph labels, legend, and theming; created Chapter Module
@@ -59,8 +59,8 @@ options(scipen=90)
 ## start timer to track how long the script takes to execute
 start <-  proc.time() #save the time (to compute elapsed time of script)
 ## Load required packages 
-require("tcltk2")     #for OS independant GUI file and folder selection
-require("colorspace") #ColorSpace color pallete selection
+require("tcltk2")     #for OS independent GUI file and folder selection
+require("colorspace") #ColorSpace color palette selection
 require("ddply")      #Aggregation
 require("plyr")       #Joins
 require("data.table") #TStringExtract
@@ -68,7 +68,7 @@ require("ggplot2")    #GGplot 2 graphics library
 
 #### Functions ####
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
-  # Make a list from the ... arguments and plotlist
+  # Make a list from the ... arguments and plot list
   plots <- c(list(...), plotlist)
   
   numPlots = length(plots)
@@ -157,7 +157,7 @@ pal2 <- function (n, h = c(248, 93), c = 100, l = c(70, 96), power = 1.211111111
                     }
 
 #### Path to Course Analysis Directories ####
-#Creates paths used to locate directory course data used in analyis
+#Creates paths used to locate directory course data used in analysis
 path_output = tclvalue(tkchooseDirectory())
 #Creates a visualization Subdirectory
 subDir = c("visualizations")
