@@ -49,7 +49,8 @@
 #   2018.05.17. Initial Code - Environment Set up, load in data for module 
 #               analysis, created initial set of visualizations for Page Modules
 #   2018.05.18. Updated bar graph labels, legend, and theming; created Chapter Module
-#               visualization set.
+#               visualization set; and save updated datasets; streamline functions and 
+#               pallettes.
 #
 ## ====================================================================================== ##
 #### Environment Setup ####
@@ -66,44 +67,10 @@ require("plyr")       #Joins
 require("data.table") #TStringExtract
 require("ggplot2")    #GGplot 2 graphics library
 
-#### Functions ####
-multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
-  # Make a list from the ... arguments and plot list
-  plots <- c(list(...), plotlist)
-  
-  numPlots = length(plots)
-  
-  # If layout is NULL, then use 'cols' to determine layout
-  if (is.null(layout)) {
-    # Make the  panel
-    # ncol: Number of columns of plots
-    # nrow: Number of rows needed, calculated from # of cols
-    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
-                     ncol = cols, nrow = ceiling(numPlots/cols))
-  }
-  if (numPlots==1) {
-    print(plots[[1]])
-  } else {
-    # Set up the page
-    grid.newpage()
-    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
-    
-    # Make each plot, in the correct location
-    for (i in 1:numPlots) {
-      # Get the i,j matrix positions of the regions that contain this subplot
-      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
-      
-      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
-                                      layout.pos.col = matchidx$col))
-    }
-  }
-}
-
 #### Color Palettes ####
 #Manual Color Pallet selection
 #pal <-  choose_palette()
 
-#Univariate color scale
 #Multi-color categorical color palette for comparing estimated vs real data
 pal1 <- function (n, h = c(360, 45), c. = c(100, 17), l = c(46, 93), 
                   power = c(0, 0.866666666666667), fixup = TRUE, gamma = NULL, 
@@ -130,32 +97,6 @@ pal1 <- function (n, h = c(360, 45), c. = c(100, 17), l = c(46, 93),
                     return(rval)
                   }
 
-#Divergent-color for comparing temporal differences
-#Blue/Grey/Green
-pal2 <- function (n, h = c(248, 93), c = 100, l = c(70, 96), power = 1.21111111111111, 
-                  fixup = TRUE, gamma = NULL, alpha = 1, ...) 
-                    {
-                      if (!is.null(gamma)) 
-                        warning("'gamma' is deprecated and has no effect")
-                      if (n < 1L) 
-                        return(character(0L))
-                      h <- rep(h, length.out = 2L)
-                      c <- c[1L]
-                      l <- rep(l, length.out = 2L)
-                      power <- rep(power, length.out = 2L)
-                      rval <- seq(1, -1, length = n)
-                      rval <- hex(polarLUV(L = l[2L] - diff(l) * abs(rval)^power[2L], 
-                                           C = c * abs(rval)^power[1L], H = ifelse(rval > 0, h[1L], 
-                                                                                   h[2L])), fixup = fixup, ...)
-                      if (!missing(alpha)) {
-                        alpha <- pmax(pmin(alpha, 1), 0)
-                        alpha <- format(as.hexmode(round(alpha * 255 + 0.0001)), 
-                                        width = 2L, upper.case = TRUE)
-                        rval <- paste(rval, alpha, sep = "")
-                      }
-                      return(rval)
-                    }
-
 #### Path to Course Analysis Directories ####
 #Creates paths used to locate directory course data used in analysis
 path_output = tclvalue(tkchooseDirectory())
@@ -173,13 +114,15 @@ for(i in 1:length(subDir)){
 
 #### Load Data ####
 #edX Course Chapter Temporal Estimates (L1)
-chpEst <- read.csv(file=list.files(full.names = TRUE, recursive = F, 
-                                       path = paste0(path_output,"/analysis/modules/"),
-                                       pattern = "TimeEstimates\\-L1.csv"))
+chpFile <- list.files(full.names = TRUE, recursive = F, 
+                      path = paste0(path_output,"/analysis/modules/"),
+                      pattern = "TimeEstimates\\-L1.csv")
+chpEst <- read.csv(file=chpFile)
 #edX Course Page Temporal Estimates (L2)
-pageEst <- read.csv(file=list.files(full.names = TRUE, recursive = F, 
-                                 path = paste0(path_output,"/analysis/modules/"),
-                                 pattern = "TimeEstimates\\-L2.csv"))
+pageFile <- list.files(full.names = TRUE, recursive = F, 
+                       path = paste0(path_output,"/analysis/modules/"),
+                       pattern = "TimeEstimates\\-L2.csv")
+pageEst <- read.csv(file=pageFile)
 #Load Module Use Stastics for a Course
 mods <- read.csv(file=list.files(full.names = TRUE, recursive = F, 
                                  path = paste0(path_output,"/analysis/modules/"),
@@ -221,6 +164,14 @@ pageEst$difTime <- pageEst$total_avgTime - pageEst$estTime
 pageEst$sign <- ifelse(pageEst$difTime<0,"neg","pos")
 pageEst$sign <- factor(pageEst$sign,labels = list("pos"=c("Over Estimate"),"neg"=c("Under Estimate")))
 
+#### Save data processing results ####
+#Update data file names
+chpFile <- strsplit(strsplit(chpFile,split="/")[[1]][10], split="\\.")[[1]][1] 
+pageFile <- strsplit(strsplit(pageFile,split="/")[[1]][10], split="\\.")[[1]][1] 
+#Write CSVs
+write.csv(chpEst, file=paste0(path_output,"/analysis/modules/",chpFile,"-avgStd.csv"),row.names = F)
+write.csv(pageEst,file=paste0(path_output,"/analysis/modules/",pageFile,"-avgStd.csv"),row.names = F)
+
 #### Update labels ####
 #Update chpEst labels
 chpEst$labelTrim <- as.character(trimws(unlist(tstrsplit(as.character(chpEst$label),split="[(]")[1])))
@@ -238,13 +189,10 @@ for(i in 1:nrow(pageEst)){
 }
 
 #### General Visualization Plot Settings ####
+#Theme for ggplot2
 theme_set(theme_light())
-##Color Scales and setting for graphs
-strip <- c("#DCDCDC") #Grey
 #Categorical colors 2
 catColors <- pal1(5)
-#Bivariate
-biColor <- pal2(21)
 
 #Sets Vertical Line Set for Page Modules by Week of course
 vline <- as.data.frame(chpEst[,1:2])
