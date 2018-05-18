@@ -225,11 +225,12 @@ ggplot(pageEst, aes(x=order, y=difTime)) +
   geom_hline(yintercept=0, linetype=1, show.legend = NA)  +
   scale_fill_manual(values=catColors[c(3,1)]) +
   scale_x_continuous(
+    expand=c(0.005, 0.005),
     labels=pageEst$label,
     breaks=seq(1,max(pageEst$order),1)) +
   scale_y_continuous(breaks=seq(-20,round(max(pageEst$difTime),0),20))+
   labs(title="B",
-       y="Difference in Time",
+       y="Difference in Time (Min.)",
        x="Course Page Module Sequence") +
   guides(fill = guide_legend(
             title = "Difference in Estimate", 
@@ -249,7 +250,7 @@ ggplot(pageEst, aes(x=order, y=difTime)) +
         panel.grid.minor.y = element_blank(),
         panel.border = element_blank(),
         panel.grid.major.y = element_line(linetype = 4),
-        legend.position = c(.92, 1),
+        legend.position = c(.95, .99),
         legend.justification = c("right", "top"),
         legend.box.just = "right",
         legend.margin = margin(0, 3, 0, 3))
@@ -267,7 +268,6 @@ ggplot(chpEst) +
   geom_point(aes(chpEst$order,chpEst$total_avgTime), shape=1)
 dev.off()  
 #### Fig X: Avg Student Temporal Module Chapter Use Compared to Estimated Time Use ####
-
 tiff(filename=paste0(path_output,"/analysis/visualizations/figX-L1ModUse-BarGraph-EstTimeStdAvgTime.tif"),
      width = 6, height = 4.5, units = "in", pointsize = 10, res=300,
      compression = c("none"),  type="cairo", bg = "white")
@@ -276,10 +276,11 @@ ggplot(chpEst, aes(x=order, y=difTime)) +
   geom_hline(yintercept=0, linetype=1, show.legend = NA)  +
   scale_fill_manual(values=catColors[c(3,1)]) +
   scale_x_continuous(
+    expand=c(0.01, 0.01),
     labels=chpEst$labelTrim,
     breaks=seq(1,max(chpEst$order),1)) +
   scale_y_continuous(breaks=seq(-60,round(max(chpEst$difTime),0),20))+
-  labs(y="Difference in Time",
+  labs(y="Difference in Time (Min.)",
        x="Course Page Module Sequence") +
   guides(fill = guide_legend(
     title = "Difference in Estimate", 
