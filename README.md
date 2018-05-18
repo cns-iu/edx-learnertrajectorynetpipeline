@@ -1,2 +1,2 @@
-# edX Student and Course Analytics Pipeline
-An data processing and analytics pipeline using edX course database and user logs, written in R.
+# edX Student and Course Analytics and Visualization Pipeline
+An data analytics and visualization pipeline using edX course database and user logs, written in R.
