@@ -19,11 +19,21 @@
 # Authors:      Michael Ginda
 # Affiliation:  Indiana University
 # 
-# Description:  This script creates visualizations based on aggregated statistics of
-#               edX course modules (for the lowest level) use and 
+# Description:  This script creates visualizations to compare the average student use 
+#               time of a course's module to the use times estimated by a course 
+#               instructor. As edX courses do not capture instructor time estimates,
+#               these were pulled from the course chapter and page desciptions.
+#               Average student use time for modules at the lowest level of the
+#               edX course hiearchy are summed based on their parent chapter and 
+#               (verticle) page module identifier. The script combines the estimated 
+#               and summed average student use times, and creates two sets of figures,
+#               one for chapter modules and the other for page modules. 
 #               
-#               
-#
+#               Each set includes:              
+#                  1) a line graph of the estimated time and average student 
+#                     use times; and
+#                  2) a bar graph showing the differences between the estimated 
+#                     and average student use time.
 #                
 # File input stack: 
 #               1) Course metadata file that describe course identifiers,
@@ -37,7 +47,9 @@
 #
 # Changelog:
 #   2018.05.17. Initial Code - Environment Set up, load in data for module 
-#               analysis
+#               analysis, created initial set of visualizations for Page Modules
+#   2018.05.18. Updated bar graph labels, legend, and theming; created Chapter Module
+#               visualization set.
 #
 ## ====================================================================================== ##
 #### Environment Setup ####
@@ -50,7 +62,10 @@ start <-  proc.time() #save the time (to compute elapsed time of script)
 require("tcltk2")     #for OS independant GUI file and folder selection
 require("colorspace") #ColorSpace color pallete selection
 require("ddply")      #Aggregation
+require("data.table") #TStringExtract
 require("plyr")       #Joins
+require("grid")       #Plotting base library
+require("gridSVG")    #Gradient color scales in 
 require("ggplot2")    #GGplot 2 graphics library
 
 #### Functions ####
@@ -194,31 +209,152 @@ names(modsL1)[1] <- names(modsL2)[1] <- "id"
 #### Join chapter and page temporal estimates with aggregated module data
 #Join chpEst to modsL1
 chpEst <- join(chpEst,modsL1,by="id")
-#Join chpEst to modsL1
+#Join pageEst to modsL1
 pageEst <- join(pageEst,modsL2,by="id")
 rm(modsL1,modsL2)
 
-#### Visualization Plotting Settings ####
-#Sets Vertical Line Set for Modules by Week of course
-vline <- as.data.frame(unique(mod_unq$L1))
-names(vline)[1] <- "L1"
-vline$mod <- NA
-for(i in 1:nrow(vline)){
-  vline[i,]$mod <- max(mod_unq[mod_unq$L1==vline[i,1],]$order)
+#### Creating fields calculating temporal difference between estimated and average student use time
+#Temporal Difference Fields
+chpEst$difTime <- chpEst$total_avgTime - chpEst$estTime
+chpEst$sign <- ifelse(chpEst$difTime<0,"neg","pos")
+chpEst$sign <- factor(chpEst$sign,labels = list("pos"=c("Over Estimate"),"neg"=c("Under Estimate")))
+
+pageEst$difTime <- pageEst$total_avgTime - pageEst$estTime
+pageEst$sign <- ifelse(pageEst$difTime<0,"neg","pos")
+pageEst$sign <- factor(pageEst$sign,labels = list("pos"=c("Over Estimate"),"neg"=c("Under Estimate")))
+
+#### Update labels ####
+#Update chpEst labels
+chpEst$labelTrim <- as.character(trimws(unlist(tstrsplit(as.character(chpEst$label),split="[(]")[1])))
+for(i in 1:nrow(chpEst)){
+  if(nchar(chpEst[i,]$labelTrim)>22){
+    chpEst[i,]$labelTrim <- paste0(trimws(substr(chpEst[i,]$labelTrim,1,22)),"...")
+  }
+}
+#Update pageEst labels
+pageEst$label <- trimws(unlist(tstrsplit(as.character(pageEst$label),split="[(]")[1]))
+for(i in 1:nrow(pageEst)){
+  if(nchar(pageEst[i,]$label)>17){
+    pageEst[i,]$label <- paste0(trimws(substr(pageEst[i,]$label,1,17)),"...")
+  }
 }
 
-#### Sets global GGplot2 themes and palletes ####
+#### General Visualization Plot Settings ####
 theme_set(theme_light())
 ##Color Scales and setting for graphs
 strip <- c("#DCDCDC") #Grey
 #Categorical colors 2
-catColors <- pal1(2)
+catColors <- pal1(5)
 #Bivariate
 biColor <- pal2(21)
-#Removes color scale functions
-rm(pal1,pal2)
 
-#### Visualizations ####
+#Sets Vertical Line Set for Page Modules by Week of course
+vline <- as.data.frame(chpEst[,1:2])
+names(vline)[1] <- 'parentID'
+vline$label <- as.factor(unlist(tstrsplit(as.character(chpEst$label),split="[(]")[1]))
+vline$mod <- 0
+for(i in 1:nrow(vline)){
+  vline[i,]$mod <- max(pageEst[pageEst$parentID==vline[i,1],]$order)+.5
+}
 
+#### Comparing Estimate Page Module Time to Avg Student Page Module Time #### 
+#### Fig X: Avg Student Temporal Module Page Use Compared to Estimated Time Use ####
+tiff(filename=paste0(path_output,"/analysis/visualizations/figX-L2ModUse-LineGraph-EstTimeStdAvgTime.tif"),
+     width = 7, height = 4, units = "in", pointsize = 10, res=300,
+     compression = c("none"),  type="cairo", bg = "white")
+ggplot(pageEst) +
+  geom_line(aes(pageEst$order,pageEst$estTime), linetype = 2) +
+  geom_point(aes(pageEst$order,pageEst$estTime), shape=2) +
+  geom_line(aes(pageEst$order,pageEst$total_avgTime),linetype = 1) +
+  geom_point(aes(pageEst$order,pageEst$total_avgTime), shape=1)
+dev.off()  
 
+#### Fig 1 - Inset B: Avg Student Temporal Module Page Use Compared to Estimated Time Use ####
+tiff(filename=paste0(path_output,"/analysis/visualizations/fig1-b-L2ModUse-BarGraph-EstTimeStdAvgTime.tif"),
+     width = 10, height = 4, units = "in", pointsize = 10, res=300,
+     compression = c("none"),  type="cairo", bg = "white")
+ggplot(pageEst, aes(x=order, y=difTime)) +
+  geom_vline(xintercept=vline[1:nrow(vline),4],linetype=5,alpha=.30) +
+  geom_bar(stat="identity",aes(fill=sign))+
+  geom_hline(yintercept=0, linetype=1, show.legend = NA)  +
+  scale_fill_manual(values=catColors[c(3,1)]) +
+  scale_x_continuous(
+    labels=pageEst$label,
+    breaks=seq(1,max(pageEst$order),1)) +
+  scale_y_continuous(breaks=seq(-20,round(max(pageEst$difTime),0),20))+
+  labs(title="B",
+       y="Difference in Time",
+       x="Course Page Module Sequence") +
+  guides(fill = guide_legend(
+            title = "Difference in Estimate", 
+            title.position = "top",
+            title.theme = element_text(
+              size = 8,
+              angle = 0),
+            label.theme = element_text(
+              size = 6,
+              angle = 0),
+            reverse = TRUE
+            )) +
+  theme(axis.text.x = element_text(hjust=1,vjust=.25,size=10, angle=90),
+        axis.ticks = element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        panel.border = element_blank(),
+        panel.grid.major.y = element_line(linetype = 4),
+        legend.position = c(.92, 1),
+        legend.justification = c("right", "top"),
+        legend.box.just = "right",
+        legend.margin = margin(0, 3, 0, 3))
+dev.off() 
+           
+#### Comparing Estimae Chapter Module Time to Avg Student Page Module Time #### 
+#### Fig X: Avg Student Temporal Module Chapter Use Compared to Estimated Time Use ####
+tiff(filename=paste0(path_output,"/analysis/visualizations/figX-L1ModUse-LineGraph-EstTimeStdAvgTime.tif"),
+     width = 10, height = 4, units = "in", pointsize = 10, res=300,
+     compression = c("none"),  type="cairo", bg = "white")
+ggplot(chpEst) +
+  geom_line(aes(chpEst$order,chpEst$estTime), linetype = 2) +
+  geom_point(aes(chpEst$order,chpEst$estTime), shape=2) +
+  geom_line(aes(chpEst$order,chpEst$total_avgTime), linetype = 1) +
+  geom_point(aes(chpEst$order,chpEst$total_avgTime), shape=1)
+dev.off()  
+#### Fig X: Avg Student Temporal Module Chapter Use Compared to Estimated Time Use ####
 
+tiff(filename=paste0(path_output,"/analysis/visualizations/figX-L1ModUse-BarGraph-EstTimeStdAvgTime.tif"),
+     width = 6, height = 4.5, units = "in", pointsize = 10, res=300,
+     compression = c("none"),  type="cairo", bg = "white")
+ggplot(chpEst, aes(x=order, y=difTime)) +
+  geom_bar(stat="identity",aes(fill=sign))+
+  geom_hline(yintercept=0, linetype=1, show.legend = NA)  +
+  scale_fill_manual(values=catColors[c(3,1)]) +
+  scale_x_continuous(
+    labels=chpEst$labelTrim,
+    breaks=seq(1,max(chpEst$order),1)) +
+  scale_y_continuous(breaks=seq(-60,round(max(chpEst$difTime),0),20))+
+  labs(y="Difference in Time",
+       x="Course Page Module Sequence") +
+  guides(fill = guide_legend(
+    title = "Difference in Estimate", 
+    title.position = "top",
+    title.theme = element_text(
+      size = 8,
+      angle = 0),
+    label.theme = element_text(
+      size = 6,
+      angle = 0),
+    reverse = TRUE
+  )) +
+  theme(axis.text.x = element_text(hjust=1,vjust=.25,size=10, angle=90),
+        axis.ticks = element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        panel.border = element_blank(),
+        panel.grid.major.y = element_line(linetype = 4),
+        legend.position = c(.95, 1),
+        legend.justification = c("right", "top"),
+        legend.box.just = "right",
+        legend.margin = margin(0, 3, 0, 3))
+dev.off() 
