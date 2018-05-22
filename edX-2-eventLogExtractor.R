@@ -1,8 +1,9 @@
-## ====================================================================================================== ##
-# Title:        Extracts edX events logs for idenfitied multiple, individual student users 
+## ====================================================================================== ##
+# Title:        Extracts edX events logs for identified multiple, individual 
+#               student users 
 # Project:      edX learner trajectory analysis
 # 
-#     Copyright 2017 Michael Ginda & Krishna Madhavan
+#     Copyright 2017-2018 Michael Ginda & Krishna Madhavan
 #     Licensed under the Apache License, Version 2.0 (the "License");
 #     you may not use this file except in compliance with the License.
 #     You may obtain a copy of the License at
@@ -18,44 +19,55 @@
 # Authors:      Michael Ginda^, Krishna Madhavan*, & Taylor Williams*
 # Affiliation:  ^Indiana University, *Purdue University
 # 
-# Description:  A daily event log for edX course participants (students) are 
-#               created by this script using an edX course's daily combined event logs and a 
-#               list of users enrolled in the course, that are provided in a edX Data Package.
+# Description:  A daily event log for edX course participants (students) are created 
+#               by this script using an edX course's daily combined event logs 
+#               (provided in a edX Data Package) and a list of users enrolled in 
+#               the course extracted from the edX course database.
 #
-#               The script takes a list of course participants and identifies students within a 
-#               course and saves this list of users.  Using the student's edX identifier, the script
-#               loops through the daily event logs to identify all logged activity (e.g server, 
-#               browser, and mobile device event) made by the user.
-#               (*NOTE: the edX provided logs are in NDJSON format, not the typical JSON format.) 
-#
-#               The resulting individual student logs are participants logs are saved as a CSV file,
-#               and processed by the script:
-#                   * edX-3-eventLogFormatter.R
+#               The script takes a list of course participants and identifies students 
+#               within a course and saves this list of users.  Using the student's 
+#               edX identifier, the script loops through the daily event logs to 
+#               identify all logged activity (e.g server, browser, and mobile device 
+#               event) made by the user. (*NOTE: the edX provided logs are in NDJSON 
+#               format, not the typical JSON format.) 
 #  
 # File input stack: 
-#            1) A folder containing one or more "*.log.gz" event log file(s)    
-#            2) A data frame edX course authenticated list of students:
-#               {org}-{course Identifier}-{term}-auth_user-students.csv
-# 
-# Package dependencies: jsonlite, ndjson, plry, tcltk
+#            1) An edX course "events" directory for an edX course containing one or 
+#               more "*.log.gz" event log file(s) for an edX course;
+#            2) A data table of student userIDs from an edX course:
+#               - {org}-{course Identifier}-{term}-auth_user-students.csv;
+#               - extracted by script, "edX-1-studentUserList.R"
 #
-# Changelog:
-#   2017.08.11. Initial Code
+# Output files:                        
+#            1) An set of extracted data tables of event action logs for each student 
+#               in an edX course:
+#               - {userID}.csv;
+#               - Used in scripts:
+#                 * "edX-3-eventLogFormatter.R"
+#
+# Package dependencies: jsonlite, ndjson, plyr, tcltk
+#
+# Change log:
+#   2017.08.11. Initial Code 
 #   2017.08.13. Added user output and user save as for output file
 #   2017.08.15. Changed to extracting single user's activity
-#   2017.08.28. Fixed require statement bug (moved required packages in individual require statements)
-#   2017.08.29. Update to comments, file saving updates, added save to RData file (added to JSON and CSV) 
+#   2017.08.28. Fixed require statement bug (moved required packages in individual
+#               require statements)
+#   2017.08.29. Update to comments, file saving updates, added save to RData file 
+#               (added to JSON and CSV)
 #   2017.09.29. Updating file for sharing
-#   2017.10.19. Updated file create function to produce event trajectory logs from a list of student IDs
+#   2017.10.19. Updated file create function to produce event trajectory logs from 
+#               a list of student IDs
 #   2017.10.31. Updated function to maintain only relevant fields
 #   2018.02.05. Cleaned-Up script to list all fields perserved in final logs CSV files
-#   2018.04.04. Description, title, and file input stack corrections; 
-#               updated function parameter definitions; creates lists of users for extraction for course
-#   2018.04.05. Forked the user list creation to a new script, simplifying package dependencies, file stack
-#               and data input sources. Path_output now are used for loading results of prior scripts.
-#
-## ====================================================================================================== ##
-
+#   2018.04.04. Description, title, and file input stack corrections; updated  
+#               function parameter definitions; creates lists of users for
+#               extraction for course.
+#   2018.04.05. Forked the user list creation to a new script, simplifying package 
+#               dependencies, file stack and data input sources. Path_output now are 
+#               used for loading results of prior scripts.
+#   2018.05.21  Script format alignment.
+## ====================================================================================== ##
 ######### Setup ########## 
 ## _Clean the environment ####
 rm(list=ls()) 
@@ -68,7 +80,7 @@ require("jsonlite")   #for working with JSON files (esp. read and write)
 require("ndjson")     #needed to read the non-standard JSON log files (NDJSON format)
 require("tcltk2")     #for OS independent GUI file and folder selection
 require("plyr")       #for joining user tables together
-require("stringr")    #for string manipulation
+
 ####Functions 
 #logExtractor 
 # @param curUserIDS is the file location of course structure data

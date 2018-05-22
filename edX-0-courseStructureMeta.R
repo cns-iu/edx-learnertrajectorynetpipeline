@@ -1,8 +1,9 @@
-## ====================================================================================================== ##
-# Title:        Extracting edX course metadata, course structure, and content module sequencing
+## ====================================================================================== ##
+# Title:        Extracting edX course metadata, course structure, and content 
+#               module sequencing
 # Project:      edX learner trajectory analysis
 # 
-#     Copyright 2017 Michael Ginda
+#     Copyright 2017-2018 Michael Ginda
 #     Licensed under the Apache License, Version 2.0 (the "License");
 #     you may not use this file except in compliance with the License.
 #     You may obtain a copy of the License at
@@ -18,41 +19,49 @@
 # Authors:      Michael Ginda
 # Affiliation:  Indiana University
 # 
-# Description:  This script extracts metadata that describes EdX course administration, and builds 
-#               data frame of course modules (structural and content) based on the module metadata,
-#               which is used in subsequent processing of student logs to look up parent-child 
-#               relationships between modules; to create a node list for the learner trajectory networks;
-#               and to aggregate analysis of module access patterns by students in a course.
+# Description:  This script extracts metadata that describes EdX course administration, 
+#               and builds data frame of course modules (structural and content) based 
+#               on the module metadata, which is used in subsequent processing of student 
+#               logs to look up parent-child relationships between modules; to create a 
+#               node list for the learner trajectory networks; and to aggregate analysis 
+#               of module access patterns by students in a course.
 #
-#               The script first reads in an edX course's course structure hierarchy, which comes as 
-#               JSON formatted file. The file is processed to extract the course level administrative data. 
-#               Next, a data frame is created that list all modules found in the course hiearachy. The 
-#               script identifies and orders course modules based on identified organizational structure
-#               and sequence of content module.
-#
-#               The output file is used in the edX learner trajectory analysis data processing script(s): 
-#                   * edX-3-studentLogFormatter.R
-#                   *
+#               The script first reads in an edX course's course structure hierarchy, 
+#               which comes as JSON formatted file. The file is processed to extract the 
+#               course level administrative data. Next, a data frame is created that list 
+#               all modules found in the course hiearachy. The script identifies and 
+#               orders course modules based on identified organizational structure and 
+#               sequence of content module.
 #  
 # File input stack: 
-#            1) An containing one "*.json" course structure file:
-#               {org}-{course Identifier}-{term}-course_structure-{server}-analytics.json
-#               (source: edX research documentation)
+#            1) An edX course "state" directory containing one JSON course structure file:
+#               - {org}-{course Identifier}-{term}-course_structure-{server}-analytics.json
+#                 (source: edX research documentation)
+#
+# Output files:                        
+#            1) A processed data table of modules for an edX course:
+#               - {org}+{course}+{term}-module-lookup.csv;
+#               - Used in scripts:
+#                 * "edX-3-studentLogFormatter.R",
+#                 * "edX-4-studentTrajectoryNet.R"
+#                 * "edX-6-studentFeatureExtraction.R"
 # 
 # Package dependencies: jsonlite, reshape2, plyr, and tcltk
 #
-# Changelog:
+# Change log:
 #   2017.11.13. Initial Code
 #   2018.02.06. Course structure extracted and formatting 
 #   2018.02.07. Working version of code created
 #   2018.02.08. Fixed sorting for vertical modules, removed numeric sort columns, 
-#               added courseID field to align with the student event log formatter script.
-#   2018.04.04  Clean-up of project description, title, alignment across edX course data processing
-#               pipeline.
-#   2018.04.05  Update description to indicate where outputs are used later in pipeline; added directory
-#               structure creation for data processing and analysis pipeline.
-#
-## ====================================================================================================== ##
+#               added courseID field to align with the student event log formatter 
+#               script.
+#   2018.04.04  Clean-up of project description, title, alignment across edX 
+#               course data processing pipeline.
+#   2018.04.05  Update description to indicate where outputs are used later in pipeline; 
+#               added directory structure creation for data processing and 
+#               banalysis pipeline.
+#   2018.05.21  Script format alignment.
+## ====================================================================================== ##
 
 ######### Setup ########## 
 ## _Clean the environment ####

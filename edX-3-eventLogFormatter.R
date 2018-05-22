@@ -1,8 +1,8 @@
-## ====================================================================================================== ##
+## ====================================================================================== ##
 # Title:        Processing and formatting student's edX events logs for analysis          
 # Project:      edX learner trajectory analysis
 # 
-#     Copyright 2018 Michael Ginda
+#     Copyright 2017-2018 Michael Ginda
 #     Licensed under the Apache License, Version 2.0 (the "License");
 #     you may not use this file except in compliance with the License.
 #     You may obtain a copy of the License at
@@ -18,40 +18,76 @@
 # Authors:      Michael Ginda
 # Affiliation:  Indiana University
 # 
-# Description:  This script processes the raw student event logs event extracted from an edX
-#               course's daily event logs, provided in an edX Data Package. The script cleans
-#               and reformat student event logs for learner trajectory analysis and modeling.
+# Description:  This script processes the raw student event logs event extracted 
+#               from an edX course's daily event logs, provided in an edX Data Package.
+#               The script cleans and reformat student event logs for learner 
+#               trajectory analysis and modeling.
 #
-#               The scripts uses a custom function to identify the different event log use cases 
-#               (e.g. students with no events; students who do not access content modules;
-#               and active students); calculates time between events, identifies user sessions
-#               based on threshold for temporal gaps; the script then creates a white list of 
-#               event records to keep, records are removed for two type reasons:
-#                      1) interaction is with non-course content modules or enrollment activity;
+#               The scripts uses a custom function to identify the different event log 
+#               use cases (e.g. students with no events; students who do not access 
+#               content modules; and active students); calculates time between events,
+#               identifies user sessions based on threshold for temporal gaps; the 
+#               script then creates a white list of event records to keep, records are 
+#               removed for two type reasons:
+#                      1) interaction is with non-course content modules or 
+#                         enrollment activity;
 #                      2) event provided redundant information (e.g. problem module 
 #                         browser events and server responses) and partial data;
 #                         OR did not show meaningful interactions (e.g load_video events);
 #                         OR were infrequently used by students in courses;
-#               see in line comments for purpose of event removal. See logFormatter function 
-#               parameters for details for selecting events that are appropriate for removal.
-# 
-#               After non-relevant event records are removed,
+#               see in line comments for purpose of event removal. See logFormatter 
+#               function parameters for details for selecting events that are appropriate
+#               for removal.
+#
+#               After non-relevant event records are removed, navigation event logs 
+#               that reference the second level of the course hierarchy (vertical pages)
+#               are updated to identify fourth level child module being referenced in the
+#               navigation event. The change places all logged events at the same level 
+#               of the course hierarchy.
+#
+#               Events without a module order are removed, as they are outside of course
+#               structure. Events without a given type are set to "mod_access". Events
+#               with session times greater than or equal to 60 minutes are updated to 
+#               to the mean time for events actions of the same type made by a learner.
+#               Student event logs are saved as "{userID}.csv" files in the project
+#               directory "./studentevents_processed/".
+#
+#               Finally, the script exports lists of students that indicate their activity 
+#               status: inactive, active but has unusable activity, or is active and usable.
+#               These files are saved in the project directory "./userlists/"
 #
 # File input stack: 
-#               1) Course structure and content module list, extracted from the course
-#                  edX course data package state directory, with the script "edX-courseStructureMeta.R"
-#                  Files name format: 
-#                     {org}+{course}+{term}-module-lookup.csv
-#               2) Set of known student users from an edX course, extracted from the daily 
-#                  course logs, with the script "edX-1-studentUserList.R"
-#                  File name format: 
-#                     {org}-{course}-{term}-auth_user-students.csv
-#               3) Directory (studentevents) containing one or more extracted student event log file(s)
-#                  with the script "edX-2-eventLogExtractor.R" based on course
-#                  edX event logs. File name format: 
-#                     {user-id}.csv
-# 
-# Package dependencies: zoo, magrittr, stringr, plyr, tcltk
+#            1) A processed edX Course structure and content module list:
+#               - {org}+{course}+{term}-module-lookup.csv;
+#               - extracted by script, "edX-0-courseStructureMeta.R";
+#            2) A list of student userIDs from an edX course:
+#               - {org}-{course}-{term}-auth_user-students.csv;
+#               - extracted by script, "edX-1-studentUserList.R";
+#            3) A "studentevents" directory containing one or more student
+#               CSV event log file(s):
+#               - {userID}.csv;
+#               - extracted by script, "edX-2-eventLogExtractor.R"
+#
+# Output files:                        
+#            1) A set of processed data tables of event action logs for each student:
+#               - {userID}.csv;
+#               - Used in scripts:
+#                 * "edX-4-studentTrajectoryNet.R"
+#                 *	"edX-6-studentFeatureExtraction.R"			
+#            2) A list capturing student userIDs who are active in the course,
+#				        and have usable actions:
+#               - {org}-{course}-{term}-auth_user-students-active.csv;
+#               - Used in scripts:
+#                 * "edX-4-studentTrajectoryNet.R";
+#                 *	"edX-6-studentFeatureExtraction.R;
+#            3) A list capturing student userIDs who are active in the course,
+#				        but have no usable actions:
+#               - {org}-{course}-{term}-auth_user-students-unusableActivity.csv;
+#            4) A list capturing student userIDs who are inactive in the course,
+#				        and have no actions in their event logs:
+#               - {org}-{course}-{term}-auth_user-students-inactive.csv; 
+#
+# Package dependencies: magrittr, stringr, plyr, tcltk
 #
 # Change log:
 #   2017.10.23. Initial Code
@@ -89,18 +125,20 @@
 #               the module was not found in the final course module structure. 
 #   2018.02.02  Cleaned-up script for sharing and added function to manually select user
 #               ID list.
-#   2018.02.08  Aligned logFormatter function with outputs of the "edX-courseStructureMeta.R"
-#               script; added parameter to allow user to set manual time length for tsess field.
-#   2018.04.05  Update paths used to collect data, removed the getCSVdata function, updated to 
-#               read and save files in correct output directories; updated description text.
+#   2018.02.08  Aligned logFormatter function with outputs of the 
+#               "edX-courseStructureMeta.R" script; added parameter to allow user
+#               to set manual time length for tsess field.
+#   2018.04.05  Update paths used to collect data, removed the getCSVdata function,
+#               updated to read and save files in correct output directories; 
+#               updated description text.
 #   2018.04.09  Update filenames for saved lists of student 
 #               activity use cases (e.g from noEvents to inactive, from unusableEvents to 
 #               unusableActivity, events and active).
-#   2018.04.30  Update time calculations for session events with times of 60 minutes or greater 
-#               for students with usable activity
+#   2018.04.30  Update time calculations for session events with times of 60 minutes 
+#               or greater.
+#   2018.05.21  Script format alignment.
 #
-## ====================================================================================================== ##
-
+## ====================================================================================== ##
 ######### Setup ########## 
 ## _Clean the environment ####
 rm(list=ls()) 
@@ -108,7 +146,6 @@ rm(list=ls())
 
 ## _Load required packages #####
 require("magrittr")   #Pipe tool
-require("zoo")        #dataPrep
 require("stringr")    #string parsing
 require("plyr")       #DPLYR
 require("tcltk2")     #for OS independent GUI file and folder selection
@@ -439,11 +476,9 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,timeB=60,subZ,s
             look[i,]$level <- NA
           }
         }
-        
         #Copies over replacement children module IDs for the original sequential block modules ID
         data[grepl("sequential",data$module.key)==T, ]$module.key  <- look$replace
         rm(look)
-        
         #Resets module.key as a factor and resets it to course structure levels
         #needed for matching edge and node statistics witht the node list
         data$module.key <- as.factor(data$module.key)
@@ -452,7 +487,6 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,timeB=60,subZ,s
         #Extracts the module type and module unique identifiers from the verbose moduleID
         data$mod_hex_id <- do.call(rbind,strsplit(as.character(data$module.key ),'\\@'))[,3]
         data$module_type <- do.call(rbind,strsplit(as.character(data$module.key ),'\\@'))[,2]    
-        
         #Adds module order in course sequence logs and sequence page 
         data <- join(data,courseStr[,c(2,7,13)],by="mod_hex_id")
         
@@ -472,163 +506,72 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,timeB=60,subZ,s
           data[grepl("course-v1",as.character(data$event_type))==T, ]$event_type <- c("mod_access")
         }
         
+        #Update time estimate for events where gap is greater than or less than 60 minutes
+        if(timeBEst==TRUE){
+          if(nrow(data[data$period==timeB,])>0){
+            if(nrow(data[data$period==timeB & data$event_type==c('page_close'),])>0){
+              median(data[data$period<timeB & data$event_type==c('page_close'),]$period) -> data[data$period==timeB & data$event_type==c('page_close'),]$period
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('mod_access'),])>0){
+              median(data[data$period<timeB & data$event_type==c('mod_access'),]$period) -> data[data$period==timeB & data$event_type==c('mod_access'),]$period
+            }
+              #Video event outliar time estimates
+              if(nrow(data[data$period==timeB & data$event_type==c('pause_video'),])>0){
+                median(data[data$period<timeB & data$event_type==c('pause_video'),]$period) -> data[data$period==timeB & data$event_type==c('pause_video'),]$period
+              }
+            if(nrow(data[data$period==timeB & data$event_type==c('play_video'),])>0){
+              median(data[data$period<timeB & data$event_type==c('play_video'),]$period) -> data[data$period==timeB & data$event_type==c('play_video'),]$period
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('seek_video'),])>0){
+              median(data[data$period<timeB & data$event_type==c('seek_video'),]$period) -> data[data$period==timeB & data$event_type==c('seek_video'),]$period
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('stop_video'),])>0){
+              median(data[data$period<timeB & data$event_type==c('stop_video'),]$period) -> data[data$period==timeB & data$event_type==c('stop_video'),]$period
+            }
+            #Problem events outliar time estimates
+            if(nrow(data[data$period==timeB & data$event_type==c('problem_check'),])>0){
+              median(data[data$period<timeB & data$event_type==c('problem_check'),]$period) -> data[data$period==timeB & data$event_type==c('problem_check'),]$period
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('problem_show'),])>0){
+              median(data[data$period<timeB & data$event_type==c('problem_show'),]$period) -> data[data$period==timeB & data$event_type==c('problem_show'),]$period
+            }
+            #Open Assessment event outliar time estimages
+            if(nrow(data[data$period==timeB & data$event_type==c('openassessmentblock.create_submission'),])>0){
+              median(data[data$period<timeB & data$event_type==c('openassessmentblock.create_submission'),]$period) -> data[data$period==timeB & data$event_type==c('openassessmentblock.create_submission'),]$period
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('openassessmentblock.get_peer_submission'),])>0){
+              median(data[data$period<timeB & data$event_type==c('openassessmentblock.get_peer_submission'),]$period) -> data[data$period==timeB & data$event_type==c('openassessmentblock.get_peer_submission'),]$period
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('openassessmentblock.save_submission'),])>0){
+              median(data[data$period<timeB & data$event_type==c('openassessmentblock.save_submission'),]$period) -> data[data$period==timeB & data$event_type==c('openassessmentblock.save_submission'),]$period
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('openassessmentblock.peer_assess'),])>0){
+              median(data[data$period<timeB & data$event_type==c('openassessmentblock.peer_assess'),]$period) -> data[data$period==timeB & data$event_type==c('openassessmentblock.peer_assess'),]$period
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('openassessmentblock.self_assess'),])>0){
+              median(data[data$period<timeB & data$event_type==c('openassessmentblock.self_assess'),]$period) -> data[data$period==timeB & data$event_type==c('openassessmentblock.self_assess'),]$period
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('openassessmentblock.submit_feedback_on_assessments'),])>0){
+              median(data[data$period<timeB & data$event_type==c('openassessmentblock.submit_feedback_on_assessments'),]$period) -> data[data$period==timeB & data$event_type==c('openassessmentblock.submit_feedback_on_assessments'),]$period
+            }
+            #Navigation Events
+            if(nrow(data[data$period==timeB & data$event_type==c('seq_next'),])>0){
+              median(data[data$period<timeB & data$event_type==c('seq_next'),]$period) -> data[data$period==timeB & data$event_type==c('seq_next'),]$period
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('seq_goto'),])>0){
+              median(data[data$period<timeB & data$event_type==c('seq_goto'),]$period) -> data[data$period==timeB & data$event_type==c('seq_goto'),]$period
+            }
+            if(nrow(data[data$period==timeB & data$event_type==c('seq_prev'),])>0){
+              median(data[data$period<timeB & data$event_type==c('seq_prev'),]$period) -> data[data$period==timeB & data$event_type==c('seq_prev'),]$period
+            }
+          }
+        }
+        
         #Maintain only fields that are needed for analysis
         data <- data[,c(3,19,21,22,20,6,7,16,9,17,12:15)]
         names(data) <- c("user_id","mod_hex_id","order","mod_parent_id","module_type","event_type",
                          "time","period","session","tsess","event.attempts","event.grade",
                          "event.max_grade","event.success")
-        
-        #Update time estimate for events where gap is greater than or less than 60 minutes
-        if(timeBEst==TRUE){
-          if(nrow(data[data$period==timeB,])>0){
-            
-            # if(nrow(data[data$period==timeB & data$event_type==c('page_close'),])>0){
-            #   med <- median(data[data$period<timeB & data$event_type==c('page_close'),]$period) 
-            #   if(is.na(med)==F) {
-            #     med -> data[data$period==timeB & data$event_type==c('page_close'),]$period}
-            #   else {
-            #     median(data[data$period<timeB & data$module_type==c('html+block'),]$period) -> data[data$period==timeB & data$event_type==c('page_close'),]$period 
-            #   }
-            # }
-            #Generic Module Access outlier events time estimation
-            if(nrow(data[data$period==timeB & data$event_type==c('mod_access'),])>0){
-                 med<- median(data[data$period<timeB & data$event_type==c('mod_access'),]$period) 
-               if(is.na(med)==F){
-                 med -> data[data$period==timeB & data$event_type==c('mod_access'),]$period
-               } else {
-                 median(data[data$period<timeB & data$module_type==c('html+block'),]$period) -> data[data$period==timeB & data$event_type==c('mod_access'),]$period
-               }
-            }
-            
-            #Video event outlier time estimates
-            if(nrow(data[data$period==timeB & data$event_type==c('pause_video'),])>0){
-              med <- median(data[data$period<timeB & data$event_type==c('pause_video'),]$period) 
-              if(is.na(med)==F) {
-                med -> data[data$period==timeB & data$event_type==c('pause_video'),]$period
-              } else {
-                median(data[data$period<timeB & data$module_type==c('video+block'),]$period) -> data[data$period==timeB & data$event_type==c('pause_video'),]$period
-              }
-            }
-            if(nrow(data[data$period==timeB & data$event_type==c('play_video'),])>0){
-              med <- median(data[data$period<timeB & data$event_type==c('play_video'),]$period) 
-              if(is.na(med)==F) {
-                med -> data[data$period==timeB & data$event_type==c('play_video'),]$period
-              } else {
-                median(data[data$period<timeB & data$module_type==c('video+block'),]$period) -> data[data$period==timeB & data$event_type==c('play_video'),]$period
-              }
-            }
-            if(nrow(data[data$period==timeB & data$event_type==c('seek_video'),])>0){
-              med <- median(data[data$period<timeB & data$event_type==c('seek_video'),]$period) 
-              if(is.na(med)==F) {
-                med -> data[data$period==timeB & data$event_type==c('seek_video'),]$period
-              } else {
-                median(data[data$period<timeB & data$module_type==c('video+block'),]$period) -> data[data$period==timeB & data$event_type==c('seek_video'),]$period
-              }
-            }
-            if(nrow(data[data$period==timeB & data$event_type==c('stop_video'),])>0){
-              med <- median(data[data$period<timeB & data$event_type==c('stop_video'),]$period) 
-              if(is.na(med)==F) {
-                med -> data[data$period==timeB & data$event_type==c('stop_video'),]$period
-              } else {
-                median(data[data$period<timeB & data$module_type==c('video+block'),]$period) -> data[data$period==timeB & data$event_type==c('stop_video'),]$period
-              }
-            }
-            
-            #Problem events outlier time estimates
-            if(nrow(data[data$period==timeB & data$event_type==c('problem_check'),])>0){
-              med <- median(data[data$period<timeB & data$event_type==c('problem_check'),]$period) 
-              if(is.na(med)==F) {
-                med -> data[data$period==timeB & data$event_type==c('problem_check'),]$period
-              } else {
-                median(data[data$period<timeB & data$module_type==c('problem+block'),]$period) -> data[data$period==timeB & data$event_type==c('problem_check'),]$period
-              }
-            }
-            if(nrow(data[data$period==timeB & data$event_type==c('problem_show'),])>0){
-              med <- median(data[data$period<timeB & data$event_type==c('problem_show'),]$period) 
-              if(is.na(med)==F) {
-                med -> data[data$period==timeB & data$event_type==c('problem_show'),]$period
-              } else {
-                median(data[data$period<timeB & data$module_type==c('problem+block'),]$period) -> data[data$period==timeB & data$event_type==c('problem_show'),]$period
-              }
-            }
-            
-            #Open Assessment event outlier time estimages
-            if(nrow(data[data$period==timeB & data$event_type==c('openassessmentblock.create_submission'),])>0){
-              med <- median(data[data$period<timeB & data$event_type==c('openassessmentblock.create_submission'),]$period) 
-              if(is.na(med)==F) {
-                med -> data[data$period==timeB & data$event_type==c('openassessmentblock.create_submission'),]$period
-              } else {
-                median(data[data$period<timeB & data$module_type==c('openassessment+block'),]$period) -> data[data$period==timeB & data$event_type==c('openassessmentblock.create_submission'),]$period
-              }
-            }
-            if(nrow(data[data$period==timeB & data$event_type==c('openassessmentblock.get_peer_submission'),])>0){
-              med <- median(data[data$period<timeB & data$event_type==c('openassessmentblock.get_peer_submission'),]$period) 
-              if(is.na(med)==F) {
-                med -> data[data$period==timeB & data$event_type==c('openassessmentblock.get_peer_submission'),]$period
-              } else {
-                median(data[data$period<timeB & data$module_type==c('openassessment+block'),]$period) -> data[data$period==timeB & data$event_type==c('openassessmentblock.get_peer_submission'),]$period
-              }
-            }
-            if(nrow(data[data$period==timeB & data$event_type==c('openassessmentblock.save_submission'),])>0){
-              med <- median(data[data$period<timeB & data$event_type==c('openassessmentblock.save_submission'),]$period) 
-              if(is.na(med)==F) {
-                med -> data[data$period==timeB & data$event_type==c('openassessmentblock.save_submission'),]$period
-              } else {
-                median(data[data$period<timeB & data$module_type==c('openassessment+block'),]$period) -> data[data$period==timeB & data$event_type==c('openassessmentblock.save_submission'),]$period
-              }
-            }
-            if(nrow(data[data$period==timeB & data$event_type==c('openassessmentblock.peer_assess'),])>0){
-              med <- median(data[data$period<timeB & data$event_type==c('openassessmentblock.peer_assess'),]$period) 
-              if(is.na(med)==F) {
-                med -> data[data$period==timeB & data$event_type==c('openassessmentblock.peer_assess'),]$period
-              } else {
-                median(data[data$period<timeB & data$module_type==c('openassessment+block'),]$period) -> data[data$period==timeB & data$event_type==c('openassessmentblock.peer_assess'),]$period
-              }
-            }
-            if(nrow(data[data$period==timeB & data$event_type==c('openassessmentblock.self_assess'),])>0){
-              med <- median(data[data$period<timeB & data$event_type==c('openassessmentblock.self_assess'),]$period) 
-              if(is.na(med)==F) {
-                med -> data[data$period==timeB & data$event_type==c('openassessmentblock.self_assess'),]$period
-              } else {
-                median(data[data$period<timeB & data$module_type==c('openassessment+block'),]$period) -> data[data$period==timeB & data$event_type==c('openassessmentblock.self_assess'),]$period
-              }
-            }
-            if(nrow(data[data$period==timeB & data$event_type==c('openassessmentblock.submit_feedback_on_assessments'),])>0){
-              med <- median(data[data$period<timeB & data$event_type==c('openassessmentblock.submit_feedback_on_assessments'),]$period) 
-              if(is.na(med)==F) {
-                med -> data[data$period==timeB & data$event_type==c('openassessmentblock.submit_feedback_on_assessments'),]$period
-              } else {
-                median(data[data$period<timeB & data$module_type==c('openassessment+block'),]$period) -> data[data$period==timeB & data$event_type==c('openassessmentblock.submit_feedback_on_assessments'),]$period
-              }
-            }
-            
-            #Navigation Events
-            if(nrow(data[data$period==timeB & data$event_type==c('seq_next'),])>0){
-              med <- median(data[data$period<timeB & data$event_type==c('seq_next'),]$period) 
-              if(is.na(med)==F) {
-                med -> data[data$period==timeB & data$event_type==c('seq_next'),]$period
-              } else {
-                median(data[data$period<timeB & data$module_type==c('html+block'),]$period) -> data[data$period==timeB & data$event_type==c('seq_next'),]$period
-              }
-            }
-            if(nrow(data[data$period==timeB & data$event_type==c('seq_goto'),])>0){
-              med <- median(data[data$period<timeB & data$event_type==c('seq_goto'),]$period) 
-              if(is.na(med)==F) {
-                med -> data[data$period==timeB & data$event_type==c('seq_goto'),]$period
-              } else {
-                median(data[data$period<timeB & data$module_type==c('html+block'),]$period) -> data[data$period==timeB & data$event_type==c('seq_goto'),]$period
-              }
-            }
-            if(nrow(data[data$period==timeB & data$event_type==c('seq_prev'),])>0){
-              med <- median(data[data$period<timeB & data$event_type==c('seq_prev'),]$period) 
-              if(is.na(med)==F) {
-                med -> data[data$period==timeB & data$event_type==c('seq_prev'),]$period
-              } else {
-                median(data[data$period<timeB & data$module_type==c('html+block'),]$period) -> data[data$period==timeB & data$event_type==c('seq_prev'),]$period
-              }
-            }
-          }
-        }
         
         #Writes processed logfile user ID for file saving 
         write.csv(x = data, file = paste0(path,"/studentevents_processed/",uid,".csv"),
