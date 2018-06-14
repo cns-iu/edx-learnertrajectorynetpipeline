@@ -34,33 +34,33 @@
 #               sequence of content module.
 #  
 # File input stack: 
-#            1) An edX course "state" directory containing one JSON course structure file:
+#            1) An containing one "*.json" course structure file:
 #               - {org}-{course Identifier}-{term}-course_structure-{server}-analytics.json
 #                 (source: edX research documentation)
 #
-# Output files:                        
-#            1) A processed data table of modules for an edX course:
-#               - {org}+{course}+{term}-module-lookup.csv;
-#               - Used in scripts:
-#                 * "edX-3-studentLogFormatter.R",
-#                 * "edX-4-studentTrajectoryNet.R"
-#                 * "edX-6-studentFeatureExtraction.R"
+# Output files:    
+#               The output file is used in the edX learner trajectory analysis data 
+#               processing script(s): 
+#                   * edX-3-studentLogFormatter.R
+#                   *
 # 
 # Package dependencies: jsonlite, reshape2, plyr, and tcltk
 #
-# Change log:
+# Changelog:
 #   2017.11.13. Initial Code
 #   2018.02.06. Course structure extracted and formatting 
 #   2018.02.07. Working version of code created
 #   2018.02.08. Fixed sorting for vertical modules, removed numeric sort columns, 
-#               added courseID field to align with the student event log formatter 
-#               script.
-#   2018.04.04  Clean-up of project description, title, alignment across edX 
-#               course data processing pipeline.
+#               added courseID field to align with the student event log formatter script.
+#   2018.04.04  Clean-up of project description, title, alignment across edX course 
+#               data processing pipeline.
 #   2018.04.05  Update description to indicate where outputs are used later in pipeline; 
-#               added directory structure creation for data processing and 
-#               banalysis pipeline.
+#               added directory structure creation for data processing.#               
 #   2018.05.21  Script format alignment.
+#   2018.06.14  Tested script on new course structure; updated script to look select the
+#               correct columns in the modlist when updated with the temp object; added
+#               a control statement to level 4 parent ModuleID look-up.
+#
 ## ====================================================================================== ##
 
 ######### Setup ########## 
@@ -97,7 +97,7 @@ for(i in 1:length(subDir)){
     }
   }
 }
-
+#rm(coursemeta,modList,moduleID,temp,cols,course,id,i)
 ####Functions 
 #courseMeta
 # @param filelist is the file location of course structure data
@@ -108,7 +108,6 @@ for(i in 1:length(subDir)){
 courseStrMeta <- function(fileList,path){    
   #Extracts initial course structure
   course <- fromJSON(fileList)
-  
   #Locates root note in JSON file and creates a df
   coursemeta <- as.data.frame(unlist(course[grepl("type\\@course",names(course))==T][[1]]))
   cols <- row.names(coursemeta)
@@ -151,7 +150,6 @@ courseStrMeta <- function(fileList,path){
   modList <- modList[,c("id","category","display_name","markdown","children",
                        paste0("children",seq(1,length(grep("children",names(modList)))-1,1)))]
   rm(mod,course)
-  
   #Identifies Parent Module for Each Module based on reported children
   temp <- melt(modList[,-c(2:4)],id.vars=1,na.rm =T)
   temp <- temp[order(temp$id),]
@@ -166,8 +164,7 @@ courseStrMeta <- function(fileList,path){
   temp$id <- factor(temp$id, levels=levels(modList$id))
   names(temp) <- c("id","parent","childOrder")
   modList <- join(modList,temp)
-  modList <- modList[,c(1:4,21,22)]
-  rm(temp)
+  modList <- modList[,c(1:4,seq(length(modList)-1,length(modList),by=1))]
   
   #Shortens the module ID and the parent ID strings to 32hex
   modList$mod_hex_id <- NA
@@ -179,6 +176,7 @@ courseStrMeta <- function(fileList,path){
   modList$mod_hex_id<- factor(modList$mod_hex_id)
   modList$parent <- factor(modList$parent,levels=levels(modList$mod_hex_id))
   
+  #Code Above OK
   #Sets level of hierarchy for each module in course
   modList$level <- -1
   #Sets Course Root node to child order to 0
@@ -200,7 +198,9 @@ courseStrMeta <- function(fileList,path){
   moduleID <- modList[modList$level==3,]$mod_hex_id
   #Identifies Content Modules
   for(i in 1:length(moduleID)){
-    modList[modList$parent==moduleID[i],]$level <- 4
+    if(length(modList[modList$parent==moduleID[i],]$level)>0){
+       modList[modList$parent==moduleID[i],]$level <- 4
+    }
   }
   
   #Set up Parent Module Identifiers
@@ -271,7 +271,7 @@ courseStrMeta <- function(fileList,path){
 # (files ending with ".log.gz").
 fileList <- list.files(full.names = TRUE, recursive = FALSE, 
                        path = path_data,
-                       pattern = ".json$")
+                       pattern = "structure-prod-analytics.json$")
 #courseMeta Test
 courseStrMeta(fileList,path=path_output)
 
