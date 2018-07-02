@@ -38,9 +38,12 @@
 #               - {org}-{course Identifier}-{term}-course_structure-{server}-analytics.json
 #                 (source: edX research documentation)
 #
-# Output files:    
-#               The output file is used in the edX learner trajectory analysis data 
-#               processing script(s): 
+# Output files:
+#            1) A data table of course metadata,
+#               - {org}-{course Identifier}-{term}-meta.csv;
+#            2) A data table with the course structure and module metadata,
+#               - {org}-{course Identifier}-{term}-module-lookup.csv
+#               - Used in scripts:
 #                   * edX-3-learnerLogFormatter.R
 #                   * edX-4-learnerTrajectoryNet.R
 # 
