@@ -73,13 +73,11 @@
 #               - {userID}.csv;
 #               - Used in scripts:
 #                 * edX-4-learnerTrajectoryNet.R
-#                 *	edX-6-learnerFeatureExtraction.R"		
 #            2) A list capturing student userIDs who are active in the course,
 #				        and have usable actions:
 #               - {org}-{course}-{term}-auth_user-students-active.csv;
 #               - Used in scripts:
 #                 * edX-4-learnerTrajectoryNet.R;
-#                 *	edX-6-learnerFeatureExtraction.R;
 #            3) A list capturing student userIDs who are active in the course,
 #				        but have no usable actions:
 #               - {org}-{course}-{term}-auth_user-students-unusableActivity.csv;
