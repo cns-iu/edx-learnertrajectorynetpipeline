@@ -42,7 +42,7 @@
 #               The output file is used in the edX learner trajectory analysis data 
 #               processing script(s): 
 #                   * edX-3-studentLogFormatter.R
-#                   *
+#                   * edX-4-studentLogFormatter.R
 # 
 # Package dependencies: jsonlite, reshape2, plyr, and tcltk
 #
