@@ -55,7 +55,7 @@
 #               updated function parameter definitions; creates lists of users for 
 #               extraction for course
 #   2018.05.21  Script format alignment.
-#   2018.07.02  File input stack updates.
+#   2018.07.02  File output stack updates.
 ## ====================================================================================== ##
 ######### Setup ########## 
 ## _Clean the environment ####
