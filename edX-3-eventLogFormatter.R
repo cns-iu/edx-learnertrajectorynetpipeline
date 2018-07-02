@@ -59,27 +59,27 @@
 # File input stack: 
 #            1) A processed edX Course structure and content module list:
 #               - {org}+{course}+{term}-module-lookup.csv;
-#               - extracted by script, "edX-0-courseStructureMeta.R";
+#               - extracted by script, edX-0-courseStructureMeta.R;
 #            2) A list of student userIDs from an edX course:
 #               - {org}-{course}-{term}-auth_user-students.csv;
-#               - extracted by script, "edX-1-studentUserList.R";
+#               - extracted by script, edX-1-studentUserList.R;
 #            3) A "studentevents" directory containing one or more student
 #               CSV event log file(s):
 #               - {userID}.csv;
-#               - extracted by script, "edX-2-eventLogExtractor.R"
+#               - extracted by script, edX-2-eventLogExtractor.R
 #
 # Output files:                        
 #            1) A set of processed data tables of event action logs for each student:
 #               - {userID}.csv;
 #               - Used in scripts:
-#                 * "edX-4-studentTrajectoryNet.R"
-#                 *	"edX-6-studentFeatureExtraction.R"			
+#                 * edX-4-learnerTrajectoryNet.R
+#                 *	edX-6-learnerFeatureExtraction.R"		
 #            2) A list capturing student userIDs who are active in the course,
 #				        and have usable actions:
 #               - {org}-{course}-{term}-auth_user-students-active.csv;
 #               - Used in scripts:
-#                 * "edX-4-studentTrajectoryNet.R";
-#                 *	"edX-6-studentFeatureExtraction.R;
+#                 * edX-4-learnerTrajectoryNet.R;
+#                 *	edX-6-learnerFeatureExtraction.R;
 #            3) A list capturing student userIDs who are active in the course,
 #				        but have no usable actions:
 #               - {org}-{course}-{term}-auth_user-students-unusableActivity.csv;
@@ -137,7 +137,7 @@
 #   2018.04.30  Update time calculations for session events with times of 60 minutes 
 #               or greater.
 #   2018.05.21  Script format alignment.
-#
+#   2018.07.02  File out/input stack updates.
 ## ====================================================================================== ##
 ######### Setup ########## 
 ## _Clean the environment ####
