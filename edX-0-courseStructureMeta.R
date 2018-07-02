@@ -41,8 +41,8 @@
 # Output files:    
 #               The output file is used in the edX learner trajectory analysis data 
 #               processing script(s): 
-#                   * edX-3-studentLogFormatter.R
-#                   * edX-4-studentLogFormatter.R
+#                   * edX-3-learnerLogFormatter.R
+#                   * edX-4-learnerTrajectoryNet.R
 # 
 # Package dependencies: jsonlite, reshape2, plyr, and tcltk
 #
@@ -60,7 +60,7 @@
 #   2018.06.14  Tested script on new course structure; updated script to look select the
 #               correct columns in the modlist when updated with the temp object; added
 #               a control statement to level 4 parent ModuleID look-up.
-#
+#   2018.07.02  File input stack updates.
 ## ====================================================================================== ##
 
 ######### Setup ########## 
