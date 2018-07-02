@@ -73,7 +73,7 @@
 #               - {org}-{course}-{term}-auth_user-students-auth_user-oneEvent.csv;
 #            6) A list capturing student userIDs that have no network if self-loops
 #               are removed during processing to create a learner trajectory network;
-#				(not always produced):
+#				        (not always produced):
 #               - {org}-{course}-{term}-auth_user-students-auth_user-selfLoops.csv;
 #
 # Package dependencies: stringr, plyr, igraph, tcltk, jsonlite, 
