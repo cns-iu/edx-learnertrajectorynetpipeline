@@ -44,8 +44,8 @@
 #               and demographics:
 #               - {org}-{course Identifier}-{term}-auth_user-students.csv;
 #               - Used in scripts:
-#                 * "edX-2-eventLogExtractor.R"
-#                 * "edX-3-eventLogFormatter.R"
+#                 * edX-2-eventLogExtractor.R
+#                 * edX-3-learnerLogFormatter.R
 #
 # Package dependencies: tcltk, plyr, stringr
 #
@@ -55,6 +55,7 @@
 #               updated function parameter definitions; creates lists of users for 
 #               extraction for course
 #   2018.05.21  Script format alignment.
+#   2018.07.02  File input stack updates.
 ## ====================================================================================== ##
 ######### Setup ########## 
 ## _Clean the environment ####
