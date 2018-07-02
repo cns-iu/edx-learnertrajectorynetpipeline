@@ -43,7 +43,7 @@
 #               in an edX course:
 #               - {userID}.csv;
 #               - Used in scripts:
-#                 * "edX-3-eventLogFormatter.R"
+#                 * edX-3-eventLogFormatter.R
 #
 # Package dependencies: jsonlite, ndjson, plyr, tcltk
 #
@@ -67,6 +67,7 @@
 #               dependencies, file stack and data input sources. Path_output now are 
 #               used for loading results of prior scripts.
 #   2018.05.21  Script format alignment.
+#   2018.07.02  File input stack updates.
 ## ====================================================================================== ##
 ######### Setup ########## 
 ## _Clean the environment ####
