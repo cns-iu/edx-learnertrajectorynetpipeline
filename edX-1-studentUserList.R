@@ -45,7 +45,7 @@
 #               - {org}-{course Identifier}-{term}-auth_user-students.csv;
 #               - Used in scripts:
 #                 * edX-2-eventLogExtractor.R
-#                 * edX-3-learnerLogFormatter.R
+#                 * edX-3-eventLogFormatter.R
 #
 # Package dependencies: tcltk, plyr, stringr
 #
