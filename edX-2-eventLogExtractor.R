@@ -36,7 +36,7 @@
 #               more "*.log.gz" event log file(s) for an edX course;
 #            2) A data table of student userIDs from an edX course:
 #               - {org}-{course Identifier}-{term}-auth_user-students.csv;
-#               - extracted by script, "edX-1-studentUserList.R"
+#               - extracted by script, edX-1-studentUserList.R
 #
 # Output files:                        
 #            1) An set of extracted data tables of event action logs for each student 
@@ -67,7 +67,7 @@
 #               dependencies, file stack and data input sources. Path_output now are 
 #               used for loading results of prior scripts.
 #   2018.05.21  Script format alignment.
-#   2018.07.02  File input stack updates.
+#   2018.07.02  File out/input stack updates.
 ## ====================================================================================== ##
 ######### Setup ########## 
 ## _Clean the environment ####
