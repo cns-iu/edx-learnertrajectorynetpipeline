@@ -36,7 +36,7 @@
 #               more "*.log.gz" event log file(s) for an edX course;
 #            2) A data table of student userIDs from an edX course:
 #               - {org}-{course Identifier}-{term}-auth_user-students.csv;
-#               - extracted by script, edX-1-studentUserList.R
+#               - extracted by script, edX-2-studentUserList.R
 #
 # Output files:                        
 #            1) An set of extracted data tables of event action logs for each student 
