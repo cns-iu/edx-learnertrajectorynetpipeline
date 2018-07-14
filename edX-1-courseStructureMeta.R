@@ -44,8 +44,8 @@
 #            2) A data table with the course structure and module metadata,
 #               - {org}-{course Identifier}-{term}-module-lookup.csv
 #               - Used in scripts:
-#                   * edX-3-eventLogFormatter.R
-#                   * edX-4-learnerTrajectoryNet.R
+#                   * edX-4-eventLogFormatter.R
+#                   * edX-5-learnerTrajectoryNet.R
 # 
 # Package dependencies: jsonlite, reshape2, plyr, and tcltk
 #
