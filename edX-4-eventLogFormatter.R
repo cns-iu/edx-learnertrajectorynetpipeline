@@ -59,25 +59,25 @@
 # File input stack: 
 #            1) A processed edX Course structure and content module list:
 #               - {org}+{course}+{term}-module-lookup.csv;
-#               - extracted by script, edX-0-courseStructureMeta.R;
+#               - extracted by script, edX-1-courseStructureMeta.R;
 #            2) A list of student userIDs from an edX course:
 #               - {org}-{course}-{term}-auth_user-students.csv;
-#               - extracted by script, edX-1-studentUserList.R;
+#               - extracted by script, edX-2-studentUserList.R;
 #            3) A "studentevents" directory containing one or more student
 #               CSV event log file(s):
 #               - {userID}.csv;
-#               - extracted by script, edX-2-eventLogExtractor.R
+#               - extracted by script, edX-3-eventLogExtractor.R
 #
 # Output files:                        
 #            1) A set of processed data tables of event action logs for each student:
 #               - {userID}.csv;
 #               - Used in scripts:
-#                 * edX-4-learnerTrajectoryNet.R
+#                 * edX-5-learnerTrajectoryNet.R
 #            2) A list capturing student userIDs who are active in the course,
 #				        and have usable actions:
 #               - {org}-{course}-{term}-auth_user-students-active.csv;
 #               - Used in scripts:
-#                 * edX-4-learnerTrajectoryNet.R;
+#                 * edX-5-learnerTrajectoryNet.R;
 #            3) A list capturing student userIDs who are active in the course,
 #				        but have no usable actions:
 #               - {org}-{course}-{term}-auth_user-students-unusableActivity.csv;
