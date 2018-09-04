@@ -13,4 +13,5 @@ Each script in the data processing pipeline is briefly described below:
  
 ## A Note on Using the Learner Trajectory Network Pipeline
 The processing scripts are provided under Apache License 2.0. Contributors provide permission for commercial use, modification, distribution, patent use, and private use.  Licensed works, modifications, and larger works may be distributed under different terms and without source code. The script is provided with a limited liability and warranty, use these data processing scripts with your own discretion, and make preservation copies of any source data prior to use.
+
 Additional modifications are likely needed to make use of this pipeline when processing other course data sets that using the edX Data Package format specification. Organizational implementation of the edX learning management systems may use customized event log tracking systems, and courses may use different types of edX block modules, and logs may include types of events that were not encountered for this project (e.g. error events, or edX discussion forums). An exploratory analysis of the course structure and event logs is advisable at the outset of a project.
