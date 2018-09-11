@@ -643,13 +643,13 @@ names(users) <- c("userID","v")
 write.csv(x=users[,1], file=paste0(path_output,"/userlists/",courseID,"-auth_user-students-unusableActivity.csv"),row.names = F)
 
 ######### Finishing Details ########## 
-#Indicate completion
+## Indicate completion
 message("\n**** Complete! ****\n")
 
-## _Script processing time feedback #####
+## Script processing time feedback #####
 #print the amount of time the script required
 cat("\n\n\nComplete script processing time details (in sec):\n")
 print(proc.time() - start)
 
-## _Clear environment variables
+## Clear environment variables
 rm(list=ls())
