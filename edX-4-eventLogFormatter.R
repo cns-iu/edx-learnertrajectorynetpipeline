@@ -137,24 +137,24 @@
 #   2018.05.21  Script format alignment.
 #   2018.07.02  File out/input stack updates.
 ## ====================================================================================== ##
-######### Setup ########## 
-## _Clean the environment ####
+#### Environment setup ####
+##  Clean the environment
 rm(list=ls()) 
 #rm(courseStr,courseID,curUserIDS,eventLog,fileList,start,studentLogs,subDir,logExtractor,i)
 
-## _Load required packages #####
+## Load required packages
 require("magrittr")   #Pipe tool
 require("stringr")    #string parsing
 require("plyr")       #DPLYR
 require("tcltk2")     #for OS independent GUI file and folder selection
 
-####Functions
+####  Functions ####
 #logFormatter 
-##The logFormatter function is a modification of code provided
-##to allow mass extracting individual set of student logs based on known set of student IDs for an 
-##edX course. The function creates a unique log file for each student ID in the list, 
-##saved as either a JSON or CSV formatted file. The function currently set up to save as CSV,
-##alternatively can be set for user defined action such as format=T csv if format=F, JSON set up possible.
+# The logFormatter function is a modification of code provided
+# to allow mass extracting individual set of student logs based on known set of student IDs for an 
+# edX course. The function creates a unique log file for each student ID in the list, 
+# saved as either a JSON or CSV formatted file. The function currently set up to save as CSV,
+# alternatively can be set for user defined action such as format=T csv if format=F, JSON set up possible.
 #current event types handled by script:
 #Course wiki, progress, and information pages
 #Course Navigation events (seq_prev, seq_next, seq_goto)
@@ -212,7 +212,7 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,timeB=60,subZ,s
       #removes fields unused in processing, modeling, analysis, or visualization
       data <- data[,-c(1:3,11,14,20,22:32)]
       
-      ##Data format updates and column creation/organization
+      ## Data format updates and column creation/organization
       #Updates Time field to R compliant format
       sapply(strsplit(as.character(data$time),split='+',fixed=T),function(x)(x[1])) %>% 
         as.POSIXlt(tz="EST",format='%Y-%m-%dT%H:%M:%S') -> data$time 
@@ -270,10 +270,10 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,timeB=60,subZ,s
       #Creates a dummy column to ID events without course module identifiers, events are kept if value is 1
       data["kp"] <- 1
       
-      ##Remove events without associated learning object modules
-      ##These come before all actions actions, because they are known missing data cases;
-      ##and server events lack Session IDs, which cause problem if they appear at the 
-      ##end of asorted data file when you back fill session IDs to events.
+      ## Remove events without associated learning object modules
+      ## These come before all actions actions, because they are known missing data cases;
+      ## and server events lack Session IDs, which cause problem if they appear at the 
+      ## end of asorted data file when you back fill session IDs to events.
       #Identifies events that do not relate to a learning object these include: course information
       #student progress, wiki pages, course about, and visits to a discussion forum
       if(nrow(data[grepl('\\{\\}', data$event)==T & grepl('courseware',data$event_type)==F,])>0){
@@ -365,7 +365,7 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,timeB=60,subZ,s
         write.csv(x = data, file = paste0(path,"/studentevents_processed/",subN,"/",uid,".csv"),
                   row.names = F)
       } else {
-        ##Extracts or recreate module ID from the log fields for various known modules cases (if not removed by user)
+        ## Extracts or recreate module ID from the log fields for various known modules cases (if not removed by user)
         #Creates column to place learning object moduleID idenfitied for each event
         #removes data with a value of 0
         data <- data[data$kp!=0,]
@@ -423,7 +423,7 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,timeB=60,subZ,s
             paste0(vapply(strsplit(as.character(data[grepl('\\{\\"widget_placement',data$event)==T,]$event),'\\"'),'[',13,FUN.VALUE=character(1)))
         }
         
-        ##Process to identify child modules via a lookup table
+        ## Process to identify child modules via a lookup table
         #Cleans up module child references, removing puntuation and spaces from the field
         data$mod.child.ref <- str_replace_all(data$mod.child.ref,"[^[:alnum:]]","")
         
@@ -431,7 +431,7 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,timeB=60,subZ,s
         #Module key is set to character to allow matching without the difficulties of factor variables
         data$module.key <- as.character(data$module.key) 
         
-        ##Course branch module identifier clean up
+        ## Course branch module identifier clean up
         #All module ID for events that reference activity at the 2nd level of the course hiearchy are 
         #processed to identify the appropriate 3rd level branch module and then 4th level content module 
         #that a user navigated too in the course. The process uses a look-up table to identify the 
@@ -495,7 +495,7 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,timeB=60,subZ,s
           data <- data[!is.na(data$order),]
         }
         
-        ##Updates event_type field for non-typed event module visits.
+        ## Updates event_type field for non-typed event module visits.
         #converts records where events_types have a module URL to a generic access event "mod_access"
         levels <- levels(data$event_type)
         levels[length(levels)+1] <- "mod_access"
@@ -581,15 +581,15 @@ logFormatter <- logFormatter <- function(fileList,courseStr,path,timeB=60,subZ,s
   } 
 }
 
-######### Main ########## 
-## _start timer to track how long the script takes to execute
+#### Main Processing ####
+## start timer to track how long the script takes to execute
 start <- proc.time() #save the time (to compute elapsed time of script)
 
 #Generic Set up
 #Assigns a path to open prior script outputs and to save new processing output files.
 path_output = tclvalue(tkchooseDirectory())
 
-##Create data processing output sub-directories for student without events
+## Create data processing output sub-directories for student without events
 #students with zero events on load and those with zero events after post-data processing 
 subDir = c("zeroEvents", "noEventsProc")
 for(i in 1:length(subDir)){
@@ -621,12 +621,12 @@ courseStr <- read.csv(file=courseStr, header=T)
 courseID <- as.character(courseStr $courseID[1])
 courseID <- gsub("\\+","-",courseID)
 
-##Log Capture function for list of users, set up to 
+## Log Capture function for list of users, set up to 
 logFormatter(fileList=fileList, time=60, courseStr=courseStr, 
              path=path_output, subZ=subDir[1], subN=subDir[2], 
              nc=FALSE, pse=FALSE, vid=FALSE, timeBEst = TRUE)
 
-##Saves out list of user IDs for students with usable logs and unusable logs
+## Saves out list of user IDs for students with usable logs and unusable logs
 users <- list.files(path=paste0(path_output,"/studentevents_processed/"),pattern=".csv")
 users <- data.frame(do.call('rbind',strsplit(users,"\\.")))
 names(users) <- c("userID","v")
