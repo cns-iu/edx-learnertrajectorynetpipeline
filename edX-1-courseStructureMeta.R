@@ -65,15 +65,14 @@
 #               a control statement to level 4 parent ModuleID look-up.
 #   2018.07.02  File input stack updates.
 ## ====================================================================================== ##
-
-######### Setup ########## 
-## _Clean the environment ####
+#### Environment Setup ####
+## Clean the environment
 rm(list=ls()) 
 
-## _start timer to track how long the script takes to execute
+## Start timer to track how long the script takes to execute
 start <-  proc.time() #save the time (to compute elapsed time of script)
 
-## _Load required packages #####
+## Load required packages
 require("jsonlite")   #for working with JSON files (esp. read and write)
 require("reshape2")   #for melting data
 require("plyr")       #for Join
@@ -85,7 +84,7 @@ path_data = tclvalue(tkchooseDirectory())
 #Assigns path where R may save processing outputs
 path_output = setwd(tclvalue(tkchooseDirectory()))
 
-##Create data processing output sub-directories for learner trajectory analysis pipeline
+## Create data processing output sub-directories for learner trajectory analysis pipeline
 #user lists are where lists of user IDs are maintained for a project; studentevents and 
 #studentevents_processed are directories for student event logs; networks holds the trajectory
 #networks derived from the student event logs, and analysis is where results of analysis and 
@@ -101,14 +100,13 @@ for(i in 1:length(subDir)){
   }
 }
 
-#rm(coursemeta,modList,moduleID,temp,cols,course,id,i)
-####Functions 
+#### Functions ####
 #courseMeta
 # @param filelist is the file location of course structure data
 # @param path indicates the path used to save outputs files
-##The courseMeta function is reads in edX Course Structure JSON files and extracts course metadata
-##Specifically it captures the module type of the root node (verifying course data is captured);
-##course enrollment and run dates.
+## The courseMeta function is reads in edX Course Structure JSON files and extracts course metadata
+## Specifically it captures the module type of the root node (verifying course data is captured);
+## course enrollment and run dates.
 courseStrMeta <- function(fileList,path){    
   #Extracts initial course structure
   course <- fromJSON(fileList)
@@ -269,8 +267,8 @@ courseStrMeta <- function(fileList,path){
   write.csv(modList,file=paste0(path_output,"/course/",id,"-module-lookup.csv"),row.names = F)
 }
 
-######### Main ########## 
-## Build list of all event files for course####
+#### Main processing ####
+## Build list of all event files for course
 #Store all the filenames of JSON formatted edX event logs within a user selected edX course's state directory
 # (files ending with ".log.gz").
 fileList <- list.files(full.names = TRUE, recursive = FALSE, 
@@ -279,14 +277,14 @@ fileList <- list.files(full.names = TRUE, recursive = FALSE,
 #courseMeta Test
 courseStrMeta(fileList,path=path_output)
 
-######### Finishing Details ########## 
+##### Finishing Details ####
 #Indicate completion
 message("\n**** Complete! ****\n")
 
-## _Script processing time feedback #####
+## Script processing time feedback #####
 #print the amount of time the script required
 cat("\n\n\nComplete script processing time details (in sec):\n")
 print(proc.time() - start)
 
-## _Clear environment variables
-rm(list=ls())   
+## Clear environment variables
+rm(list=ls())
