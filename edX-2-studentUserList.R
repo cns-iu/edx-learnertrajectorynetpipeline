@@ -57,28 +57,28 @@
 #   2018.05.21  Script format alignment.
 #   2018.07.02  File output stack updates.
 ## ====================================================================================== ##
-######### Setup ########## 
-## _Clean the environment ####
+#### Environment setup ####
+## Clean the R environment
 rm(list=ls()) 
 
-## _start timer to track how long the script takes to execute
+## Start timer to track how long the script takes to execute
 start <-  proc.time() #save the time (to compute elapsed time of script)
 
-## _Load required packages #####
+## Load required packages 
 require("tcltk2")     #for OS independent GUI file and folder selection
 require("stringr")    #for string manipulation
 require("plyr")       #for table joins
 
-######### Main ########## 
-#Assigns path where R may read in state data from the edX data package 
-path_state = tclvalue(tkchooseDirectory())
+#### Main Processing #### 
+#Assigns path to directory where R may read in a course' state data from the edX data package 
+path_data = tclvalue(tkchooseDirectory())
 #Assigns path where R saves processing outputs for user logs
-path_output = paste0(tclvalue(tkchooseDirectory()),"/")
+path_output = paste0(tclvalue(tkchooseDirectory()))
 
-##Identifying student users from an edX course
+## Identifying student users from an edX course
 #List of authenticated users extracted from edX course data package
 userList <- list.files(full.names = TRUE, recursive = FALSE, 
-                       path = path_state,
+                       path = paste0(path_data,"/state/"),
                        pattern = "auth_user")
 users <- read.csv(userList[1],sep = '\t',header=T)[,c(1,7:11)]
 userProf <- read.csv(userList[2],sep = '\t',header=T)[,c(2,8,10:14)]
@@ -95,14 +95,14 @@ userFileName <- str_split(userFileName,pattern="-")
 userFileName <- paste(userFileName[[1]][1],userFileName[[1]][2],userFileName[[1]][3],userFileName[[1]][4],"students",sep="-")
 write.csv(users,file=paste0(path_output,"userlists/",userFileName,".csv"), row.names=F)
 
-######### Finishing Details ########## 
+#### Finishing details ####
 #Indicate completion
 message("\n**** Complete! ****\n")
 
-## _Script processing time feedback #####
+## Script processing time feedback
 #print the amount of time the script required
 cat("\n\n\nComplete script processing time details (in sec):\n")
 print(proc.time() - start)
 
-## _Clear environment variables
+## Clear environment variables
 rm(list=ls())   
