@@ -24,12 +24,6 @@
 #               which captures a students interactions with low level edX learning 
 #               modules, based on processed event logs from an EdX course.
 #
-#               The script combines the node and edge lists of multiple students to 
-#               create statistical descriptions of modules and module transitions for 
-#               a given cohort. Once the node and edge lists are aggregated, a single 
-#               network will be created with igraph package and exported as CSV and 
-#               JSON formatted network data sets for further visualization and analysis.
-#                
 # File input stack: 
 #            1) A list of user identifiers that indicate the student has a 
 #               learner trajectory network in the results directory.
@@ -265,4 +259,3 @@ print(proc.time() - start)
 
 ## Clear environment variables
 rm(list=ls())
-warnings()
