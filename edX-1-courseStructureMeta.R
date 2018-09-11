@@ -44,8 +44,8 @@
 #            2) A data table with the course structure and module metadata,
 #               - {org}-{course Identifier}-{term}-module-lookup.csv
 #               - Used in scripts:
-#                   * edX-4-eventLogFormatter.R
-#                   * edX-5-learnerTrajectoryNet.R
+#                   * edX-3-eventLogFormatter.R
+#                   * edX-4-learnerTrajectoryNet.R
 # 
 # Package dependencies: jsonlite, reshape2, plyr, and tcltk
 #
@@ -79,7 +79,7 @@ require("reshape2")   #for melting data
 require("plyr")       #for Join
 require("tcltk2")     #for OS independant GUI file and folder selection
 
-#Assigns path where R may read in files from the edX data package 
+#Assigns path to directory where R may read in a course' data from the edX data package
 path_data = tclvalue(tkchooseDirectory())
 
 #Assigns path where R may save processing outputs
@@ -90,7 +90,7 @@ path_output = setwd(tclvalue(tkchooseDirectory()))
 #studentevents_processed are directories for student event logs; networks holds the trajectory
 #networks derived from the student event logs, and analysis is where results of analysis and 
 #visualization are kept.
-subDir = c("course","userlists","studentevents","studentevents_processed","networks","analysis")
+subDir = c("course","userlists","studentevents","studentevents_processed","studentevents_subsets","networks","analysis","surveyss")
 for(i in 1:length(subDir)){
   if(!file_test("-d", file.path(path_output, subDir[i]))){
     if(file_test("-f", file.path(path_output, subDir[i]))){
@@ -100,6 +100,7 @@ for(i in 1:length(subDir)){
     }
   }
 }
+
 #rm(coursemeta,modList,moduleID,temp,cols,course,id,i)
 ####Functions 
 #courseMeta
@@ -270,10 +271,10 @@ courseStrMeta <- function(fileList,path){
 
 ######### Main ########## 
 ## Build list of all event files for course####
-#Store all the filenames of JSON formatted edX event logs within a user selected directory 
+#Store all the filenames of JSON formatted edX event logs within a user selected edX course's state directory
 # (files ending with ".log.gz").
 fileList <- list.files(full.names = TRUE, recursive = FALSE, 
-                       path = path_data,
+                       path = paste0(path_data,"/state/"),
                        pattern = "structure-prod-analytics.json$")
 #courseMeta Test
 courseStrMeta(fileList,path=path_output)
