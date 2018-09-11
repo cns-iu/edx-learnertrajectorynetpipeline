@@ -36,7 +36,7 @@
 #               more "*.log.gz" event log file(s) for an edX course;
 #            2) A data table of student userIDs from an edX course:
 #               - {org}-{course Identifier}-{term}-auth_user-students.csv;
-#               - extracted by script, edX-2-studentUserList.R
+#               - extracted by script, edX-1-studentUserList.R
 #
 # Output files:                        
 #            1) An set of extracted data tables of event action logs for each student 
@@ -68,31 +68,32 @@
 #               used for loading results of prior scripts.
 #   2018.05.21  Script format alignment.
 #   2018.07.02  File out/input stack updates.
+#   2018.07.03  
 ## ====================================================================================== ##
-######### Setup ########## 
-## _Clean the environment ####
+#### Environment Setup #####
+## _Clean the environment 
 rm(list=ls()) 
 
-## _start timer to track how long the script takes to execute
+## Start timer to track how long the script takes to execute
 start <-  proc.time() #save the time (to compute elapsed time of script)
 
-## _Load required packages #####
+## Load required packages 
 require("jsonlite")   #for working with JSON files (esp. read and write)
 require("ndjson")     #needed to read the non-standard JSON log files (NDJSON format)
 require("tcltk2")     #for OS independent GUI file and folder selection
 require("plyr")       #for joining user tables together
 
-####Functions 
+#### Functions ####
 #logExtractor 
 # @param curUserIDS is the file location of course structure data
 # @param eventLog==NULL sets a dummy eventLog dataframe
 # @param filelist a list of daily event logs from a course's edX Data Package
 # @param path indicates the path used to save outputs files
-##The logExtractor function is a modification of code provided by Purdue University team
-##to allow mass extracting individual student's event logs from course event logs, based on known set 
-##of student IDs for an edX course. The function creates a unique log file for each student ID in the list, 
-##saved as either a JSON or CSV formatted file. The function currently set up to save as CSV,
-##alternatively can be set for user defined action such as format=T csv if format=F, JSON set up possible.
+## The logExtractor function is a modification of code provided by Purdue University team
+## to allow mass extracting individual student's event logs from course event logs, based on known set 
+## of student IDs for an edX course. The function creates a unique log file for each student ID in the list, 
+## saved as either a JSON or CSV formatted file. The function currently set up to save as CSV,
+## alternatively can be set for user defined action such as format=T csv if format=F, JSON set up possible.
 
 logExtractor <- function(curUserIDS,eventLog,fileList,path){      
   numStudents <- length(curUserIDS)
@@ -112,7 +113,8 @@ logExtractor <- function(curUserIDS,eventLog,fileList,path){
       id <- curUser
     }
     #Identifies all columns that are maintained for the rest of the workflow
-    eventLog<-subset(eventLog,select=c("accept_language","agent","augmented.country_code",
+    eventLog<-subset(eventLog,select=c("accept_language",
+                                       "agent","augmented.country_code",
                                        "context.course_id","context.org_id","context.user_id","event",
                                        "event_source","event_type","time","username","name","session",
                                        "context.module.display_name","context.module.usage_key",
@@ -122,7 +124,7 @@ logExtractor <- function(curUserIDS,eventLog,fileList,path){
                                        "event.submitted_at","event.feedback","event.feedback_text",
                                        "event.rubric.content_hash","event.score_type","event.scored_at",
                                        "event.scorer_id"))
-    ###Unused columns that could be useful for other courses
+    ## Unused columns that could be useful for other courses
     #event.correctness	event.hint_label	event.hints.0.text	
     #event.module_id	event.problem_part_id	event.question_type	
     #event.trigger_type	event.enrollment_mode	event.social_network	
@@ -136,18 +138,18 @@ logExtractor <- function(curUserIDS,eventLog,fileList,path){
   }
 }
 
-######### Main ########## 
+##### Main processing ####
 #Assigns path where R may read in events logs from the edX data package 
 path_data = tclvalue(tkchooseDirectory())
 
 #Assigns path where R saves processing outputs for user logs
-path_output = paste0(tclvalue(tkchooseDirectory()),"/")
+path_output = paste0(tclvalue(tkchooseDirectory()))
 
 #Identifies the output of the student user list for an edX course. 
 #The pattern parameter identifies the outputs of the edX-1-studentUserList.R script
 fileList <- list.files(full.names = T, recursive = FALSE, 
-                       path = paste0(path_output,"userlists"),
-                       pattern = "auth_user-students.csv")
+                       path = paste0(path_output,"/userlists"),
+                       pattern = "-students.csv$")
 users <- read.csv(fileList,header=T)[1]
 #Alternative userlists
 #users <- read.csv(file="PATH/FILENAME",header=T)
@@ -155,29 +157,29 @@ users <- read.csv(fileList,header=T)[1]
 #Sets ID list for processing
 curUserIDS <- users$id #this converts dataframe of user ids to integer list needed for the function
 #Removes user list related objects
-rm(userList,users,userProf,userFileName)
+rm(users)
 
 #dummy eventLog object used in logCapture function
 eventLog <- NULL
 
-## _Build list of all event files for course####
+## Build list of all event files for course####
 #Store all the filenames of JSON formatted edX event logs within a user selected directory 
 # (files ending with ".log.gz").
 fileList <- list.files(full.names = TRUE, recursive = FALSE, 
-                       path = path_data,
-                       pattern = ".log.gz$")
+                       path = paste0(path_data,"/events"),
+                       pattern = ".gz$")
 
 #Log Capture function for list of users
 logExtractor(curUserIDS,eventLog,fileList,path=paste0(path_output,"studentevents/"))
 
-######### Finishing Details ########## 
+##### Finishing Details #####
 #Indicate completion
 message("\n**** Complete! ****\n")
 
-## _Script processing time feedback #####
+## Script processing time feedback #####
 #print the amount of time the script required
 cat("\n\n\nComplete script processing time details (in sec):\n")
 print(proc.time() - start)
 
-## _Clear environment variables
+## Clear environment variables
 rm(list=ls())   
