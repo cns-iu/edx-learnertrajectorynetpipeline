@@ -124,12 +124,7 @@ logExtractor <- function(curUserIDS,eventLog,fileList,path){
                                        "event.submitted_at","event.feedback","event.feedback_text",
                                        "event.rubric.content_hash","event.score_type","event.scored_at",
                                        "event.scorer_id"))
-    ## Unused columns that could be useful for other courses
-    #event.correctness	event.hint_label	event.hints.0.text	
-    #event.module_id	event.problem_part_id	event.question_type	
-    #event.trigger_type	event.enrollment_mode	event.social_network	
-    #event.answers	event.submission
-    
+
     #Write student log file
     write.csv(x = eventLog, file = paste0(path,"/",id,".csv"),
               row.names = F)
@@ -138,48 +133,50 @@ logExtractor <- function(curUserIDS,eventLog,fileList,path){
   }
 }
 
-##### Main processing ####
+#### Paths ####
 #Assigns path where R may read in events logs from the edX data package 
 path_data = tclvalue(tkchooseDirectory())
 
 #Assigns path where R saves processing outputs for user logs
 path_output = paste0(tclvalue(tkchooseDirectory()))
 
-#Identifies the output of the student user list for an edX course. 
-#The pattern parameter identifies the outputs of the edX-1-studentUserList.R script
-fileList <- list.files(full.names = T, recursive = FALSE, 
-                       path = paste0(path_output,"/userlists"),
-                       pattern = "-students.csv$")
-users <- read.csv(fileList,header=T)[1]
-#Alternative userlists
-#users <- read.csv(file="PATH/FILENAME",header=T)
-
-#Sets ID list for processing
-curUserIDS <- users$id #this converts dataframe of user ids to integer list needed for the function
-#Removes user list related objects
-rm(users)
-
-#dummy eventLog object used in logCapture function
-eventLog <- NULL
-
-## Build list of all event files for course####
+#### Build list of all event files for course ####
 #Store all the filenames of JSON formatted edX event logs within a user selected directory 
 # (files ending with ".log.gz").
 fileList <- list.files(full.names = TRUE, recursive = FALSE, 
                        path = paste0(path_data,"/events"),
                        pattern = ".gz$")
 
-#Log Capture function for list of users
+#### Identifies the output of the student user list for an edX course ####
+#The pattern parameter identifies the outputs of the edX-1-studentUserList.R script
+users <- list.files(full.names = T, recursive = FALSE, 
+                    path = paste0(path_output,"/userlists"),
+                    pattern = "-students.csv$")
+users <- read.csv(users, header=T)[1]
+
+#Sets ID list for processing
+curUserIDS <- users$id #this converts dataframe of user ids to integer list needed for the function
+#Removes user list related objects
+rm(users)
+
+#### Main processing ####
+## Start timer to track how long the script takes to execute
+start <-  proc.time() #save the time (to compute elapsed time of script)
+
+#Creates a dummy eventLog object used in logCapture function
+eventLog <- NULL
+
+## Log Capture function for list of users
 logExtractor(curUserIDS,eventLog,fileList,path=paste0(path_output,"studentevents/"))
 
-##### Finishing Details #####
+#### Finishing details ####
 #Indicate completion
 message("\n**** Complete! ****\n")
 
-## Script processing time feedback #####
+## Script processing time feedback
 #print the amount of time the script required
 cat("\n\n\nComplete script processing time details (in sec):\n")
 print(proc.time() - start)
 
 ## Clear environment variables
-rm(list=ls())   
+rm(list=ls())
