@@ -106,6 +106,9 @@
 #   2018.05.22  Updated network creation loop: file exports, and added self-loops field, 
 #               to networks; updated script add networks directory if none found.
 #   2018.07.02  File out/input stack updates.
+#   2018.09.07  Forked script for revised data format. Updated Problem module calculation
+#               for accurate results and speeding up processing.
+#
 ## ====================================================================================== ##
 #### Environment setup ####
 ## Clean the  ####
@@ -151,6 +154,7 @@ exportGraph <- function(g,filename){
   #return the json in case you need it
   return(json.content)
 }
+
 #courseStrNodes v1.0 
 # Converts course structure data set into a node list with only fourth level course learning modules.
 # @param nc The nc parameter is set by a user to indicate the course node list output needed for their processed
@@ -262,8 +266,6 @@ courseStrNodes <- function(courseStr,nc=FALSE){
 
 #### Paths ####
 ## Sets path to processed data
-
-#Sets path to processed data
 path_output = tclvalue(tkchooseDirectory())
 
 ##Creates a network directory if none exists in the project space
@@ -302,13 +304,13 @@ courseID <- gsub("\\+","\\-",struct$courseID)[1]
 ## Modification of course structure for accurate node representation for courses
 nodes <- courseStrNodes(courseStr=struct, nc=F)
 
-## Load list of users 
-d <- read.csv(list.files(full.names = TRUE, recursive = FALSE, 
-                         path = paste0(path_output,"/userlists/"),
-                         pattern = "-auth_user-students-active.csv$"),header=T)
-names(d) <- "id"
-logFilePaths <- paste0(path_output,"/studentevents_processed/",d$id,".csv")
-rm(d,struct)
+## Load list of users to create list of log file paths
+logFilePaths <- read.csv(list.files(full.names = TRUE, recursive = FALSE, 
+                                    path = paste0(path_output,"/userlists/"),
+                                    pattern = "-auth_user-students-active.csv$"),header=T)
+names(logFilePaths) <- "id"
+logFilePaths <- paste0(path_output,"/studentevents_processed/",logFilePaths$id,".csv")
+rm(struct)
 
 #### Process student event log to create network graph files ####
 numLogs <- length(logFilePaths) 
@@ -418,13 +420,19 @@ for(i in 1:numLogs){
         rm(es,et,sl)  
 
         ## Problem module event calculations
-        ag <- ddply(data,~mod_hex_id,summarize,
-                    attempts = max(event.attempts),
-                    max.grade = max(event.grade)
-                    )
-        nodes_t <- join(nodes_t,ag,by='mod_hex_id',type='left')
-        rm(ag)
-      
+        ## Problem module event calculations
+        ag <- ddply(data[data$event_type==c("problem_check") & data$event_source==c("server"),],~mod_hex_id,summarise,
+                    attempts = max(attempts),
+                    points = max(grade))
+        if(nrow(ag)>0){
+          nodes_t <- join(nodes_t,ag,by='mod_hex_id',type='left')
+          rm(ag)  
+        } else {
+          nodes_t$attempts <- NA
+          nodes_t$points <- NA
+          rm(ag)
+        }
+        
         ## Video Module time calculations (video)
         #Video load events and time calc
         if(length(data[data$event_type==c("load_video"),]$event_type)>0){
@@ -492,10 +500,18 @@ for(i in 1:numLogs){
         nodes_t[nodes_t$module.type==c("problem+block") & is.na(nodes_t$attempts) , 19:20] <- 0
         
         #Video watching variables
-        nodes_t[nodes_t$module.type==c("video+block") & is.na(nodes_t$loads),21:22] <- 0
-        nodes_t[nodes_t$module.type==c("video+block") & is.na(nodes_t$plays),23:24] <- 0
-        nodes_t[nodes_t$module.type==c("video+block") & is.na(nodes_t$pauses),25:26] <- 0
-        nodes_t[nodes_t$module.type==c("video+block") & is.na(nodes_t$seeks),27:28] <- 0
+        if(nrow(nodes_t[nodes_t$module.type==c("video+block") & is.na(nodes_t$loads),])>0){
+          nodes_t[nodes_t$module.type==c("video+block") & is.na(nodes_t$loads),21:22] <- 0  
+        }
+        if(nrow(nodes_t[nodes_t$module.type==c("video+block") & is.na(nodes_t$plays),])>0){
+          nodes_t[nodes_t$module.type==c("video+block") & is.na(nodes_t$plays),23:24] <- 0
+        }
+        if(nrow(nodes_t[nodes_t$module.type==c("video+block") & is.na(nodes_t$pauses),])>0){
+          nodes_t[nodes_t$module.type==c("video+block") & is.na(nodes_t$pauses),25:26] <- 0 
+        }
+        if(nrow(nodes_t[nodes_t$module.type==c("video+block") & is.na(nodes_t$seeks),])>0){
+          nodes_t[nodes_t$module.type==c("video+block") & is.na(nodes_t$seeks),27:28] <- 0 
+        }
     
         ## Writing node and edge lists
         write.csv(nodes_t,paste0(path_output,"/networks/",subDir[1],"/",sid,"-nodes.csv"),row.names=F)
