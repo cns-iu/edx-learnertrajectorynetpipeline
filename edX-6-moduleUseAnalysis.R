@@ -245,7 +245,7 @@ mods[mods$unq_stu!=0,]$avgSeekTime <- mods[mods$unq_stu!=0,]$seek_time/mods[mods
 mods <- mods[,c(1:10,30,11:13,31,14,32:33,15:20,34,21,35:36,22,37,23,38,24,39,25,40,26,41,27,42,28,43,29,44)]
 
 #### Exports a CSV file of aggregate module analysis for cohort of students ####
-write.csv(mods,file=paste0(path_output,"/analysis/",courseID,groupID,"+ModuleUseStats-NodeList.csv"), row.names = F)
+write.csv(mods,file=paste0(path_output,"/analysis/modules/",courseID,groupID,"+ModuleUseStats.csv"), row.names = F)
 rm(nodeFileList,rec)
 
 #### Finishing Details ####
