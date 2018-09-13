@@ -277,14 +277,14 @@ fileList <- list.files(full.names = TRUE, recursive = FALSE,
 #courseMeta Test
 courseStrMeta(fileList,path=path_output)
 
-##### Finishing Details ####
+#### Finishing details ####
 #Indicate completion
 message("\n**** Complete! ****\n")
 
-## Script processing time feedback #####
+## Script processing time feedback
 #print the amount of time the script required
-cat("\n\n\nComplete script processing time details (in sec):\n")
-print(proc.time() - start)
+cat("\n\n\nComplete script processing time details (in min.):\n")
+print((proc.time()[3] - start[3])/60)
 
 ## Clear environment variables
 rm(list=ls())

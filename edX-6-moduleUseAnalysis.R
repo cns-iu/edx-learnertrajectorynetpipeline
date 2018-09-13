@@ -248,14 +248,14 @@ mods <- mods[,c(1:10,30,11:13,31,14,32:33,15:20,34,21,35:36,22,37,23,38,24,39,25
 write.csv(mods,file=paste0(path_output,"/analysis/modules/",courseID,groupID,"+ModuleUseStats.csv"), row.names = F)
 rm(nodeFileList,rec)
 
-#### Finishing Details ####
+#### Finishing details ####
 #Indicate completion
 message("\n**** Complete! ****\n")
 
-## Script processing time feedback 
+## Script processing time feedback
 #print the amount of time the script required
 cat("\n\n\nComplete script processing time details (in sec):\n")
-print(proc.time() - start)
+print((proc.time()[3] - start[3])/60)
 
 ## Clear environment variables
 rm(list=ls())

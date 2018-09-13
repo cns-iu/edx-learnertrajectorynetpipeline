@@ -56,44 +56,228 @@
 #               extraction for course
 #   2018.05.21  Script format alignment.
 #   2018.07.02  File output stack updates.
+#   2018.07.03  Update script for new course data naming conventions; user table now
+#               includes grades, certificates, and enrollment data. User list is subset
+#               for active student users.
+#   2018.07.22  Updated script to remove users from list who are on the rolecourse.csv 
+#               data set. These are instructors who are presented as non-staff to 
+#               students in the course. Update to remove research staff in student pool.
+#   2018.09.12  Updated to accommidate courses that may or may not have a data set of
+#               user roles or grades provided directly in edX data package; limit fields
+#               returned in final user data; 
 ## ====================================================================================== ##
 #### Environment setup ####
 ## Clean the R environment
 rm(list=ls()) 
 
-## Start timer to track how long the script takes to execute
-start <-  proc.time() #save the time (to compute elapsed time of script)
-
 ## Load required packages 
 require("tcltk2")     #for OS independent GUI file and folder selection
 require("stringr")    #for string manipulation
 require("plyr")       #for table joins
+require("Hmisc")      # %nin% function
 
-#### Main Processing #### 
+#### Paths #### 
 #Assigns path to directory where R may read in a course' state data from the edX data package 
 path_data = tclvalue(tkchooseDirectory())
+
 #Assigns path where R saves processing outputs for user logs
-path_output = paste0(tclvalue(tkchooseDirectory()))
+path_output = tclvalue(tkchooseDirectory())
+
+## Start timer to track how long the script takes to execute
+start <-  proc.time() #save the time (to compute elapsed time of script)
 
 ## Identifying student users from an edX course
 #List of authenticated users extracted from edX course data package
-userList <- list.files(full.names = TRUE, recursive = FALSE, 
+userFilename <- list.files(full.names = TRUE, recursive = FALSE, 
                        path = paste0(path_data,"/state/"),
-                       pattern = "auth_user")
-users <- read.csv(userList[1],sep = '\t',header=T)[,c(1,7:11)]
-userProf <- read.csv(userList[2],sep = '\t',header=T)[,c(2,8,10:14)]
-names(userProf)[1] <- 'id'
+                       pattern = "users")
+
+# Tests if user data is found with given pattern
+if(length(userFilename)==0){
+  userFilename <- list.files(full.names = TRUE, recursive = FALSE, 
+                             path = paste0(path_data,"/state/"),
+                             pattern = "user-")
+}
+#User Profile data
+userProf <- list.files(full.names = TRUE, recursive = FALSE, 
+                       path = paste0(path_data,"/state/"),
+                       pattern = "profile")
+#Course certificate award data
+certs <- list.files(full.names = TRUE, recursive = FALSE, 
+                    path = paste0(path_data,"/state/"),
+                    pattern = "cert")
+
+## The enrollment and grade data tables may not be included for every course
+#Enrollment data
+enroll <- list.files(full.names = TRUE, recursive = FALSE, 
+                     path = paste0(path_data,"/state/"),
+                     pattern = "enroll")
+#Overall course grade data
+grade <- list.files(full.names = TRUE, recursive = FALSE, 
+                     path = paste0(path_data,"/state/"),
+                     pattern = "coursegrade.csv$")
+
+#Course Roles
+role <- list.files(full.names = TRUE, recursive = FALSE, 
+                    path = paste0(path_data,"/state/"),
+                    pattern = "rolecourse.csv$")
+
+#### Processing Parameters ####
+## Parameter to remove known research users from course lists
+#True means these users are removed, False means they are kept in the data.
+researchers=T
+
+## Sets course certificate (grading) threshold
+pass_grade=.6
+
+## Student Age User settings
+#Sets maximum age boundary for year of birth
+maxAge=75
+#Sets minimum age boundary for year of birth
+minAge=20
+
+#### Read in data sets and update names ####
+#Checks to see if file name ends in SQL or csv
+if(grepl("\\.sql",userFilename)==T){
+  users <- read.delim(userFilename[1],header=T, sep="\t")[,c(1,7,8,11)]
+  userProf <- read.delim(userProf[1],header=T, sep="\t")[,c(2,8,10:11,14)]
+  certs <- read.delim(certs[1],header=T, sep="\t")[,c(2,12,4,8)]
+  enroll <- read.delim(enroll[1],header=T, sep="\t")[,c(2,4)]
+  names(certs)[2:4] <- c("cert_created_date","percent_grade","letter_grade")
+} else {
+  users <- read.csv(userFilename[1],header=T)[,c(1,7,8,11)]
+  userProf <- read.csv(userProf[1],header=T)[,c(2,8,10:11,14)]
+  certs <- read.csv(certs[1],header=T)[,c(2,12)]
+  enroll <- read.csv(enroll[1],header=T)[,c(2,4)]
+  names(certs)[2] <- c("cert_created_date")  
+}
+names(userProf)[1] <- names(enroll)[1] <- names(certs)[1] <- 'id'
+names(enroll)[2] <-c("enroll_created_date")
+
+#These fields are tested because not all edX data packages incorporate these files
+#Loads in grade data OR creates the grade data frame based on certificate data set
+if(length(grade)>0){
+  grade <- read.csv(grade[1],header=T)[,c(2,4:8)]
+  names(grade)[1] <- "id"
+} else {
+  if(ncol(certs)==4){
+    grade <- certs[,c(1,3,4)]
+    grade$letter_grade <- as.character(grade$letter_grade)
+    grade[grade$letter_grade=="downloadable",]$letter_grade <- "Pass"
+    grade[grade$letter_grade!="downloadable",]$letter_grade <- "Not Passing"
+    certs <- certs[,c(1,2)]
+  }
+}
+
+if(length(role)>0){
+  role <- read.csv(role[1],header=T)[,c(3:4)]  
+} else {
+  role <- data.frame(matrix(data=NA,nrow=1,ncol=2))
+  names(role) <- c("user_id","role")
+}
+
+## Combine Data sets
 users <- join(users,userProf,by="id")
+users <- join(users,enroll,by="id")
+users <- join(users,grade,by="id")
+users <- join(users,certs,by="id")
+rm(userProf,certs,enroll,grade)
 
+#Rearrange columns
+users<-users[c(1:3,5:8,4,9,12,10,11)]
+
+#### Subset to remove staff and researchers #### 
 #Subset users to remove non-students from the list
-users <- users[users$is_staff==0,]
+users <- users[users$is_staff==0 & users$is_active==1,]
 
-#Saves the list of students for the analysis
-userFileName <- sapply(str_split(userList[1],pattern="/"),tail,1)
-userFileName <- str_split(userFileName,pattern="-")
-#Sets file name for edX course user list (uses format {org}-{course Identifier}-{term}-auth_user-students)
-userFileName <- paste(userFileName[[1]][1],userFileName[[1]][2],userFileName[[1]][3],userFileName[[1]][4],"students",sep="-")
-write.csv(users,file=paste0(path_output,"userlists/",userFileName,".csv"), row.names=F)
+#Checks against roles for administrators not listed correctly in user list
+users <- users[which(users$id %nin% role$user_id),]
+
+#Checks for know Boeing IU research team
+if(researchers==T){
+  role <- list.files(full.names = TRUE, recursive = FALSE, 
+                     path = paste0(path_output,"/userlists/"),
+                     pattern = "researchteam_ids.csv$")
+  role <- read.csv(role[1],header=T)[1:2]
+  users <- users[which(users$id %nin% role$user_id),]
+}
+rm(role)
+
+#### Final clean-up of user data set####
+## Grades & Certification fields
+if(nrow(users[is.na(users$percent_grade),])>0){
+  users[is.na(users$percent_grade),]$percent_grade <- 0.00  
+}
+
+if(nrow(users[grepl("Pass",users$letter_grade)==F & is.na(users$letter_grade),])>0) {
+  users$letter_grade <- as.character(users$letter_grade)
+  users[grepl("Pass",users$letter_grade)==F & is.na(users$letter_grade),]$letter_grade <- "Not Passing"
+}
+
+## Creates Percentiles and Certification Group Field used in GLMs and Visualization Groupings
+users$percentile <- ecdf(users$percent_grade)(users$percent_grade)
+users$certGrp <- NA
+users$certGrp <- ifelse(users$percent_grade>pass_grade,paste0("Certified (< ",pass_grade*100,"% Grade)"),paste0("Not certified (> ",pass_grade*100,"% Grade)"))
+users$certGrp <- as.factor(users$certGrp)
+rm(pass_grade)
+
+## Clean-up Gender field
+users$gender <- as.character(users$gender)
+clean <- c("NULL","","none","o","other")
+for(i in 1:length(clean)){
+  if(nrow(users[users$gender==clean[i] & !is.na(users$gender),])>0){
+    users[users$gender==clean[i] & !is.na(users$gender),]$gender <- NA  
+  }
+}
+users$gender <- factor(users$gender,levels=c("m","f"),labels=list("Male","Female"))
+
+## Clean-up Year of Birth field
+users$year_of_birth <- as.character(users$year_of_birth)
+if(nrow(users[users$year_of_birth=="NULL",])>0){
+  users[users$year_of_birth=="NULL",]$year_of_birth <- NA  
+}
+#Sets max reportable year to within a retirement window 75
+if(nrow(users[users$year_of_birth <= (as.numeric(format(Sys.Date(), "%Y"))-maxAge) & !is.na(users$year_of_birth),])>0){
+  users[users$year_of_birth <= (as.numeric(format(Sys.Date(), "%Y"))-maxAge) & !is.na(users$year_of_birth),]$year_of_birth <- NA  
+}
+#Sets min age to year of young employees (college grads) 20
+if(nrow(users[users$year_of_birth >= (as.numeric(format(Sys.Date(), "%Y"))-minAge) & !is.na(users$year_of_birth),])>0){
+  users[users$year_of_birth >= (as.numeric(format(Sys.Date(), "%Y"))-minAge) & !is.na(users$year_of_birth),]$year_of_birth <- NA  
+}
+users$year_of_birth <- as.numeric(users$year_of_birth)
+rm(maxAge,minAge)
+
+## Clean-up Level of Education field
+users$level_of_education <- as.character(users$level_of_education)
+for(i in 1:length(clean)){
+  if(nrow(users[users$level_of_education==clean[i] & !is.na(users$level_of_education),])>0){
+    users[users$level_of_education==clean[i] & !is.na(users$level_of_education),]$level_of_education <- NA  
+  }
+}
+if(nrow(users[users$level_of_education=="p_oth" & !is.na(users$level_of_education),])>0){
+  users[users$level_of_education=="p_oth" & !is.na(users$level_of_education),]$level_of_education <- "p"  
+}
+users$level_of_education <- factor(users$level_of_education,levels=c("hs","a","b","m","p"),labels=c("High School","Associates","Bachelors","Masters","Doctoral"))
+rm(clean,i)
+
+#Updates names of student demographi and performance data
+names(users)[c(5,6,12)] <- c("yob","loe","cert_status")
+#Reorders columns
+users <- users[,c(1,4:7,11,13,8:10,12,14)]
+
+#### Exporting the user data set ####
+## Load Course Metadata
+# This is used for file naming
+meta <- list.files(full.names = TRUE, recursive = FALSE, 
+                   path = paste0(path_output,"/course/"),
+                   pattern = "meta")
+meta <- read.csv(meta[1],header=T)[1]
+meta$id <-gsub("\\+","\\-",meta$id)
+
+#Sets file name for user list
+userFilename <- paste0(meta$id,"-auth_user-students")
+#Saves user list as a csv
+write.csv(users,file=paste0(path_output,"/userlists/",userFilename,".csv"), row.names=F)
 
 #### Finishing details ####
 #Indicate completion
@@ -102,7 +286,7 @@ message("\n**** Complete! ****\n")
 ## Script processing time feedback
 #print the amount of time the script required
 cat("\n\n\nComplete script processing time details (in sec):\n")
-print(proc.time() - start)
+print((proc.time()[3] - start[3])/60)
 
 ## Clear environment variables
-rm(list=ls())   
+rm(list=ls())
