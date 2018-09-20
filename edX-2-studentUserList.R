@@ -64,7 +64,9 @@
 #               students in the course. Update to remove research staff in student pool.
 #   2018.09.12  Updated to accommidate courses that may or may not have a data set of
 #               user roles or grades provided directly in edX data package; limit fields
-#               returned in final user data; 
+#               returned in final user data.
+#   2018.09.20  Update to reorder script lines that update "letter_grade" field.
+#
 ## ====================================================================================== ##
 #### Environment setup ####
 ## Clean the R environment
@@ -128,7 +130,7 @@ role <- list.files(full.names = TRUE, recursive = FALSE,
 researchers=T
 
 ## Sets course certificate (grading) threshold
-pass_grade=.6
+pass_grade=.7
 
 ## Student Age User settings
 #Sets maximum age boundary for year of birth
@@ -163,8 +165,8 @@ if(length(grade)>0){
   if(ncol(certs)==4){
     grade <- certs[,c(1,3,4)]
     grade$letter_grade <- as.character(grade$letter_grade)
-    grade[grade$letter_grade=="downloadable",]$letter_grade <- "Pass"
     grade[grade$letter_grade!="downloadable",]$letter_grade <- "Not Passing"
+    grade[grade$letter_grade=="downloadable",]$letter_grade <- "Pass"
     certs <- certs[,c(1,2)]
   }
 }
