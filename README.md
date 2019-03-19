@@ -4,7 +4,7 @@ The edX Student and Course Analytics and Visualization Pipeline is analytics and
 * to extract and process student users and performance data, course structures and event logs;
 * create learner trajectory networks (see [Visualizations of student learning trajectories in online courses (cns-iu/learning-trajectories)](https://github.com/cns-iu/learning-trajectories) for example visualization implementation);
 * analyze the students use of course content modules; and 
-* a data set of aggregate student performance and interaction measurements for a given course.
+* aggregate student performance and interaction measurements for a given course.
 
 Each script in the data processing pipeline is briefly described below:
 1.	[edX-1-courseStructureMeta.R](https://github.com/mginda/edx-learnertrajectorynetpipeline/blob/master/edX-1-courseStructureMeta.R) script extracts a the course structure from the edX Data Package files, . The course structure is used in processing log files and creating the node lists in learner trajectory networks. 
