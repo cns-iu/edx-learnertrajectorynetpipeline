@@ -1,0 +1,279 @@
+---
+title: "Visualizing "
+output: html_document
+---
+
+```{r setup_knitr, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This R Markdown script reproduces visualization presented in the paper, ""; specifically *Figure 1, Inset B*. The visualizations documented here use analytic results for the MITxPro course, *Architecture of Complex Systems, Fall 2016,* (MITProfessionalX+SysEngxB1+3T2016) with the **edX Learner and Course Analytics Pipeline** scripts 1 through 6.
+
+## Environment Setup
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+```{r setup_environment, warning = FALSE,message = FALSE}
+## Load required packages
+require("RCurl")      #Loading data from GitHub
+require("grid")       #Visualizations
+require("plyr")       #Data aggregations
+require("stringr")    #Extracting strings
+require("colorspace") #ColorSpace color pallete selection
+require("ggplot2") #GGplot 2 graphics library
+```
+
+## Loading Data
+The data set loaded as moduels was created by the script [edX-1-courseStructureMeta.R](https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-1-courseStructureMeta.R). Data represents the course structure used to represent the content of an edX course.
+
+The data set loaded as moduleUse was created by the script [edX-6-moduleUseAnalysis.R](https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-6-moduleUseAnalysis.R). Data represents an overall module engagement statistics for an identified group/cohort of student active in edX Course.
+```{r data}
+#Load Sample Data Set A
+modules <- read.csv(text=getURL("https://raw.githubusercontent.com/cns-iu/edx-learnertrajectorynetpipeline/master/data/dataA.csv", ssl.verifypeer = FALSE), header=T)
+
+#Load Sample Data Set C
+moduleUse <- read.csv(text=getURL("https://raw.githubusercontent.com/cns-iu/edx-learnertrajectorynetpipeline/master/data/dataC.csv",ssl.verifypeer = FALSE), header=T)
+```
+
+##Temporal Completion Estimates for an edX Course
+In the example course, instructional designers estimated of how long they believe a student would take to complete each chapter unit of the course. Estimates for how longs students can expect to complete a unit or group of pages are to students (and analysts) through a brief module description. Chapter time estimages are made in hours; page estimates are provided in minutes.
+
+###Extracting Chapter Time Estimates of Completion 
+The sample data found in the *modules* data frame captures this information. The following section of code is used to extract these temporal estimates for the edX course chapter modules as a separate data frame *chapterEst*. In cases where a range of time is given (e.g. 4-5 hours), the maximum time is used. All hour estimates converted to minutes.
+
+```{r chapterTimeUseEstimates}
+#Subset the course structure to keep only chapter modules
+chapterEst <- modules[modules$mod_type==c("chapter"),c(2,7,5)]
+names(chapterEst)[c(1,3)] <- c("id","label")
+
+#Processing chapter labels to extract time estimates and estimate units
+label<- sapply(chapterEst$label, function(x) str_split(x,"\\(")[[1]][2])
+#Updates the Chapter Labels
+chapterEst$label<- sapply(chapterEst$label, function(x) str_split(x,"\\(")[[1]][1]) %>% str_trim()
+
+#Estimate Unit
+unit <- str_sub((lapply(label, function(x) str_split(x," ",n = 3)[[1]][2])),1,1)
+
+#Extracting Estimates
+est <- as.data.frame(regmatches(label,gregexpr("[[:digit:]]+\\.*[[:digit:]]*",label)),
+                     row.names = c("min","max")) %>% t() 
+rownames(est) <- 1:nrow(est)
+est <- as.data.frame(est,stringsAsFactors=F)
+est$max <- as.numeric(est$max)
+est$min <- as.numeric(est$min)
+
+#Combines estimates with estimate units
+est <- cbind(est,unit)
+
+#Convert all estimates in hours to minutes
+est[est$unit=="h",]$max <- est[est$unit=="h",]$max*60
+est[est$unit=="h",]$min <- est[est$unit=="h",]$min*60
+
+chapterEst <- cbind(chapterEst,est[1:2])
+names(chapterEst)[4:5] <- c("estTime_min","estTime_max")
+chapterEst
+```
+
+###Extracting Chapter Time Estimates of Completion based on Sub-Page Estimates
+Estimates are also made for sequential pages of content, which allows for a second measures of estimates to be made for chapters, based on the sum of a chapter's sub-page estimates.  In cases where a range of time is given (e.g. 4-5 hours), the maximum time is used and converted to minutes.
+```{r chapterSubPageTimeEstimates}
+#Extracting chapter level temporal estimates
+chapterPageEst<- modules[modules$mod_type==c("sequential"),c(13,7,5)]
+names(chapterPageEst)[c(1,3)] <- c("id","label")
+chapterPageEst$label <- sapply(chapterPageEst$label, function(x) str_split(x,"\\(")[[1]][2])
+
+#Estimate Unit
+unit <- str_sub((lapply(chapterPageEst$label, function(x) str_split(x," ",n = 3)[[1]][2])),1,1)
+
+#Extracting Estimates
+est <- regmatches(chapterPageEst$label,gregexpr("[[:digit:]]+\\.*[[:digit:]]*",chapterPageEst$label)) %>% 
+    lapply(function(x) if(identical(x, character(0))) NA_character_ else x) %>% 
+    as.data.frame(row.names = c("min","max"), stringsAsFactors = F)
+est <- as.data.frame(t(est), stringsAsFactors = F)
+rownames(est) <- 1:nrow(est)
+est$max <- as.numeric(est$max)
+est$min <- as.numeric(est$min)
+
+#Combines estimates with estimate units
+chapterPageEst <- cbind(chapterPageEst[,1:2],est,unit)
+
+#Convert all estimates in hours to minutes
+chapterPageEst[chapterPageEst$unit=="h" & is.na(chapterPageEst$unit)==F,]$max <- 
+  chapterPageEst[chapterPageEst$unit=="h" & is.na(chapterPageEst$unit)==F,]$max*60
+chapterPageEst[chapterPageEst$unit=="h" & is.na(chapterPageEst$unit)==F,]$min <- 
+  chapterPageEst[chapterPageEst$unit=="h" & is.na(chapterPageEst$unit)==F,]$min*60
+
+#Chapter time estimates based on the sum of page time estimates
+chapterPageEst <- ddply(chapterPageEst,.(id),summarize,
+                       pageEstTime_min = sum(min,na.rm=T),
+                       pageEstTime_max = sum(max,na.rm=T))
+chapterPageEst
+```
+Note that some chapters do not have page level estimates for their time, these will be treated after combining the Chapter level and page level time estimates for completion.
+
+###Combining the Chapter Level and the Page Level Time Estimates of Completion
+```{r chapterData}
+chapterEst <- join(chapterEst[,c(1:3,5)],chapterPageEst[,c(1,3)],by="id")
+rm(est,unit,label,chapterPageEst,modules)
+
+#Updates maximum time estimates for pages that lacked them
+chapterEst[chapterEst$pageEstTime_max==0,]$pageEstTime_max <-
+  chapterEst[chapterEst$pageEstTime_max==0,]$estTime_max
+chapterEst
+```
+
+##Calculating Temporal Use Measures of edX Course's Chapters
+
+```{r chapterUseAverage}
+#### Aggregateing Module Data to Join to Prediction data ####
+#Modules with Zero events are not visualized.
+maxStdUsers <- max(moduleUse$unq_stu)
+#Aggregate temporal and user data for course chapter (L1) Modules
+chapterUse <- ddply(moduleUse,.(L1),summarize,
+                total_time = sum(totalTime,na.rm=T),
+                total_avgTime  = sum(avgTimeStu,na.rm=T),
+                avg_chapterStdUsers = mean(unq_stu,na.rm=T),
+                prp_chapterStdUsers = mean(unq_stu,na.rm=T)/maxStdUsers)
+names(chapterUse)[1] <- "id"
+chapterUse
+```
+
+## Combining edX course chapter temporal completion estimates with chapters average time used by students
+```{r , echo=FALSE}
+data <- join(chapterEst[,1:4],chapterUse[,c(1,3)],by="id")
+rm(chapterUse,chapterEst,moduleUse)
+
+#### Creating fields calculating temporal difference between estimated and average student use time
+#Temporal Difference Fields
+data$difTime <- data$total_avgTime - data$estTime_max
+data$sign <- ifelse(data$difTime<0,"neg","pos")
+data$sign <- factor(data$sign,labels = list("pos"=c("Over Estimate"),"neg"=c("Under Estimate")))
+
+data
+```
+
+##Visualization of results
+###Setting themes and color palettes
+```{r themes}
+#Theme for ggplot2
+theme_set(theme_light())
+
+#Univariate color scale
+#Multi-color univariate color palette for the module type variables
+#Dark blue to yellow green
+pal1 <- function (n, h = c(360, 45), c. = c(100, 17), l = c(46, 93), 
+                  power = c(0, 0.866666666666667), fixup = TRUE, gamma = NULL, 
+                  alpha = 1, ...) 
+                  {
+                    if (!is.null(gamma)) 
+                      warning("'gamma' is deprecated and has no effect")
+                    if (n < 1L) 
+                      return(character(0L))
+                    h <- rep(h, length.out = 2L)
+                    c <- rep(c., length.out = 2L)
+                    l <- rep(l, length.out = 2L)
+                    power <- rep(power, length.out = 2L)
+                    rval <- seq(1, 0, length = n)
+                    rval <- hex(polarLUV(L = l[2L] - diff(l) * rval^power[2L], 
+                                         C = c[2L] - diff(c) * rval^power[1L], H = h[2L] - diff(h) * 
+                                           rval), fixup = fixup, ...)
+                    if (!missing(alpha)) {
+                      alpha <- pmax(pmin(alpha, 1), 0)
+                      alpha <- format(as.hexmode(round(alpha * 255 + 0.0001)), 
+                                      width = 2L, upper.case = TRUE)
+                      rval <- paste(rval, alpha, sep = "")
+                    }
+                    return(rval)
+}
+
+#Categorical colors 2
+catColors <- pal1(5)
+```
+  
+
+### Fig 1 - Inset B: Avg Student Temporal Module Page Use Compared to Estimated Time Use ####
+```{r figure 1.B, eval=FALSE, , echo=FALSE, include=FALSE}
+ggplot(pageEst, aes(x=order, y=difTime)) +
+  geom_vline(xintercept=vline[1:nrow(vline),4],linetype=5,alpha=.30) +
+  geom_bar(stat="identity",aes(fill=sign))+
+  geom_hline(yintercept=0, linetype=1, show.legend = NA)  +
+  scale_fill_manual(values=catColors[c(3,1)]) +
+  scale_x_continuous(
+    expand=c(0.005, 0.005),
+    labels=pageEst$label,
+    breaks=seq(1,max(pageEst$order),1)) +
+  scale_y_continuous(breaks=seq(-20,round(max(pageEst$difTime),0),20))+
+  labs(#title="B",
+       y="Difference in Time (Min.)",
+       x="Course Page Module Sequence") +
+  guides(fill = guide_legend(
+            title = "Difference in Estimate", 
+            title.position = "top",
+            title.theme = element_text(
+              size = 10,
+              angle = 0),
+            label.theme = element_text(
+              size = 8,
+              angle = 0),
+            reverse = TRUE
+            )) +
+  theme(axis.text.x = element_text(hjust=1,vjust=.25,size=10, angle=90),
+        axis.ticks = element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        panel.border = element_blank(),
+        panel.grid.major.y = element_line(linetype = 4),
+        legend.position = c(.95, .99),
+        legend.justification = c("right", "top"),
+        legend.box.just = "right",
+        legend.margin = margin(0, 3, 0, 3))
+ 
+#### Comparing Estimate Chapter Module Time to Avg Student Page Module Time #### 
+#### Fig X: Avg Student Temporal Module Chapter Use Compared to Estimated Time Use ####
+tiff(filename=paste0(path_output,"/analysis/visualizations/figX-L1ModUse-LineGraph-EstTimeStdAvgTime.tif"),
+     width = 10, height = 4, units = "in", pointsize = 10, res=300,
+     compression = c("none"),  type="cairo", bg = "white")
+ggplot(chpEst) +
+  geom_line(aes(chpEst$order,chpEst$estTime), linetype = 2) +
+  geom_point(aes(chpEst$order,chpEst$estTime), shape=2) +
+  geom_line(aes(chpEst$order,chpEst$total_avgTime), linetype = 1) +
+  geom_point(aes(chpEst$order,chpEst$total_avgTime), shape=1)
+dev.off()  
+#### Fig X: Avg Student Temporal Module Chapter Use Compared to Estimated Time Use ####
+tiff(filename=paste0(path_output,"/analysis/visualizations/figX-L1ModUse-BarGraph-EstTimeStdAvgTime.tif"),
+     width = 6, height = 4.5, units = "in", pointsize = 10, res=300,
+     compression = c("none"),  type="cairo", bg = "white")
+ggplot(chpEst, aes(x=order, y=difTime)) +
+  geom_bar(stat="identity",aes(fill=sign))+
+  geom_hline(yintercept=0, linetype=1, show.legend = NA)  +
+  scale_fill_manual(values=catColors[c(3,1)]) +
+  scale_x_continuous(
+    expand=c(0.01, 0.01),
+    labels=chpEst$labelTrim,
+    breaks=seq(1,max(chpEst$order),1)) +
+  scale_y_continuous(breaks=seq(-60,round(max(chpEst$difTime),0),20))+
+  labs(y="Difference in Time (Min.)",
+       x="Course Page Module Sequence") +
+  guides(fill = guide_legend(
+    title = "Difference in Estimate", 
+    title.position = "top",
+    title.theme = element_text(
+      size = 8,
+      angle = 0),
+    label.theme = element_text(
+      size = 6,
+      angle = 0),
+    reverse = TRUE
+  )) +
+  theme(axis.text.x = element_text(hjust=1,vjust=.25,size=10, angle=90),
+        axis.ticks = element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        panel.border = element_blank(),
+        panel.grid.major.y = element_line(linetype = 4),
+        legend.position = c(.95, 1),
+        legend.justification = c("right", "top"),
+        legend.box.just = "right",
+        legend.margin = margin(0, 3, 0, 3))
+```
