@@ -1,0 +1,11 @@
+name: "edX Learner and Course Analytics and Visualization Pipeline"
+navbar:
+  title: "edX Learner and Course Analytics and Visualization Pipeline"
+  left:
+  - text: "Home"
+    href: index.html
+  - text: "Figure 1.B"
+    href: edx-8-figure1-B.html
+output:
+  html_document:
+    theme: cosmo
