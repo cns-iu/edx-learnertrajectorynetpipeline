@@ -2,6 +2,7 @@
 title: "index"
 author: "Michael Ginda"
 date: "March 21, 2019"
+site: bookdown::bookdown_site
 # knit: (function(input_file, encoding) {
 #   out_dir <- 'docs';
 #   rmarkdown::render(input_file,
