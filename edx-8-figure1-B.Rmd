@@ -1,14 +1,13 @@
 ---
 title: "Figure 1 B - Visualizing Difference Between Instructor Estimate and Students Use Time to Unit Completion"
-knit: (function(input_file, encoding) {
-  out_dir <- 'docs';
-  rmarkdown::render(input_file,
- encoding=encoding,
- output_file=file.path(dirname(input_file), out_dir, 'edx-8-figure1B.html'))})
 ---
-
+file.path()
 ```{r setup_knitr, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+# knit: (function(input_file, encoding) {
+#   out_dir <- 'docs';
+#   rmarkdown::render(input_file,
+#   encoding=encoding,
+#   output_file=file.path(dirname(input_file), out_dir, 'edx-8-figure1-B.html'))})
 ```
 
 This R Markdown script reproduces visualization presented in the paper, ""; specifically *Figure 1, Inset B*. The visualizations documented here use analytic results for the MITxPro course, *Architecture of Complex Systems, Fall 2016,* (MITProfessionalX+SysEngxB1+3T2016) with the **edX Learner and Course Analytics Pipeline** scripts 1 through 6.
@@ -24,6 +23,8 @@ require("plyr")       #Data aggregations
 require("stringr")    #String manipulation
 require("colorspace") #ColorSpace color pallete selection
 require("ggplot2")    #GGplot 2 graphics library
+
+file.path()
 ```
 
 ## Loading Data
