@@ -18,12 +18,12 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 
 ```{r setup_environment, warning = FALSE,message = FALSE}
 ## Load required packages
-require("RCurl")      #Loading data from GitHub
-require("grid")       #Visualizations
+require("RCurl")      #Loading data from web
+require("grid")       #Visualizations base
 require("plyr")       #Data aggregations
-require("stringr")    #Extracting strings
+require("stringr")    #String manipulation
 require("colorspace") #ColorSpace color pallete selection
-require("ggplot2") #GGplot 2 graphics library
+require("ggplot2")    #GGplot 2 graphics library
 ```
 
 ## Loading Data
