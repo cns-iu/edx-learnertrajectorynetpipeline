@@ -1,4 +1,4 @@
----
+--
 title: "index"
 author: "Michael Ginda"
 date: "March 21, 2019"
@@ -9,7 +9,6 @@ site: bookdown::bookdown_site
 #   encoding=encoding,
 #   output_file=file.path(dirname(input_file), out_dir, 'index.html'))})
 ---
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ## Load required packages
