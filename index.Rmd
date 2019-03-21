@@ -3,14 +3,11 @@ title: "index"
 author: "Michael Ginda"
 date: "March 21, 2019"
 output: html_document
-<<<<<<< HEAD
 knit: (function(input_file, encoding) {
   out_dir <- 'docs';
   rmarkdown::render(input_file,
  encoding=encoding,
  output_file=file.path(dirname(input_file), out_dir, 'index.html'))})
-=======
->>>>>>> ad833059b850b53f5fcb4f90b043a0a1948074fa
 ---
 
 ```{r setup, include=FALSE}
