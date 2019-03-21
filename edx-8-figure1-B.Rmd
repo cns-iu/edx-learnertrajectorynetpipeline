@@ -23,8 +23,6 @@ require("plyr")       #Data aggregations
 require("stringr")    #String manipulation
 require("colorspace") #ColorSpace color pallete selection
 require("ggplot2")    #GGplot 2 graphics library
-
-file.path()
 ```
 
 ## Loading Data
