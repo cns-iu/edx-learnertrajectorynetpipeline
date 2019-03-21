@@ -9,8 +9,4 @@ navbar:
    href: edx-8-figure1B.html
 output:
   html_document:
-<<<<<<< HEAD
 theme: cosmo
-=======
- theme: cosmo
->>>>>>> ad833059b850b53f5fcb4f90b043a0a1948074fa
