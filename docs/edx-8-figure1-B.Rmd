@@ -1,5 +1,5 @@
 ---
-title: "Figure 1 B - Visualizing Difference Between Instructor Estimate and Students Use Time to Unit Completion"
+title: "Figure 1, Inset B - Visualizing Difference Between Instructor Estimate and Students Use Time to Unit Completion"
 ---
 ```{r setup_knitr, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -160,7 +160,7 @@ moduleUse <- moduleUse[moduleUse$totalTime>0,]
 pageUse <- ddply(moduleUse,.(L2),summarize,
                 avgTime_total  = sum(avgTimeStu,na.rm=T))
 names(pageUse)[1] <- "id"
-pageUse
+str(pageUse)
 ```
 
 ###Alternative methods for calculating total average time using sequential modules
@@ -231,7 +231,9 @@ pal1 <- function (n, h = c(360, 45), c. = c(100, 17), l = c(46, 93),
 #Categorical colors 2
 catColors <- pal1(5)
 ```
-  
+
+###Setting vertical lines used in the bar graph
+
 ```{r vlines}
 chapterEst$parentID <- factor(chapterEst$parentID)
 pageData$parentID <- factor(pageData$parentID)
@@ -246,10 +248,9 @@ for(i in 1:nrow(vline)){
 }
 ```
 
+##Figure 1 - Inset B
 
-##Visualization of Fig 1 - Inset B: Avg Student Temporal Module Page Use Compared to Estimated Time Use
-
-```{r figure 1.B, eval=FALSE, , echo=FALSE, include=FALSE}
+```{r figure 1.B}
 ggplot(pageData, aes(x=order, y=difTime)) +
   geom_bar(stat="identity",aes(fill=sign)) +
   geom_hline(yintercept=0, linetype=1, show.legend = NA)  +
