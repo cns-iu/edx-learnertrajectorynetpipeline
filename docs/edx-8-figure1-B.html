@@ -307,10 +307,13 @@ $(document).ready(function () {
 
 
 <p>This R Markdown script reproduces visualization presented in the paper, “”; specifically <em>Figure 1, Inset B</em>. The visualizations documented here use analytic results for the MITxPro course, <em>Architecture of Complex Systems, Fall 2016,</em> (MITProfessionalX+SysEngxB1+3T2016) with the <strong>edX Learner and Course Analytics Pipeline</strong> scripts 1 through 6.</p>
-<div id="environment-setup" class="section level2">
-<h2>Environment Setup</h2>
+<div id="environment-setup" class="section level1">
+<h1>Environment Setup</h1>
 <p>This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <a href="http://rmarkdown.rstudio.com" class="uri">http://rmarkdown.rstudio.com</a>.</p>
-<pre class="r"><code>## Load required packages
+<pre class="r"><code>#clean environment
+rm(list=ls())
+
+## Load required packages
 require(&quot;RCurl&quot;)      #Loading data from web
 require(&quot;grid&quot;)       #Visualizations base
 require(&quot;plyr&quot;)       #Data aggregations
@@ -318,8 +321,8 @@ require(&quot;stringr&quot;)    #String manipulation
 require(&quot;colorspace&quot;) #ColorSpace color pallete selection
 require(&quot;ggplot2&quot;)    #GGplot 2 graphics library</code></pre>
 </div>
-<div id="loading-data" class="section level2">
-<h2>Loading Data</h2>
+<div id="loading-data" class="section level1">
+<h1>Loading Data</h1>
 <p>The data set loaded as moduels was created by the script <a href="https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-1-courseStructureMeta.R">edX-1-courseStructureMeta.R</a>. Data represents the course structure used to represent the content of an edX course.</p>
 <p>The data set loaded as moduleUse was created by the script <a href="https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-6-moduleUseAnalysis.R">edX-6-moduleUseAnalysis.R</a>. Data represents an overall module engagement statistics for an identified group/cohort of student active in edX Course.</p>
 <pre class="r"><code>#Load Sample Data Set A
@@ -328,196 +331,231 @@ modules &lt;- read.csv(text=getURL(&quot;https://raw.githubusercontent.com/cns-i
 #Load Sample Data Set C
 moduleUse &lt;- read.csv(text=getURL(&quot;https://raw.githubusercontent.com/cns-iu/edx-learnertrajectorynetpipeline/master/data/dataC.csv&quot;,ssl.verifypeer = FALSE), header=T)</code></pre>
 </div>
-<div id="temporal-completion-estimates-for-an-edx-course" class="section level2">
-<h2>Temporal Completion Estimates for an edX Course</h2>
+<div id="estimates-of-time-to-completion-for-edx-course-chapters-and-sequential-pages" class="section level1">
+<h1>Estimates of Time to Completion for edX Course Chapters and Sequential Pages</h1>
 <p>In the example course, instructional designers estimated of how long they believe a student would take to complete each chapter unit of the course. Estimates for how longs students can expect to complete a unit or group of pages are to students (and analysts) through a brief module description. Chapter time estimages are made in hours; page estimates are provided in minutes.</p>
-<div id="extracting-chapter-time-estimates-of-completion" class="section level3">
-<h3>Extracting Chapter Time Estimates of Completion</h3>
-<p>The sample data found in the <em>modules</em> data frame captures this information. The following section of code is used to extract these temporal estimates for the edX course chapter modules as a separate data frame <em>chapterEst</em>. In cases where a range of time is given (e.g. 4-5 hours), the maximum time is used. All hour estimates converted to minutes.</p>
+<div id="extracting-chapter-estimates-of-time-to-completion" class="section level2">
+<h2>Extracting Chapter Estimates of Time to Completion</h2>
+<p>The sample data found in the <em>modules</em> data frame captures this information. The following section of code is used to extract these temporal estimates for the edX course chapter modules as a separate data frame <em>chapterEst</em>. In cases where a range of time is given (e.g. 4-5 hours), both min and maximum calculations are made. All hour estimates converted to minutes.</p>
 <pre class="r"><code>#Subset the course structure to keep only chapter modules
 chapterEst &lt;- modules[modules$mod_type==c(&quot;chapter&quot;),c(2,7,5)]
-names(chapterEst)[c(1,3)] &lt;- c(&quot;id&quot;,&quot;label&quot;)
-
+names(chapterEst)[c(1,3)] &lt;- c(&quot;parentID&quot;,&quot;parentLabel&quot;)
 #Processing chapter labels to extract time estimates and estimate units
-label&lt;- sapply(chapterEst$label, function(x) str_split(x,&quot;\\(&quot;)[[1]][2])
+label&lt;- sapply(chapterEst$parentLabel, function(x) str_split(x,&quot;\\(&quot;)[[1]][2])
 #Updates the Chapter Labels
-chapterEst$label&lt;- sapply(chapterEst$label, function(x) str_split(x,&quot;\\(&quot;)[[1]][1]) %&gt;% str_trim()
-
-#Estimate Unit
-unit &lt;- str_sub((lapply(label, function(x) str_split(x,&quot; &quot;,n = 3)[[1]][2])),1,1)
+chapterEst$parentLabel &lt;- sapply(chapterEst$parentLabel, function(x) str_split(x,&quot;\\(&quot;)[[1]][1]) %&gt;% str_trim()
 
 #Extracting Estimates
 est &lt;- as.data.frame(regmatches(label,gregexpr(&quot;[[:digit:]]+\\.*[[:digit:]]*&quot;,label)),
-                     row.names = c(&quot;min&quot;,&quot;max&quot;)) %&gt;% t() 
+                     row.names = c(&quot;chpEstTime_min&quot;,&quot;chpEstTime_max&quot;)) %&gt;% t() 
 rownames(est) &lt;- 1:nrow(est)
 est &lt;- as.data.frame(est,stringsAsFactors=F)
-est$max &lt;- as.numeric(est$max)
-est$min &lt;- as.numeric(est$min)
+est$chpEstTime_max &lt;- as.numeric(est$chpEstTime_max)
+est$chpEstTime_min &lt;- as.numeric(est$chpEstTime_min)
+
+#Estimate Unit
+unit &lt;- str_sub((lapply(label, function(x) str_split(x,&quot; &quot;,n = 3)[[1]][2])),1,1)
 
 #Combines estimates with estimate units
 est &lt;- cbind(est,unit)
 
 #Convert all estimates in hours to minutes
-est[est$unit==&quot;h&quot;,]$max &lt;- est[est$unit==&quot;h&quot;,]$max*60
-est[est$unit==&quot;h&quot;,]$min &lt;- est[est$unit==&quot;h&quot;,]$min*60
+est[est$unit==&quot;h&quot;,]$chpEstTime_max &lt;- est[est$unit==&quot;h&quot;,]$chpEstTime_max*60
+est[est$unit==&quot;h&quot;,]$chpEstTime_min &lt;- est[est$unit==&quot;h&quot;,]$chpEstTime_min*60
+#Updates units to correct measure for all fields
+est$unit &lt;- &quot;m&quot;
 
-chapterEst &lt;- cbind(chapterEst,est[1:2])
-names(chapterEst)[4:5] &lt;- c(&quot;estTime_min&quot;,&quot;estTime_max&quot;)
-chapterEst</code></pre>
-<pre><code>##                                   id order
-## 2   29cf9e4cb86d4ed0802f432bd65440c9     2
-## 20  396ce4f65de344c38d297d8afe6bef9b    20
-## 95  19d52da9bee046a28e8c0a883773e86a    95
-## 264 63fbc15b9b194b88bba0b1fa81cbb3fb   264
-## 392 9eacda62cafd4592934b513fd9e254c3   392
-## 483 16ff74448fa34af2a1c080c99d4e844c   483
-## 603 3a2a2222db67495e885f9d1ee9d903b4   603
-## 718 5fc6f037a8e94588891e30a64945b9cb   718
-##                                             label estTime_min estTime_max
-## 2                                  Pre-Assessment          15          15
-## 20                                    Get Started          25          25
-## 95                       Week 1: Systems Thinking         210         210
-## 264                Week 2: Function and Emergence         240         300
-## 392                   Week 3: System Architecture         240         300
-## 483 Week 4: Modeling with DSMs and Modularization         240         300
-## 603                      Week 5: System Architect         240         300
-## 718                               Post-Assessment          15          15</code></pre>
+#Combine chapterEst and est dataframes
+chapterEst &lt;- cbind(chapterEst,est)
+str(chapterEst)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    8 obs. of  6 variables:
+##  $ parentID      : Factor w/ 735 levels &quot;003a48b7833a46feb5b56a684a115796&quot;,..: 119 170 73 295 457 65 174 282
+##  $ order         : int  2 20 95 264 392 483 603 718
+##  $ parentLabel   : chr  &quot;Pre-Assessment&quot; &quot;Get Started&quot; &quot;Week 1: Systems Thinking&quot; &quot;Week 2: Function and Emergence&quot; ...
+##  $ chpEstTime_min: num  15 25 210 240 240 240 240 15
+##  $ chpEstTime_max: num  15 25 210 300 300 300 300 15
+##  $ unit          : chr  &quot;m&quot; &quot;m&quot; &quot;m&quot; &quot;m&quot; ...</code></pre>
 </div>
-<div id="extracting-chapter-time-estimates-of-completion-based-on-sub-page-estimates" class="section level3">
-<h3>Extracting Chapter Time Estimates of Completion based on Sub-Page Estimates</h3>
-<p>Estimates are also made for sequential pages of content, which allows for a second measures of estimates to be made for chapters, based on the sum of a chapter’s sub-page estimates. In cases where a range of time is given (e.g. 4-5 hours), the maximum time is used and converted to minutes.</p>
+<div id="extracting-sequential-estimates-of-time-to-completion" class="section level2">
+<h2>Extracting Sequential Estimates of Time to Completion</h2>
+<p>Estimates of time to completion are also provided for sequential page, which group content and assessment modules into sub-units of a chapter. The nested structure allows for more nuanced estimates of time to completion than for chapters provide. Time to completion estimates for sequential pages are used for this figure.</p>
 <pre class="r"><code>#Extracting chapter level temporal estimates
-chapterPageEst&lt;- modules[modules$mod_type==c(&quot;sequential&quot;),c(13,7,5)]
-names(chapterPageEst)[c(1,3)] &lt;- c(&quot;id&quot;,&quot;label&quot;)
-chapterPageEst$label &lt;- sapply(chapterPageEst$label, function(x) str_split(x,&quot;\\(&quot;)[[1]][2])
-
-#Estimate Unit
-unit &lt;- str_sub((lapply(chapterPageEst$label, function(x) str_split(x,&quot; &quot;,n = 3)[[1]][2])),1,1)
+pageEst&lt;- modules[modules$mod_type==c(&quot;sequential&quot;),c(2,13,7,5)]
+#Update field names
+names(pageEst)[c(1:2,4)] &lt;- c(&quot;id&quot;,&quot;parentID&quot;,&quot;label&quot;)
+#Updates order based on row numbers
+pageEst$order &lt;- 1:nrow(pageEst)
+#Processing chapter labels to extract time estimates and estimate units
+label &lt;- sapply(pageEst$label, function(x) str_split(x,&quot;\\(&quot;)[[1]][2])
+#Updates the Chapter Labels
+pageEst$label&lt;- sapply(pageEst$label, function(x) str_split(x,&quot;\\(&quot;)[[1]][1]) %&gt;% str_trim()
 
 #Extracting Estimates
-est &lt;- regmatches(chapterPageEst$label,gregexpr(&quot;[[:digit:]]+\\.*[[:digit:]]*&quot;,chapterPageEst$label)) %&gt;% 
+est &lt;- regmatches(label,gregexpr(&quot;[[:digit:]]+\\.*[[:digit:]]*&quot;,label)) %&gt;% 
     lapply(function(x) if(identical(x, character(0))) NA_character_ else x) %&gt;% 
-    as.data.frame(row.names = c(&quot;min&quot;,&quot;max&quot;), stringsAsFactors = F)
+    as.data.frame(row.names = c(&quot;pageEstTime_min&quot;,&quot;pageEstTime_max&quot;), stringsAsFactors = F)
 est &lt;- as.data.frame(t(est), stringsAsFactors = F)
 rownames(est) &lt;- 1:nrow(est)
-est$max &lt;- as.numeric(est$max)
-est$min &lt;- as.numeric(est$min)
+est$pageEstTime_max &lt;- as.numeric(est$pageEstTime_max)
+est$pageEstTime_min &lt;- as.numeric(est$pageEstTime_min)
+
+#Extracts Unit of Time Estimate
+unit &lt;- str_sub((lapply(label, function(x) str_split(x,&quot; &quot;,n = 3)[[1]][2])),1,1)
 
 #Combines estimates with estimate units
-chapterPageEst &lt;- cbind(chapterPageEst[,1:2],est,unit)
+est &lt;- cbind(est,unit)
 
 #Convert all estimates in hours to minutes
-chapterPageEst[chapterPageEst$unit==&quot;h&quot; &amp; is.na(chapterPageEst$unit)==F,]$max &lt;- 
-  chapterPageEst[chapterPageEst$unit==&quot;h&quot; &amp; is.na(chapterPageEst$unit)==F,]$max*60
-chapterPageEst[chapterPageEst$unit==&quot;h&quot; &amp; is.na(chapterPageEst$unit)==F,]$min &lt;- 
-  chapterPageEst[chapterPageEst$unit==&quot;h&quot; &amp; is.na(chapterPageEst$unit)==F,]$min*60
+est[est$unit==&quot;h&quot; &amp; is.na(est$unit)==F,]$pageEstTime_max &lt;- 
+  est[est$unit==&quot;h&quot; &amp; is.na(est$unit)==F,]$pageEstTime_max*60
+est[est$unit==&quot;h&quot; &amp; is.na(est$unit)==F,]$pageEstTime_min &lt;- 
+  est[est$unit==&quot;h&quot; &amp; is.na(est$unit)==F,]$pageEstTime_min *60
+#Updates units to correct measure for all fields
+est$unit &lt;- &quot;m&quot;
 
-#Chapter time estimates based on the sum of page time estimates
-chapterPageEst &lt;- ddply(chapterPageEst,.(id),summarize,
-                       pageEstTime_min = sum(min,na.rm=T),
-                       pageEstTime_max = sum(max,na.rm=T))
-chapterPageEst</code></pre>
-<pre><code>##                                 id pageEstTime_min pageEstTime_max
-## 1 16ff74448fa34af2a1c080c99d4e844c             273             273
-## 2 19d52da9bee046a28e8c0a883773e86a             201             231
-## 3 29cf9e4cb86d4ed0802f432bd65440c9               0               0
-## 4 396ce4f65de344c38d297d8afe6bef9b              22              22
-## 5 3a2a2222db67495e885f9d1ee9d903b4             193             193
-## 6 5fc6f037a8e94588891e30a64945b9cb               0               0
-## 7 63fbc15b9b194b88bba0b1fa81cbb3fb             224             224
-## 8 9eacda62cafd4592934b513fd9e254c3             185             185</code></pre>
-<p>Note that some chapters do not have page level estimates for their time, these will be treated after combining the Chapter level and page level time estimates for completion.</p>
-</div>
+#Combine pageEst and est dataframe
+pageEst &lt;- cbind(pageEst,est)
+rm(est,unit,label)
+str(pageEst)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    54 obs. of  7 variables:
+##  $ id             : Factor w/ 735 levels &quot;003a48b7833a46feb5b56a684a115796&quot;,..: 254 154 343 11 567 594 273 242 162 405 ...
+##  $ parentID       : Factor w/ 184 levels &quot;03a3841a0f684ecd93995d985355da91&quot;,..: 35 54 54 54 54 54 54 54 54 54 ...
+##  $ order          : int  1 2 3 4 5 6 7 8 9 10 ...
+##  $ label          : chr  &quot;Pre-Assessment&quot; &quot;Welcome&quot; &quot;Course Schedule&quot; &quot;Course Collaboration Tools&quot; ...
+##  $ pageEstTime_min: num  NA 3 3 5 2 4 1 1 2 1 ...
+##  $ pageEstTime_max: num  NA 3 3 5 2 4 1 1 2 1 ...
+##  $ unit           : chr  &quot;m&quot; &quot;m&quot; &quot;m&quot; &quot;m&quot; ...</code></pre>
 <div id="combining-the-chapter-level-and-the-page-level-time-estimates-of-completion" class="section level3">
 <h3>Combining the Chapter Level and the Page Level Time Estimates of Completion</h3>
-<pre class="r"><code>chapterEst &lt;- join(chapterEst[,c(1:3,5)],chapterPageEst[,c(1,3)],by=&quot;id&quot;)
-rm(est,unit,label,chapterPageEst,modules)
+<p>Note, some sequential pages do not have estimates for the time necessary to completion. For the course profiled, the page modules without time to completion estimates happen to be survey instruments administed by instructional designers.</p>
+<p>A review of the chapter level estimates for these surveys range between 15 and 300 minutes; the 300 minute estimate for a chapter with multiple units, and is too large for a apply to the survey. Instead, we take the mode of estimate used for all survey instruments (15 minutes) to apply</p>
+<pre class="r"><code>#Left join of the pageEst and chapterEst dataframes. Combining Chapter Module Labels, and maximum time estimates
+#The chapter label
+pageEst &lt;- join(pageEst[,c(1:4,6,7)], chapterEst[,c(1,3,5)], by=&quot;parentID&quot;, type=&quot;left&quot;)
 
-#Updates maximum time estimates for pages that lacked them
-chapterEst[chapterEst$pageEstTime_max==0,]$pageEstTime_max &lt;-
-  chapterEst[chapterEst$pageEstTime_max==0,]$estTime_max
-chapterEst</code></pre>
-<pre><code>##                                 id order
-## 1 29cf9e4cb86d4ed0802f432bd65440c9     2
-## 2 396ce4f65de344c38d297d8afe6bef9b    20
-## 3 19d52da9bee046a28e8c0a883773e86a    95
-## 4 63fbc15b9b194b88bba0b1fa81cbb3fb   264
-## 5 9eacda62cafd4592934b513fd9e254c3   392
-## 6 16ff74448fa34af2a1c080c99d4e844c   483
-## 7 3a2a2222db67495e885f9d1ee9d903b4   603
-## 8 5fc6f037a8e94588891e30a64945b9cb   718
-##                                           label estTime_max
-## 1                                Pre-Assessment          15
-## 2                                   Get Started          25
-## 3                      Week 1: Systems Thinking         210
-## 4                Week 2: Function and Emergence         300
-## 5                   Week 3: System Architecture         300
-## 6 Week 4: Modeling with DSMs and Modularization         300
-## 7                      Week 5: System Architect         300
-## 8                               Post-Assessment          15
-##   pageEstTime_max
-## 1              15
-## 2              22
-## 3             231
-## 4             224
-## 5             185
-## 6             273
-## 7             193
-## 8              15</code></pre>
+#Statistical mode function
+getMode &lt;- function(x, na.rm = FALSE) {
+  if(na.rm){
+    x = x[!is.na(x)]
+  }
+  ux &lt;- unique(x)
+  return(ux[which.max(tabulate(match(x, ux)))])
+}
+#Updating the records with NA for the pageEstTime_max and replacing them with chapter level mode for survey instruments
+pageEst[is.na(pageEst$pageEstTime_max),]$pageEstTime_max &lt;-
+  getMode(pageEst[is.na(pageEst$pageEstTime_max),]$chpEstTime_max, na.rm=T)
+
+#Final pageEst dataframe
+pageEst &lt;- pageEst[,c(1:4,7,5,6)]
+str(pageEst)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    54 obs. of  7 variables:
+##  $ id             : Factor w/ 735 levels &quot;003a48b7833a46feb5b56a684a115796&quot;,..: 254 154 343 11 567 594 273 242 162 405 ...
+##  $ parentID       : Factor w/ 184 levels &quot;03a3841a0f684ecd93995d985355da91&quot;,..: 35 54 54 54 54 54 54 54 54 54 ...
+##  $ order          : int  1 2 3 4 5 6 7 8 9 10 ...
+##  $ label          : chr  &quot;Pre-Assessment&quot; &quot;Welcome&quot; &quot;Course Schedule&quot; &quot;Course Collaboration Tools&quot; ...
+##  $ parentLabel    : chr  &quot;Pre-Assessment&quot; &quot;Get Started&quot; &quot;Get Started&quot; &quot;Get Started&quot; ...
+##  $ pageEstTime_max: num  15 3 3 5 2 4 1 1 2 1 ...
+##  $ unit           : chr  &quot;m&quot; &quot;m&quot; &quot;m&quot; &quot;m&quot; ...</code></pre>
 </div>
 </div>
 <div id="calculating-temporal-use-measures-of-edx-courses-chapters" class="section level2">
 <h2>Calculating Temporal Use Measures of edX Course’s Chapters</h2>
-<pre class="r"><code>#Aggregate temporal and user data for course chapter (L1) Modules
-chapterUse &lt;- ddply(moduleUse,.(L1),summarize,
-                total_time = sum(totalTime,na.rm=T),
-                total_avgTime  = sum(avgTimeStu,na.rm=T))
-names(chapterUse)[1] &lt;- &quot;id&quot;
-chapterUse</code></pre>
-<pre><code>##                                 id total_time total_avgTime
-## 1 16ff74448fa34af2a1c080c99d4e844c  477596.81     398.84153
-## 2 19d52da9bee046a28e8c0a883773e86a  455676.39     335.69197
-## 3 29cf9e4cb86d4ed0802f432bd65440c9   45280.56      29.16925
-## 4 396ce4f65de344c38d297d8afe6bef9b   68679.77      68.43895
-## 5 3a2a2222db67495e885f9d1ee9d903b4  273897.06     243.49470
-## 6 5fc6f037a8e94588891e30a64945b9cb   29577.57      22.52500
-## 7 63fbc15b9b194b88bba0b1fa81cbb3fb  425127.11     331.06562
-## 8 9eacda62cafd4592934b513fd9e254c3  443068.07     343.98164</code></pre>
+<p>Next, Data C contains descriptive for use each content and assessment module for the course based on analysis of all active students in the course. The course’s chapter, sequential and vertical modules are excluded from the data; however, the hiearachical relationships of content and assessment modules to chapter and sequential modules identifiers through the <strong>L1</strong> and <strong>L2</strong> fields.</p>
+<p>The <em>ddply</em> function is used to calculate the total of average time spent using sequential modules by active students in an edX course. The function uses an average time spent per content module, which was calculated in <strong>Script 7</strong> by dividing the <em>totalTime</em> by <em>unq_stu</em> field.</p>
+<pre class="r"><code>#Removes modules that have no time associated with them (typically HTML pages)
+moduleUse &lt;- moduleUse[moduleUse$totalTime&gt;0,]
+
+#Aggregate temporal and user data for sequential page modules IDs (L2)
+pageUse &lt;- ddply(moduleUse,.(L2),summarize,
+                avgTime_total  = sum(avgTimeStu,na.rm=T))
+names(pageUse)[1] &lt;- &quot;id&quot;
+pageUse</code></pre>
+<pre><code>##                                  id avgTime_total
+## 1  03a3841a0f684ecd93995d985355da91     1.6023650
+## 2  055506a2a4524dc2b1632b81b21cc811    17.9568818
+## 3  074a451b976f43f8ad8130ac0ca39f54    28.4128169
+## 4  0cb330fde25b45e2800e1d2c770edfcf     5.1204662
+## 5  10160ccc165748739a42602a1622fe36    45.6070908
+## 6  1367597a71e54bd78f1d8772fad3550d    58.3495319
+## 7  2073478a23f442018e7b9502bd56d2f5     2.3276793
+## 8  220343c71d17417e9d9a175739851566   124.5463138
+## 9  285b1bd66df34dc0aa50842b006ba74b     7.8113348
+## 10 33e5a8597fd544ac8be86a459d8b29ea    26.8690618
+## 11 34beb3cd4f2e4f8fb022bbb608c02284    10.6968329
+## 12 35ce61f4f19f41189f3dfb0520cb094f     2.7941313
+## 13 3abc57d455a842a9925a139c02801d6e     5.2302743
+## 14 3b6556dc02c74d6a94b57f3ae275ae1e    86.5252210
+## 15 3b7a6f9578e548cc99fc266175701e85    78.9014831
+## 16 3ce2ea77ae54430884a312f2b050bde8     7.3612606
+## 17 3feb04e2380345b7ad8a0c6349b49db0    58.6037808
+## 18 4a4c6009dd3c48a289d6a742fd40821b    11.9230084
+## 19 5082f5ef9a914b3c95986f594743a64f    82.6533957
+## 20 53524161a81c499f87c38750ddf002b0     2.1511713
+## 21 55f24215b5f947d0a3753c8c05cec3f2    11.0856465
+## 22 5664bd173cd441d092a7dd7337b311b7    29.1692475
+## 23 5a4543196a9a4c7bae6034b638064230    96.6954404
+## 24 5b94eaccb20c43fc8a52371b10c2b7dd     3.8388601
+## 25 654660e78e8649cf9540986ade83673f     3.5476333
+## 26 6f33fec9c81f4fad8679cf09531e9580     1.7251650
+## 27 72abd9ef279c4b2fab9c72f1591c5279    20.8717320
+## 28 7ba152d4c5d14ad58334cd352cfb2751     9.2516394
+## 29 85f8a064f43c45fc9a416c3e4e817175     3.7686164
+## 30 8b936c4387f442c1a555a577163bfe06     3.1181829
+## 31 95d2c586ba8a455b8777af052669005e    44.6192907
+## 32 982737c1e94d4c7b82e30d43a38e1da4    11.5422542
+## 33 986f137dcdc5491e88b372278d89f50c    22.5250031
+## 34 ad655358c57944f6bdcc3e6b07bfba48    48.0135776
+## 35 b4cb7b879ba94088982415740b23f1aa   106.4954777
+## 36 b4f134e6c634446ebbd4789a2da82d61    88.3257775
+## 37 bc954c1de7f04eea9665df94d4a19ff1   140.6825081
+## 38 c0b1e995f6de4668817461370e59aa93    53.8673499
+## 39 c4f208733cd64bcdb1dce499f24d8c33    52.4057807
+## 40 c4f3fac486a24a16ba370a2f8a8c8f22     5.2345567
+## 41 c6d24af81e0f4a519dccbd1950e6c55d     0.9240063
+## 42 d17cb798a714497c90059baf4946f9dc     6.0871521
+## 43 d40ecf47d42245589307aa667a7af1c2    62.6927626
+## 44 d68e7fd578df4f4cbab5dd41e23382f1    17.2252300
+## 45 df3d1cef12ba41298523af74d276c965     8.7840792
+## 46 e018b2ac27de4c62bdef100636a8d43b    12.5471022
+## 47 e5bfdd6ea52c45dab88fc03e6379f469     3.2249307
+## 48 e7b845bc16ef4ba08f88485983373996    28.5248607
+## 49 ea29a745ecc84fcc9b65465cecddf068    26.4626827
+## 50 f87e7e6f094e49f38d2dd9196d5370fb    23.8117772
+## 51 fc1c5fad9cc6436c8a9d6966bcde7a2b    99.6388580
+## 52 fcda6cbcf69d44b0a72a80dde15c0fa4    35.4599243
+## 53 fec8d6a9faae46bab88e4249c781d01e     2.1815129
+## 54 ff79135a616d4f35a63d115caa2d3ed4    23.4159343</code></pre>
+<div id="alternative-methods-for-calculating-total-average-time-using-sequential-modules" class="section level3">
+<h3>Alternative methods for calculating total average time using sequential modules</h3>
+<p>There are multiple possible methods to calculate an total average time a module was used by a student in the course, which may be tried by a someone trying to replicate this figure.</p>
+<pre class="r"><code>#Alternative Total Average Time Used Calculation 
+ddply(moduleUse,.(L2),summarize,
+      totalTime = sum(totalTime,na.rm=T),
+      meanUsers = mean(unq_stu,na.rm=T),
+      avgTime_Total = totalTime/meanUsers)</code></pre>
+</div>
 </div>
 <div id="combining-edx-course-chapter-temporal-completion-estimates-with-chapters-average-time-used-by-students" class="section level2">
 <h2>Combining edX course chapter temporal completion estimates with chapters average time used by students</h2>
-<pre><code>##                                 id order
-## 1 29cf9e4cb86d4ed0802f432bd65440c9     2
-## 2 396ce4f65de344c38d297d8afe6bef9b    20
-## 3 19d52da9bee046a28e8c0a883773e86a    95
-## 4 63fbc15b9b194b88bba0b1fa81cbb3fb   264
-## 5 9eacda62cafd4592934b513fd9e254c3   392
-## 6 16ff74448fa34af2a1c080c99d4e844c   483
-## 7 3a2a2222db67495e885f9d1ee9d903b4   603
-## 8 5fc6f037a8e94588891e30a64945b9cb   718
-##                                           label estTime_max total_avgTime
-## 1                                Pre-Assessment          15      29.16925
-## 2                                   Get Started          25      68.43895
-## 3                      Week 1: Systems Thinking         210     335.69197
-## 4                Week 2: Function and Emergence         300     331.06562
-## 5                   Week 3: System Architecture         300     343.98164
-## 6 Week 4: Modeling with DSMs and Modularization         300     398.84153
-## 7                      Week 5: System Architect         300     243.49470
-## 8                               Post-Assessment          15      22.52500
-##      difTime           sign
-## 1  14.169248 Under Estimate
-## 2  43.438951 Under Estimate
-## 3 125.691966 Under Estimate
-## 4  31.065617 Under Estimate
-## 5  43.981639 Under Estimate
-## 6  98.841534 Under Estimate
-## 7 -56.505304  Over Estimate
-## 8   7.525003 Under Estimate</code></pre>
+<p>Now that the estimates of time to complete a sequential page and the total average time taken by students on sequenial page modules can be combined into a single dataframe.</p>
+<p>The difference between the estimated times to completion and total average time taken by students with sequential pages is calculated. The value sign for each difference measurement (positive or negative) are created as factors used to assign color in the visualization.</p>
+<pre><code>## &#39;data.frame&#39;:    54 obs. of  9 variables:
+##  $ id             : Factor w/ 735 levels &quot;003a48b7833a46feb5b56a684a115796&quot;,..: 254 154 343 11 567 594 273 242 162 405 ...
+##  $ parentID       : Factor w/ 184 levels &quot;03a3841a0f684ecd93995d985355da91&quot;,..: 35 54 54 54 54 54 54 54 54 54 ...
+##  $ order          : int  1 2 3 4 5 6 7 8 9 10 ...
+##  $ label          : chr  &quot;Pre-Assessment&quot; &quot;Welcome&quot; &quot;Course Schedule&quot; &quot;Course Collaboration Tools&quot; ...
+##  $ parentLabel    : chr  &quot;Pre-Assessment&quot; &quot;Get Started&quot; &quot;Get Started&quot; &quot;Get Started&quot; ...
+##  $ pageEstTime_max: num  15 3 3 5 2 4 1 1 2 1 ...
+##  $ avgTime_total  : num  29.169 10.697 20.872 17.957 0.924 ...
+##  $ difTime        : num  14.17 7.7 17.87 12.96 -1.08 ...
+##  $ sign           : Factor w/ 2 levels &quot;Over Estimate&quot;,..: 2 2 2 2 1 2 2 2 2 2 ...</code></pre>
 </div>
-<div id="visualization-of-results" class="section level2">
-<h2>Visualization of results</h2>
-<div id="setting-themes-and-color-palettes" class="section level3">
-<h3>Setting themes and color palettes</h3>
+</div>
+<div id="visualization-of-results" class="section level1">
+<h1>Visualization of Results</h1>
+<div id="setting-up-visualization-themes-and-parameters" class="section level2">
+<h2>Setting up visualization themes and parameters</h2>
+<p>Before visualizing the results, themes for the visualization are set for the ggplot2 package.</p>
 <pre class="r"><code>#Theme for ggplot2
 theme_set(theme_light())
 
@@ -551,9 +589,20 @@ pal1 &lt;- function (n, h = c(360, 45), c. = c(100, 17), l = c(46, 93),
 
 #Categorical colors 2
 catColors &lt;- pal1(5)</code></pre>
+<pre class="r"><code>chapterEst$parentID &lt;- factor(chapterEst$parentID)
+pageData$parentID &lt;- factor(pageData$parentID)
+
+
+#Sets Vertical Line Set for Page Modules by Week of course
+vline &lt;- as.data.frame(chapterEst[,c(1,3)])
+names(vline)[2] &lt;- &#39;label&#39;
+vline$mod &lt;- 0
+for(i in 1:nrow(vline)){
+  vline[i,]$mod &lt;- max(pageData[pageData$parentID==vline[i,1],]$order)+.5
+}</code></pre>
 </div>
-<div id="fig-1---inset-b-avg-student-temporal-module-page-use-compared-to-estimated-time-use" class="section level3">
-<h3>Fig 1 - Inset B: Avg Student Temporal Module Page Use Compared to Estimated Time Use</h3>
+<div id="visualization-of-fig-1---inset-b-avg-student-temporal-module-page-use-compared-to-estimated-time-use" class="section level2">
+<h2>Visualization of Fig 1 - Inset B: Avg Student Temporal Module Page Use Compared to Estimated Time Use</h2>
 </div>
 </div>
 
