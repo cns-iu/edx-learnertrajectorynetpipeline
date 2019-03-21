@@ -35,10 +35,10 @@ modules <- read.csv(text=getURL("https://raw.githubusercontent.com/cns-iu/edx-le
 moduleUse <- read.csv(text=getURL("https://raw.githubusercontent.com/cns-iu/edx-learnertrajectorynetpipeline/master/data/dataC.csv",ssl.verifypeer = FALSE), header=T)
 ```
 
-#Estimates of Time to Completion for edX Course Chapters and Sequential Pages
-In the example course, instructional designers estimated of how long they believe a student would take to complete each chapter unit of the course. Estimates for how longs students can expect to complete a unit or group of pages are to students (and analysts) through a brief module description. Chapter time estimages are made in hours; page estimates are provided in minutes.
+#Time to Completion Estimates for edX Course Chapters and Sequential Pages
+In the example course, instructional designers estimated of how long they believe a student would take to complete each chapter unit of the course. Estimates for how longs students can expect to complete a unit or group of pages are to students (and analysts) through a brief module description. Chapter time to completion estimates are made in hours and minutes; sequential page time to completion estimates are provided in minutes.
 
-##Extracting Chapter Estimates of Time to Completion
+##Extracting Chapter Time to Completion Estimates
 The sample data found in the *modules* data frame captures this information. The following section of code is used to extract these temporal estimates for the edX course chapter modules as a separate data frame *chapterEst*. In cases where a range of time is given (e.g. 4-5 hours), both min and maximum calculations are made. All hour estimates converted to minutes.
 
 ```{r chapterTimeUseEstimates}
@@ -75,8 +75,8 @@ chapterEst <- cbind(chapterEst,est)
 str(chapterEst)
 ```
 
-##Extracting Sequential Estimates of Time to Completion
-Estimates of time to completion are also provided for sequential page, which group content and assessment modules into sub-units of a chapter. The nested structure allows for more nuanced estimates of time to completion than for chapters provide. Time to completion estimates for sequential pages are used for this figure.
+##Extracting Sequential Page Time to Completion Estimates
+Estimates of time to completion are also provided for sequential pages, which modules that group content and assessment modules as sub-units of a chapter. The inclusion of time to completion estimates for sequential pages edX course for more nuanced estimates of time to completion than for chapters provide, and are the estimates used for Figure 1, inset B.
 
 ```{r pageTimeEstimates}
 #Extracting chapter level temporal estimates

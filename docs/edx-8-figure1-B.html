@@ -331,11 +331,11 @@ modules &lt;- read.csv(text=getURL(&quot;https://raw.githubusercontent.com/cns-i
 #Load Sample Data Set C
 moduleUse &lt;- read.csv(text=getURL(&quot;https://raw.githubusercontent.com/cns-iu/edx-learnertrajectorynetpipeline/master/data/dataC.csv&quot;,ssl.verifypeer = FALSE), header=T)</code></pre>
 </div>
-<div id="estimates-of-time-to-completion-for-edx-course-chapters-and-sequential-pages" class="section level1">
-<h1>Estimates of Time to Completion for edX Course Chapters and Sequential Pages</h1>
-<p>In the example course, instructional designers estimated of how long they believe a student would take to complete each chapter unit of the course. Estimates for how longs students can expect to complete a unit or group of pages are to students (and analysts) through a brief module description. Chapter time estimages are made in hours; page estimates are provided in minutes.</p>
-<div id="extracting-chapter-estimates-of-time-to-completion" class="section level2">
-<h2>Extracting Chapter Estimates of Time to Completion</h2>
+<div id="time-to-completion-estimates-for-edx-course-chapters-and-sequential-pages" class="section level1">
+<h1>Time to Completion Estimates for edX Course Chapters and Sequential Pages</h1>
+<p>In the example course, instructional designers estimated of how long they believe a student would take to complete each chapter unit of the course. Estimates for how longs students can expect to complete a unit or group of pages are to students (and analysts) through a brief module description. Chapter time to completion estimates are made in hours and minutes; sequential page time to completion estimates are provided in minutes.</p>
+<div id="extracting-chapter-time-to-completion-estimates" class="section level2">
+<h2>Extracting Chapter Time to Completion Estimates</h2>
 <p>The sample data found in the <em>modules</em> data frame captures this information. The following section of code is used to extract these temporal estimates for the edX course chapter modules as a separate data frame <em>chapterEst</em>. In cases where a range of time is given (e.g. 4-5 hours), both min and maximum calculations are made. All hour estimates converted to minutes.</p>
 <pre class="r"><code>#Subset the course structure to keep only chapter modules
 chapterEst &lt;- modules[modules$mod_type==c(&quot;chapter&quot;),c(2,7,5)]
@@ -376,9 +376,9 @@ str(chapterEst)</code></pre>
 ##  $ chpEstTime_max: num  15 25 210 300 300 300 300 15
 ##  $ unit          : chr  &quot;m&quot; &quot;m&quot; &quot;m&quot; &quot;m&quot; ...</code></pre>
 </div>
-<div id="extracting-sequential-estimates-of-time-to-completion" class="section level2">
-<h2>Extracting Sequential Estimates of Time to Completion</h2>
-<p>Estimates of time to completion are also provided for sequential page, which group content and assessment modules into sub-units of a chapter. The nested structure allows for more nuanced estimates of time to completion than for chapters provide. Time to completion estimates for sequential pages are used for this figure.</p>
+<div id="extracting-sequential-page-time-to-completion-estimates" class="section level2">
+<h2>Extracting Sequential Page Time to Completion Estimates</h2>
+<p>Estimates of time to completion are also provided for sequential pages, which modules that group content and assessment modules as sub-units of a chapter. The inclusion of time to completion estimates for sequential pages edX course for more nuanced estimates of time to completion than for chapters provide, and are the estimates used for Figure 1, inset B.</p>
 <pre class="r"><code>#Extracting chapter level temporal estimates
 pageEst&lt;- modules[modules$mod_type==c(&quot;sequential&quot;),c(2,13,7,5)]
 #Update field names
