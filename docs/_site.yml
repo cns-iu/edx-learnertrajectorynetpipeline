@@ -1,4 +1,5 @@
 name: "edX Learner and Course Analytics and Visualization Pipeline"
+output_dir: "."
 navbar:
   title: "edX Learner and Course Analytics and Visualization Pipeline"
   left:
