@@ -1,10 +1,10 @@
 ---
-title: "Visualizing Figure 1 B "
+title: "Figure 1 B - Visualizing Difference Between Instructor Estimate and Students Use Time to Unit Completion"
 knit: (function(input_file, encoding) {
   out_dir <- 'docs';
   rmarkdown::render(input_file,
  encoding=encoding,
- output_file=file.path(dirname(input_file), out_dir, 'index.html'))})
+ output_file=file.path(dirname(input_file), out_dir, 'edx-8-figure1B.html'))})
 ---
 
 ```{r setup_knitr, include=FALSE}
@@ -18,12 +18,12 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 
 ```{r setup_environment, warning = FALSE,message = FALSE}
 ## Load required packages
-require("RCurl")      #Loading data from GitHub
-require("grid")       #Visualizations
+require("RCurl")      #Loading data from web
+require("grid")       #Visualizations base
 require("plyr")       #Data aggregations
-require("stringr")    #Extracting strings
+require("stringr")    #String manipulation
 require("colorspace") #ColorSpace color pallete selection
-require("ggplot2") #GGplot 2 graphics library
+require("ggplot2")    #GGplot 2 graphics library
 ```
 
 ## Loading Data
