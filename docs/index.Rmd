@@ -1,6 +1,5 @@
 ---
 title: "Sample Data Index"
-date: "March 21, 2019"
 ---
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)

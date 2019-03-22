@@ -26,7 +26,7 @@ require("GGally")
 ```
 
 # Loading Data
-Sample Data E is used for both figures 3 and 4. The data was created from 3 sets of results from script  [edX-6-moduleUseAnalysis.R](https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-6-moduleUseAnalysis.R). Data represents an overall module engagement statistics for for certification groups identified from analysis of edX course user certification data.
+Sample Data E is used for both figures. The data was created from 3 sets of results from script  [edX-6-moduleUseAnalysis.R](https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-6-moduleUseAnalysis.R). Data represents an overall module engagement statistics for for certification groups identified from analysis of edX course user certification data.
 
 
 ```{r data}
@@ -181,7 +181,13 @@ pal3 <- function (n, h = c(40, -117), c = 100, l = c(67, 97), power = 1.33333333
 
 
 
-##Figure 3
-```{r figure 3}
+##Figure 4
+```{r figure 4}
+
+```
+
+
+##Figure 5
+```{r figure 5}
 
 ```

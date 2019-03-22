@@ -1,7 +1,6 @@
 ---
 title: "Figure 6"
 ---
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -33,18 +32,6 @@ The data set loaded as students was created by the script [edX-7-studentFeatureE
 students <- read.csv(text=getURL("https://raw.githubusercontent.com/cns-iu/edx-learnertrajectorynetpipeline/master/data/dataD.csv",ssl.verifypeer = FALSE), header=T)
 str(students)
 ```
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
