@@ -248,9 +248,9 @@ for(i in 1:nrow(vline)){
 }
 ```
 
-##Figure 1 - Inset B
+##Figure 2B
 
-```{r figure 1.B}
+```{r figure 2B}
 ggplot(pageData, aes(x=order, y=difTime)) +
   geom_bar(stat="identity",aes(fill=sign)) +
   geom_hline(yintercept=0, linetype=1, show.legend = NA)  +
