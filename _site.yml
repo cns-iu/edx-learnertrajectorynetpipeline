@@ -1,12 +1,16 @@
 name: "edX Learner and Course Analytics and Visualization Pipeline"
-output_dir: "docs"
+output_dir: "."
 navbar:
   title: "edX Learner and Course Analytics and Visualization Pipeline"
   left:
-  - text: "Home"
+  - text: "Sample Data Index"
     href: index.html
-  - text: "Figure 1.B"
+  - text: "Figure 2.B"
     href: edx-8-figure1-B.html
+  - text: "Figure 4 and 5"
+    href: edx-8-figure5and5.html
+  - text: "Figure 6"
+    href: edx-8-figure6.html
 output:
   html_document:
     theme: cosmo
