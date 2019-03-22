@@ -24,9 +24,8 @@ Sample data sets are provided in the **[Data](https://github.com/cns-iu/edx-lear
 
 ## Visualization Documentation
 The visualizations generated from the data processing and analysis pipeline are visualizations created using R are available for replicated as R Markdown websites. 
-1. [Figure 1.b](https://cns-iu.github.io/edx-learnertrajectorynetpipeline/edx-8-figure1-B.html)
-2. [Figures 3 and 4](https://cns-iu.github.io/edx-learnertrajectorynetpipeline/edx-8-figure3and4.html)
-3. [Figure 5](https://cns-iu.github.io/edx-learnertrajectorynetpipeline/edx-8-figure5.html)
+1. [Figure 2.B](https://cns-iu.github.io/edx-learnertrajectorynetpipeline/edx-8-figure2-B.html)
+2. [Figures 4 and 5](https://cns-iu.github.io/edx-learnertrajectorynetpipeline/edx-8-figure4and5.html)
 6. [Figure 6](https://cns-iu.github.io/edx-learnertrajectorynetpipeline/edx-8-figure6.html)
 
 ## A Note on Using the Learner Trajectory Network Pipeline
