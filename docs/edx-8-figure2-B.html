@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+
+<title>Figure 2B - Visualizing Difference Between Instructor Estimate and Students Use Time to Unit Completion</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">edX Learner and Course Analytics and Visualization Pipeline</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Sample Data Index</a>
+</li>
+<li>
+  <a href="edx-8-figure1-B.html">Figure 2.B</a>
+</li>
+<li>
+  <a href="edx-8-figure5and5.html">Figure 4 and 5</a>
+</li>
+<li>
+  <a href="edx-8-figure6.html">Figure 6</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Figure 2B - Visualizing Difference Between Instructor Estimate and Students Use Time to Unit Completion</h1>
+
+</div>
+
+
+<p>This R Markdown script reproduces <em>Figure 2B</em> from the paper, CITATION. The visualization documented here use analytic results for the MITxPro course, <em>Architecture of Complex Systems, Fall 2016</em>, (MITProfessionalX+SysEngxB1+3T2016) with the <strong>edX Learner and Course Analytics Pipeline</strong>. More information about the data used in this visualization is available at <a href="https://cns-iu.github.io/edx-learnertrajectorynetpipeline/index.html">Sample Data Index</a>.</p>
+<div id="environment-setup" class="section level1">
+<h1>Environment Setup</h1>
+<p>This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <a href="http://rmarkdown.rstudio.com" class="uri">http://rmarkdown.rstudio.com</a>.</p>
+<pre class="r"><code>#clean environment
+rm(list=ls())
+
+## Load required packages
+require(&quot;RCurl&quot;)      #Loading data from web
+require(&quot;grid&quot;)       #Visualizations base
+require(&quot;plyr&quot;)       #Data aggregations
+require(&quot;stringr&quot;)    #String manipulation
+require(&quot;colorspace&quot;) #ColorSpace color pallete selection
+require(&quot;ggplot2&quot;)    #GGplot 2 graphics library</code></pre>
+</div>
+<div id="loading-data" class="section level1">
+<h1>Loading Data</h1>
+<p>The data set loaded as modules was created by the script <a href="https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-1-courseStructureMeta.R">edX-1-courseStructureMeta.R</a>. Data represents the course structure used to represent the content of an edX course.</p>
+<p>The data set loaded as moduleUse was created by the script <a href="https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-6-moduleUseAnalysis.R">edX-6-moduleUseAnalysis.R</a>. Data represents an overall module engagement statistics for an identified group/cohort of student active in edX Course.</p>
+<pre class="r"><code>#Load Sample Data Set A
+modules &lt;- read.csv(text=getURL(&quot;https://raw.githubusercontent.com/cns-iu/edx-learnertrajectorynetpipeline/master/data/dataA.csv&quot;, ssl.verifypeer = FALSE), header=T)
+
+#Load Sample Data Set C
+moduleUse &lt;- read.csv(text=getURL(&quot;https://raw.githubusercontent.com/cns-iu/edx-learnertrajectorynetpipeline/master/data/dataC.csv&quot;,ssl.verifypeer = FALSE), header=T)</code></pre>
+</div>
+<div id="time-to-completion-estimates-for-edx-course-chapters-and-sequential-pages" class="section level1">
+<h1>Time to Completion Estimates for edX Course Chapters and Sequential Pages</h1>
+<p>In the example course, instructional designers estimated of how long they believe a student would take to complete each chapter unit of the course. Estimates for how longs students can expect to complete a unit or group of pages are to students (and analysts) through a brief module description. Chapter time to completion estimates are made in hours and minutes; sequential page time to completion estimates are provided in minutes.</p>
+<div id="extracting-chapter-time-to-completion-estimates" class="section level2">
+<h2>Extracting Chapter Time to Completion Estimates</h2>
+<p>The sample data found in the <em>modules</em> data frame captures this information. The following section of code is used to extract these temporal estimates for the edX course chapter modules as a separate data frame <em>chapterEst</em>. In cases where a range of time is given (e.g. 4-5 hours), both min and maximum calculations are made. All hour estimates converted to minutes.</p>
+<pre class="r"><code>#Subset the course structure to keep only chapter modules
+chapterEst &lt;- modules[modules$mod_type==c(&quot;chapter&quot;),c(2,7,5)]
+names(chapterEst)[c(1,3)] &lt;- c(&quot;parentID&quot;,&quot;parentLabel&quot;)
+#Processing chapter labels to extract time estimates and estimate units
+label&lt;- sapply(chapterEst$parentLabel, function(x) str_split(x,&quot;\\(&quot;)[[1]][2])
+#Updates the Chapter Labels
+chapterEst$parentLabel &lt;- sapply(chapterEst$parentLabel, function(x) str_split(x,&quot;\\(&quot;)[[1]][1]) %&gt;% str_trim()
+
+#Extracting Estimates
+est &lt;- as.data.frame(regmatches(label,gregexpr(&quot;[[:digit:]]+\\.*[[:digit:]]*&quot;,label)),
+                     row.names = c(&quot;chpEstTime_min&quot;,&quot;chpEstTime_max&quot;)) %&gt;% t() 
+rownames(est) &lt;- 1:nrow(est)
+est &lt;- as.data.frame(est,stringsAsFactors=F)
+est$chpEstTime_max &lt;- as.numeric(est$chpEstTime_max)
+est$chpEstTime_min &lt;- as.numeric(est$chpEstTime_min)
+
+#Estimate Unit
+unit &lt;- str_sub((lapply(label, function(x) str_split(x,&quot; &quot;,n = 3)[[1]][2])),1,1)
+
+#Combines estimates with estimate units
+est &lt;- cbind(est,unit)
+
+#Convert all estimates in hours to minutes
+est[est$unit==&quot;h&quot;,]$chpEstTime_max &lt;- est[est$unit==&quot;h&quot;,]$chpEstTime_max*60
+est[est$unit==&quot;h&quot;,]$chpEstTime_min &lt;- est[est$unit==&quot;h&quot;,]$chpEstTime_min*60
+#Updates units to correct measure for all fields
+est$unit &lt;- &quot;m&quot;
+
+#Combine chapterEst and est dataframes
+chapterEst &lt;- cbind(chapterEst,est)
+str(chapterEst)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    8 obs. of  6 variables:
+##  $ parentID      : Factor w/ 735 levels &quot;003a48b7833a46feb5b56a684a115796&quot;,..: 119 170 73 295 457 65 174 282
+##  $ order         : int  2 20 95 264 392 483 603 718
+##  $ parentLabel   : chr  &quot;Pre-Assessment&quot; &quot;Get Started&quot; &quot;Week 1: Systems Thinking&quot; &quot;Week 2: Function and Emergence&quot; ...
+##  $ chpEstTime_min: num  15 25 210 240 240 240 240 15
+##  $ chpEstTime_max: num  15 25 210 300 300 300 300 15
+##  $ unit          : chr  &quot;m&quot; &quot;m&quot; &quot;m&quot; &quot;m&quot; ...</code></pre>
+</div>
+<div id="extracting-sequential-page-time-to-completion-estimates" class="section level2">
+<h2>Extracting Sequential Page Time to Completion Estimates</h2>
+<p>Estimates of time to completion are also provided for sequential pages, which modules that group content and assessment modules as sub-units of a chapter. The inclusion of time to completion estimates for sequential pages edX course for more nuanced estimates of time to completion than for chapters provide, and are the estimates used for Figure 1, inset B.</p>
+<pre class="r"><code>#Extracting chapter level temporal estimates
+pageEst&lt;- modules[modules$mod_type==c(&quot;sequential&quot;),c(2,13,7,5)]
+#Update field names
+names(pageEst)[c(1:2,4)] &lt;- c(&quot;id&quot;,&quot;parentID&quot;,&quot;label&quot;)
+#Updates order based on row numbers
+pageEst$order &lt;- 1:nrow(pageEst)
+#Processing chapter labels to extract time estimates and estimate units
+label &lt;- sapply(pageEst$label, function(x) str_split(x,&quot;\\(&quot;)[[1]][2])
+#Updates the Chapter Labels
+pageEst$label&lt;- sapply(pageEst$label, function(x) str_split(x,&quot;\\(&quot;)[[1]][1]) %&gt;% str_trim()
+
+#Extracting Estimates
+est &lt;- regmatches(label,gregexpr(&quot;[[:digit:]]+\\.*[[:digit:]]*&quot;,label)) %&gt;% 
+    lapply(function(x) if(identical(x, character(0))) NA_character_ else x) %&gt;% 
+    as.data.frame(row.names = c(&quot;pageEstTime_min&quot;,&quot;pageEstTime_max&quot;), stringsAsFactors = F)
+est &lt;- as.data.frame(t(est), stringsAsFactors = F)
+rownames(est) &lt;- 1:nrow(est)
+est$pageEstTime_max &lt;- as.numeric(est$pageEstTime_max)
+est$pageEstTime_min &lt;- as.numeric(est$pageEstTime_min)
+
+#Extracts Unit of Time Estimate
+unit &lt;- str_sub((lapply(label, function(x) str_split(x,&quot; &quot;,n = 3)[[1]][2])),1,1)
+
+#Combines estimates with estimate units
+est &lt;- cbind(est,unit)
+
+#Convert all estimates in hours to minutes
+est[est$unit==&quot;h&quot; &amp; is.na(est$unit)==F,]$pageEstTime_max &lt;- 
+  est[est$unit==&quot;h&quot; &amp; is.na(est$unit)==F,]$pageEstTime_max*60
+est[est$unit==&quot;h&quot; &amp; is.na(est$unit)==F,]$pageEstTime_min &lt;- 
+  est[est$unit==&quot;h&quot; &amp; is.na(est$unit)==F,]$pageEstTime_min *60
+#Updates units to correct measure for all fields
+est$unit &lt;- &quot;m&quot;
+
+#Combine pageEst and est dataframe
+pageEst &lt;- cbind(pageEst,est)
+rm(est,unit,label)
+str(pageEst)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    54 obs. of  7 variables:
+##  $ id             : Factor w/ 735 levels &quot;003a48b7833a46feb5b56a684a115796&quot;,..: 254 154 343 11 567 594 273 242 162 405 ...
+##  $ parentID       : Factor w/ 184 levels &quot;03a3841a0f684ecd93995d985355da91&quot;,..: 35 54 54 54 54 54 54 54 54 54 ...
+##  $ order          : int  1 2 3 4 5 6 7 8 9 10 ...
+##  $ label          : chr  &quot;Pre-Assessment&quot; &quot;Welcome&quot; &quot;Course Schedule&quot; &quot;Course Collaboration Tools&quot; ...
+##  $ pageEstTime_min: num  NA 3 3 5 2 4 1 1 2 1 ...
+##  $ pageEstTime_max: num  NA 3 3 5 2 4 1 1 2 1 ...
+##  $ unit           : chr  &quot;m&quot; &quot;m&quot; &quot;m&quot; &quot;m&quot; ...</code></pre>
+<div id="combining-the-chapter-level-and-the-page-level-time-estimates-of-completion" class="section level3">
+<h3>Combining the Chapter Level and the Page Level Time Estimates of Completion</h3>
+<p>Note, some sequential pages do not have estimates for the time necessary to completion. For the course profiled, the page modules without time to completion estimates happen to be survey instruments administer by instructional designers.</p>
+<p>A review of the chapter level estimates for these surveys range between 15 and 300 minutes; the 300 minute estimate for a chapter with multiple units, and is too large for a apply to the survey. Instead, we take the mode of estimate used for all survey instruments (15 minutes) to apply</p>
+<pre class="r"><code>#Left join of the pageEst and chapterEst dataframes. Combining Chapter Module Labels, and maximum time estimates
+#The chapter label
+pageEst &lt;- join(pageEst[,c(1:4,6,7)], chapterEst[,c(1,3,5)], by=&quot;parentID&quot;, type=&quot;left&quot;)
+
+#Statistical mode function
+getMode &lt;- function(x, na.rm = FALSE) {
+  if(na.rm){
+    x = x[!is.na(x)]
+  }
+  ux &lt;- unique(x)
+  return(ux[which.max(tabulate(match(x, ux)))])
+}
+#Updating the records with NA for the pageEstTime_max and replacing them with chapter level mode for survey instruments
+pageEst[is.na(pageEst$pageEstTime_max),]$pageEstTime_max &lt;-
+  getMode(pageEst[is.na(pageEst$pageEstTime_max),]$chpEstTime_max, na.rm=T)
+
+#Final pageEst dataframe
+pageEst &lt;- pageEst[,c(1:4,7,5,6)]
+str(pageEst)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    54 obs. of  7 variables:
+##  $ id             : Factor w/ 735 levels &quot;003a48b7833a46feb5b56a684a115796&quot;,..: 254 154 343 11 567 594 273 242 162 405 ...
+##  $ parentID       : Factor w/ 184 levels &quot;03a3841a0f684ecd93995d985355da91&quot;,..: 35 54 54 54 54 54 54 54 54 54 ...
+##  $ order          : int  1 2 3 4 5 6 7 8 9 10 ...
+##  $ label          : chr  &quot;Pre-Assessment&quot; &quot;Welcome&quot; &quot;Course Schedule&quot; &quot;Course Collaboration Tools&quot; ...
+##  $ parentLabel    : chr  &quot;Pre-Assessment&quot; &quot;Get Started&quot; &quot;Get Started&quot; &quot;Get Started&quot; ...
+##  $ pageEstTime_max: num  15 3 3 5 2 4 1 1 2 1 ...
+##  $ unit           : chr  &quot;m&quot; &quot;m&quot; &quot;m&quot; &quot;m&quot; ...</code></pre>
+</div>
+</div>
+<div id="calculating-temporal-use-measures-of-edx-courses-chapters" class="section level2">
+<h2>Calculating Temporal Use Measures of edX Course’s Chapters</h2>
+<p>Next, Data C contains descriptive for use each content and assessment module for the course based on analysis of all active students in the course. The course’s chapter, sequential and vertical modules are excluded from the data; however, the hierarchical relationships of content and assessment modules to chapter and sequential modules identifiers through the <strong>L1</strong> and <strong>L2</strong> fields.</p>
+<p>The <em>ddply</em> function is used to calculate the total of average time spent using sequential modules by active students in an edX course. The function uses an average time spent per content module, which was calculated in <strong>Script 7</strong> by dividing the <em>totalTime</em> by <em>unq_stu</em> field.</p>
+<pre class="r"><code>#Removes modules that have no time associated with them (typically HTML pages)
+moduleUse &lt;- moduleUse[moduleUse$totalTime&gt;0,]
+
+#Aggregate temporal and user data for sequential page modules IDs (L2)
+pageUse &lt;- ddply(moduleUse,.(L2),summarize,
+                avgTime_total  = sum(avgTimeStu,na.rm=T))
+names(pageUse)[1] &lt;- &quot;id&quot;
+str(pageUse)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    54 obs. of  2 variables:
+##  $ id           : Factor w/ 54 levels &quot;03a3841a0f684ecd93995d985355da91&quot;,..: 1 2 3 4 5 6 7 8 9 10 ...
+##  $ avgTime_total: num  1.6 17.96 28.41 5.12 45.61 ...</code></pre>
+<div id="alternative-methods-for-calculating-total-average-time-using-sequential-modules" class="section level3">
+<h3>Alternative methods for calculating total average time using sequential modules</h3>
+<p>There are multiple possible methods to calculate an total average time a module was used by a student in the course, which may be tried by a someone trying to replicate this figure.</p>
+<pre class="r"><code>#Alternative Total Average Time Used Calculation 
+ddply(moduleUse,.(L2),summarize,
+      totalTime = sum(totalTime,na.rm=T),
+      meanUsers = mean(unq_stu,na.rm=T),
+      avgTime_Total = totalTime/meanUsers)</code></pre>
+</div>
+</div>
+<div id="combining-edx-course-chapter-temporal-completion-estimates-with-chapters-average-time-used-by-students" class="section level2">
+<h2>Combining edX course chapter temporal completion estimates with chapters average time used by students</h2>
+<p>Now that the estimates of time to complete a sequential page and the total average time taken by students on sequential page modules can be combined into a single data frame.</p>
+<p>The difference between the estimated times to completion and total average time taken by students with sequential pages is calculated. The value sign for each difference measurement (positive or negative) are created as factors used to assign color in the visualization.</p>
+<pre><code>## &#39;data.frame&#39;:    54 obs. of  9 variables:
+##  $ id             : Factor w/ 735 levels &quot;003a48b7833a46feb5b56a684a115796&quot;,..: 254 154 343 11 567 594 273 242 162 405 ...
+##  $ parentID       : Factor w/ 184 levels &quot;03a3841a0f684ecd93995d985355da91&quot;,..: 35 54 54 54 54 54 54 54 54 54 ...
+##  $ order          : int  1 2 3 4 5 6 7 8 9 10 ...
+##  $ label          : chr  &quot;Pre-Assessment&quot; &quot;Welcome&quot; &quot;Course Schedule&quot; &quot;Course Collaboration Tools&quot; ...
+##  $ parentLabel    : chr  &quot;Pre-Assessment&quot; &quot;Get Started&quot; &quot;Get Started&quot; &quot;Get Started&quot; ...
+##  $ pageEstTime_max: num  15 3 3 5 2 4 1 1 2 1 ...
+##  $ avgTime_total  : num  29.169 10.697 20.872 17.957 0.924 ...
+##  $ difTime        : num  14.17 7.7 17.87 12.96 -1.08 ...
+##  $ sign           : Factor w/ 2 levels &quot;Over Estimate&quot;,..: 2 2 2 2 1 2 2 2 2 2 ...</code></pre>
+</div>
+</div>
+<div id="visualization-of-results" class="section level1">
+<h1>Visualization of Results</h1>
+<div id="setting-up-visualization-themes-and-parameters" class="section level2">
+<h2>Setting up visualization themes and parameters</h2>
+<p>Before visualizing the results, themes for the visualization are set for the ggplot2 package.</p>
+<pre class="r"><code>#Theme for ggplot2
+theme_set(theme_light())
+
+#Univariate color scale
+#Multi-color univariate color palette for the module type variables
+#Dark blue to yellow green
+pal1 &lt;- function (n, h = c(360, 45), c. = c(100, 17), l = c(46, 93), 
+                  power = c(0, 0.866666666666667), fixup = TRUE, gamma = NULL, 
+                  alpha = 1, ...) 
+                  {
+                    if (!is.null(gamma)) 
+                      warning(&quot;&#39;gamma&#39; is deprecated and has no effect&quot;)
+                    if (n &lt; 1L) 
+                      return(character(0L))
+                    h &lt;- rep(h, length.out = 2L)
+                    c &lt;- rep(c., length.out = 2L)
+                    l &lt;- rep(l, length.out = 2L)
+                    power &lt;- rep(power, length.out = 2L)
+                    rval &lt;- seq(1, 0, length = n)
+                    rval &lt;- hex(polarLUV(L = l[2L] - diff(l) * rval^power[2L], 
+                                         C = c[2L] - diff(c) * rval^power[1L], H = h[2L] - diff(h) * 
+                                           rval), fixup = fixup, ...)
+                    if (!missing(alpha)) {
+                      alpha &lt;- pmax(pmin(alpha, 1), 0)
+                      alpha &lt;- format(as.hexmode(round(alpha * 255 + 0.0001)), 
+                                      width = 2L, upper.case = TRUE)
+                      rval &lt;- paste(rval, alpha, sep = &quot;&quot;)
+                    }
+                    return(rval)
+}
+
+#Categorical colors 2
+catColors &lt;- pal1(5)</code></pre>
+<div id="setting-vertical-lines-used-in-the-bar-graph" class="section level3">
+<h3>Setting vertical lines used in the bar graph</h3>
+<pre class="r"><code>chapterEst$parentID &lt;- factor(chapterEst$parentID)
+pageData$parentID &lt;- factor(pageData$parentID)
+
+
+#Sets Vertical Line Set for Page Modules by Week of course
+vline &lt;- as.data.frame(chapterEst[,c(1,3)])
+names(vline)[2] &lt;- &#39;label&#39;
+vline$mod &lt;- 0
+for(i in 1:nrow(vline)){
+  vline[i,]$mod &lt;- max(pageData[pageData$parentID==vline[i,1],]$order)+.5
+}</code></pre>
+</div>
+</div>
+<div id="figure-1---inset-b" class="section level2">
+<h2>Figure 1 - Inset B</h2>
+<pre class="r"><code>ggplot(pageData, aes(x=order, y=difTime)) +
+  geom_bar(stat=&quot;identity&quot;,aes(fill=sign)) +
+  geom_hline(yintercept=0, linetype=1, show.legend = NA)  +
+  geom_vline(xintercept=vline[1:nrow(vline),3],linetype=5,alpha=.30) +
+  scale_fill_manual(values=catColors[c(3,1)]) +
+  scale_x_continuous(
+    expand=c(0.005, 0.005),
+    labels=pageEst$label,
+    breaks=seq(1,max(pageEst$order),1)) +
+  scale_y_continuous(breaks=seq(-20,round(max(pageData$difTime),0),20))+
+  labs(#title=&quot;B&quot;,
+       y=&quot;Difference in Time (Min.)&quot;,
+       x=&quot;Course Page Module Sequence&quot;) +
+  guides(fill = guide_legend(
+            title = &quot;Difference in Estimate&quot;, 
+            title.position = &quot;top&quot;,
+            title.theme = element_text(
+              size = 10,
+              angle = 0),
+            label.theme = element_text(
+              size = 8,
+              angle = 0),
+            reverse = TRUE
+            )) +
+  theme(axis.text.x = element_text(hjust=1,vjust=.25,size=10, angle=90),
+        axis.ticks = element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        panel.border = element_blank(),
+        panel.grid.major.y = element_line(linetype = 4),
+        legend.position = c(.95, .99),
+        legend.justification = c(&quot;right&quot;, &quot;top&quot;),
+        legend.box.just = &quot;right&quot;,
+        legend.margin = margin(0, 3, 0, 3))</code></pre>
+<p><img src="edx-8-figure2-B_files/figure-html/figure%201.B-1.png" width="672" /></p>
+</div>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
