@@ -76,7 +76,7 @@ str(chapterEst)
 ```
 
 ##Extracting Sequential Page Time to Completion Estimates
-Estimates of time to completion are also provided for sequential pages, which modules that group content and assessment modules as sub-units of a chapter. The inclusion of time to completion estimates for sequential pages edX course for more nuanced estimates of time to completion than for chapters provide, and are the estimates used for Figure 1, inset B.
+Estimates of time to completion are also provided for sequential pages, which modules that group content and assessment modules as sub-units of a chapter. The inclusion of time to completion estimates for sequential pages edX course for more nuanced estimates of time to completion than for chapters provide, and are the estimates used for Figure 2B.
 
 ```{r pageTimeEstimates}
 #Extracting chapter level temporal estimates
