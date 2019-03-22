@@ -182,6 +182,6 @@ pal3 <- function (n, h = c(40, -117), c = 100, l = c(67, 97), power = 1.33333333
 
 
 ##Figure 5
-```{r figure 5}
+```{r figure 5, eval=FALSE, include=FALSE}
 
 ```

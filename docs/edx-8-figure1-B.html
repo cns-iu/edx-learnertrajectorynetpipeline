@@ -290,7 +290,13 @@ $(document).ready(function () {
   <a href="edx-8-figure1-B.html">Figure 1.B</a>
 </li>
 <li>
-  <a href="edx-8-figure3.html">Figure 3</a>
+  <a href="edx-8-figure3and4.html">Figure 3 and 4</a>
+</li>
+<li>
+  <a href="edx-8-figure5.html">Figure 5</a>
+</li>
+<li>
+  <a href="edx-8-figure6.html">Figure 6</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
@@ -309,7 +315,7 @@ $(document).ready(function () {
 </div>
 
 
-<p>This R Markdown script reproduces visualization presented in the paper, “”; specifically <em>Figure 1, Inset B</em>. The visualizations documented here use analytic results for the MITxPro course, <em>Architecture of Complex Systems, Fall 2016</em>, (MITProfessionalX+SysEngxB1+3T2016) with the <strong>edX Learner and Course Analytics Pipeline</strong>, scripts 1 through 6.</p>
+<p>This R Markdown script reproduces <em>Figure 1, Inset B</em> from the paper, CITATION. The visualization documented here use analytic results for the MITxPro course, <em>Architecture of Complex Systems, Fall 2016</em>, (MITProfessionalX+SysEngxB1+3T2016) with the <strong>edX Learner and Course Analytics Pipeline</strong>. More information about the data used in this visualization is available at <a href="https://cns-iu.github.io/edx-learnertrajectorynetpipeline/index.html">Sample Data Index</a>.</p>
 <div id="environment-setup" class="section level1">
 <h1>Environment Setup</h1>
 <p>This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <a href="http://rmarkdown.rstudio.com" class="uri">http://rmarkdown.rstudio.com</a>.</p>
@@ -326,7 +332,7 @@ require(&quot;ggplot2&quot;)    #GGplot 2 graphics library</code></pre>
 </div>
 <div id="loading-data" class="section level1">
 <h1>Loading Data</h1>
-<p>The data set loaded as moduels was created by the script <a href="https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-1-courseStructureMeta.R">edX-1-courseStructureMeta.R</a>. Data represents the course structure used to represent the content of an edX course.</p>
+<p>The data set loaded as modules was created by the script <a href="https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-1-courseStructureMeta.R">edX-1-courseStructureMeta.R</a>. Data represents the course structure used to represent the content of an edX course.</p>
 <p>The data set loaded as moduleUse was created by the script <a href="https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-6-moduleUseAnalysis.R">edX-6-moduleUseAnalysis.R</a>. Data represents an overall module engagement statistics for an identified group/cohort of student active in edX Course.</p>
 <pre class="r"><code>#Load Sample Data Set A
 modules &lt;- read.csv(text=getURL(&quot;https://raw.githubusercontent.com/cns-iu/edx-learnertrajectorynetpipeline/master/data/dataA.csv&quot;, ssl.verifypeer = FALSE), header=T)
@@ -430,7 +436,7 @@ str(pageEst)</code></pre>
 ##  $ unit           : chr  &quot;m&quot; &quot;m&quot; &quot;m&quot; &quot;m&quot; ...</code></pre>
 <div id="combining-the-chapter-level-and-the-page-level-time-estimates-of-completion" class="section level3">
 <h3>Combining the Chapter Level and the Page Level Time Estimates of Completion</h3>
-<p>Note, some sequential pages do not have estimates for the time necessary to completion. For the course profiled, the page modules without time to completion estimates happen to be survey instruments administed by instructional designers.</p>
+<p>Note, some sequential pages do not have estimates for the time necessary to completion. For the course profiled, the page modules without time to completion estimates happen to be survey instruments administer by instructional designers.</p>
 <p>A review of the chapter level estimates for these surveys range between 15 and 300 minutes; the 300 minute estimate for a chapter with multiple units, and is too large for a apply to the survey. Instead, we take the mode of estimate used for all survey instruments (15 minutes) to apply</p>
 <pre class="r"><code>#Left join of the pageEst and chapterEst dataframes. Combining Chapter Module Labels, and maximum time estimates
 #The chapter label
@@ -463,7 +469,7 @@ str(pageEst)</code></pre>
 </div>
 <div id="calculating-temporal-use-measures-of-edx-courses-chapters" class="section level2">
 <h2>Calculating Temporal Use Measures of edX Course’s Chapters</h2>
-<p>Next, Data C contains descriptive for use each content and assessment module for the course based on analysis of all active students in the course. The course’s chapter, sequential and vertical modules are excluded from the data; however, the hiearachical relationships of content and assessment modules to chapter and sequential modules identifiers through the <strong>L1</strong> and <strong>L2</strong> fields.</p>
+<p>Next, Data C contains descriptive for use each content and assessment module for the course based on analysis of all active students in the course. The course’s chapter, sequential and vertical modules are excluded from the data; however, the hierarchical relationships of content and assessment modules to chapter and sequential modules identifiers through the <strong>L1</strong> and <strong>L2</strong> fields.</p>
 <p>The <em>ddply</em> function is used to calculate the total of average time spent using sequential modules by active students in an edX course. The function uses an average time spent per content module, which was calculated in <strong>Script 7</strong> by dividing the <em>totalTime</em> by <em>unq_stu</em> field.</p>
 <pre class="r"><code>#Removes modules that have no time associated with them (typically HTML pages)
 moduleUse &lt;- moduleUse[moduleUse$totalTime&gt;0,]
@@ -488,7 +494,7 @@ ddply(moduleUse,.(L2),summarize,
 </div>
 <div id="combining-edx-course-chapter-temporal-completion-estimates-with-chapters-average-time-used-by-students" class="section level2">
 <h2>Combining edX course chapter temporal completion estimates with chapters average time used by students</h2>
-<p>Now that the estimates of time to complete a sequential page and the total average time taken by students on sequenial page modules can be combined into a single dataframe.</p>
+<p>Now that the estimates of time to complete a sequential page and the total average time taken by students on sequential page modules can be combined into a single data frame.</p>
 <p>The difference between the estimated times to completion and total average time taken by students with sequential pages is calculated. The value sign for each difference measurement (positive or negative) are created as factors used to assign color in the visualization.</p>
 <pre><code>## &#39;data.frame&#39;:    54 obs. of  9 variables:
 ##  $ id             : Factor w/ 735 levels &quot;003a48b7833a46feb5b56a684a115796&quot;,..: 254 154 343 11 567 594 273 242 162 405 ...
