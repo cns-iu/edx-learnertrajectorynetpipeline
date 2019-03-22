@@ -26,19 +26,65 @@ require("GGally")
 ```
 
 # Loading Data
-Sample Data E is used for both figures. The data was created from 3 sets of results from script  [edX-6-moduleUseAnalysis.R](https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-6-moduleUseAnalysis.R). Data represents an overall module engagement statistics for for certification groups identified from analysis of edX course user certification data.
+The data set loaded as students was created by the script [edX-7-studentFeatureExtraction.R](https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-7-studentFeatureExtraction.R). Data represents an each active student's overall engagement statistics for the 
 
+```{r dataD}
+#Load Sample Data Set D
+students <- read.csv(text=getURL("https://raw.githubusercontent.com/cns-iu/edx-learnertrajectorynetpipeline/master/data/dataD.csv",ssl.verifypeer = FALSE), header=T)
+str(students)
+```
 
-```{r data}
+Sample Data E is used for both figures, and is loaded in to the data frame modules. The data was created from 3 sets of results from script  [edX-6-moduleUseAnalysis.R](https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-6-moduleUseAnalysis.R). Data represents an overall module engagement statistics for for certification groups identified from analysis of edX course user certification data.
+
+```{r dataE}
 #Load Sample Data Set E
-moduleUse <- read.csv(text=getURL("https://raw.githubusercontent.com/cns-iu/edx-learnertrajectorynetpipeline/master/data/dataE.csv",ssl.verifypeer = FALSE), header=T)
+modules <- read.csv(text=getURL("https://raw.githubusercontent.com/cns-iu/edx-learnertrajectorynetpipeline/master/data/dataE.csv",ssl.verifypeer = FALSE), header=T)
 ```
 
 
+```{r moduleUse Edits}
+##Feature generation and reshaping data for plots
+#Scatter 1: plot of unique number of students using a module 
+#split by different student percentile groups, which are based students' 
+#final grade. For cross-group comparison, the values are scaled based on the 
+#proportion of a percentile groups visiting a module.
+modules$unq_stu_per<- modules$unq_stu/max(modules$unq_stu)
+modules$unq_stu_per.1<- modules$unq_stu.1/max(modules$unq_stu.1)
+modules$unq_stu_per.2<- modules$unq_stu.2/max(modules$unq_stu.2)
 
+#Reshape data for scatter plot visualization 1 using melt 
+#module unique students by certificate group
+#Modules with Zero events are not visualized.
+mod_unq <- melt(modules[modules$events>0,c(1:9,19:21)], id.vars=c(1:9))
 
+length(modules[modules$events>0,c(1:9,19:21)]$mod_hex_id)
 
+#Scatter 2 set 2: plot the mean number of events per student, based on the 
+#number of students in a grade percentile group that use a given module.  
+#Average module events per students visiting a module
+modules$events_meanStd     <- ifelse(modules$unq_stu>0,modules$events/modules$unq_stu,0)
+modules$events_meanStd.1 <- ifelse(modules$unq_stu.1>0,modules$events.1/modules$unq_stu.1,0)
+modules$events_meanStd.2  <- ifelse(modules$unq_stu.2>0,modules$events.2/modules$unq_stu.2,0)
 
+#Reshape data for scatter plot
+#Modules with Zero events are not visualized
+mod_event <- cbind(mod_unq, melt(modules[modules$events>0,c(1:9,22:24)], id.vars=c(1:9))[10:11])
+names(mod_event) [10:13] <- c("var1","val1","var2","val2")
+mod_event$module.type <- factor(mod_event$module.type)
+
+#Scatter Set 3: plot the mean time spent per student on a module, based on the 
+#number of students in a grade percentile group that use a given module. 
+modules$time_meanStd <- ifelse(modules$unq_stu>0,modules$totalTime/modules$unq_stu,0)
+modules$time_meanStd.1 <- ifelse(modules$unq_stu.1>0,modules$totalTime.1/modules$unq_stu.1,0)
+modules$time_meanStd.2  <- ifelse(modules$unq_stu.2>0,modules$totalTime.2/modules$unq_stu.2,0)
+
+#Reshape data for scatter plot
+#Modules with Zero events are not visualized
+mod_time <- melt(modules[modules$events>0,c(1:9,25:27)],id.vars=c(1:9))
+mod_time <- cbind(mod_unq, mod_time[10:11])
+names(mod_time) [10:13] <- c("var1","val1","var2","val2")
+mod_time$module.type <- factor(mod_time$module.type)
+```
 
 
 
@@ -97,6 +143,9 @@ Before visualizing the results, themes for the visualization are set for the ggp
 #Theme for ggplot2
 theme_set(theme_light())
 
+##Color Scales and setting for graphs
+strip <- c("#DCDCDC") #Grey
+
 #Univariate color scale
 #Multi-color univariate color palette for the module type variables
 #Dark blue to yellow green
@@ -124,70 +173,121 @@ pal1 <- function (n, h = c(360, 45), c. = c(17, 100), l = c(2, 76),
                     }
                     return(rval)
                   }
-                  
-#Multi-color univariate color palette color palette for the student group variables
-#Pink/Orange/Yellow
-pal2 <- function (n, h = c(-83, 43), c. = c(100, 43), l = c(56, 86), 
-                  power = c(0.166666666666667, 0.9), fixup = TRUE, gamma = NULL, 
-                  alpha = 1, ...) 
-                    {
-                      if (!is.null(gamma)) 
-                        warning("'gamma' is deprecated and has no effect")
-                      if (n < 1L) 
-                        return(character(0L))
-                      h <- rep(h, length.out = 2L)
-                      c <- rep(c., length.out = 2L)
-                      l <- rep(l, length.out = 2L)
-                      power <- rep(power, length.out = 2L)
-                      rval <- seq(1, 0, length = n)
-                      rval <- hex(polarLUV(L = l[2L] - diff(l) * rval^power[2L], 
-                                           C = c[2L] - diff(c) * rval^power[1L], H = h[2L] - diff(h) * 
-                                             rval), fixup = fixup, ...)
-                      if (!missing(alpha)) {
-                        alpha <- pmax(pmin(alpha, 1), 0)
-                        alpha <- format(as.hexmode(round(alpha * 255 + 1e-04)), 
-                                        width = 2L, upper.case = TRUE)
-                        rval <- paste(rval, alpha, sep = "")
-                      }
-                      return(rval)
-                    }
 
-##Divergent color scales - variable neutral
-#Orange to Blue
-pal3 <- function (n, h = c(40, -117), c = 100, l = c(67, 97), power = 1.33333333333333, 
-                  fixup = TRUE, gamma = NULL, alpha = 1, ...) 
-                    {
-                      if (!is.null(gamma)) 
-                        warning("'gamma' is deprecated and has no effect")
-                      if (n < 1L) 
-                        return(character(0L))
-                      h <- rep(h, length.out = 2L)
-                      c <- c[1L]
-                      l <- rep(l, length.out = 2L)
-                      power <- rep(power, length.out = 2L)
-                      rval <- seq(1, -1, length = n)
-                      rval <- hex(polarLUV(L = l[2L] - diff(l) * abs(rval)^power[2L], 
-                                           C = c * abs(rval)^power[1L], H = ifelse(rval > 0, h[1L], 
-                                                                                   h[2L])), fixup = fixup, ...)
-                      if (!missing(alpha)) {
-                        alpha <- pmax(pmin(alpha, 1), 0)
-                        alpha <- format(as.hexmode(round(alpha * 255 + 0.0001)), 
-                                        width = 2L, upper.case = TRUE)
-                        rval <- paste(rval, alpha, sep = "")
-                      }
-                      return(rval)
+#Color Scales for Module Types
+modColors <- pal1(4)
+modColors <- modColors[c(2,1,3,4)]
+```
+
+##Figure Labels
+```{r labels}
+##Label groups
+#Certification Groups
+userGrps <- as_labeller(c('unq_stu_per' = paste0("All students (", length(students$user_id)," students)"),
+                           'unq_stu_per.1'  = paste0("Certificate granted, grades between 100%-70% (",
+                                                     length(students[students$grade>=.7,]$user_id)," students)"),  
+                           'unq_stu_per.2'  = paste0("No certification but active, with grades less than 70% (",
+                                                     length(students[students$grade<.7,]$user_id)," students)")))
+userGrps2 <- as_labeller(c('unq_stu_per' = paste0("All students\n(", length(students$user_id)," students)"),
+                          'unq_stu_per.1'  = paste0("Certificate granted\n(",
+                                                    length(students[students$grade>=.7,]$user_id)," students)"),  
+                          'unq_stu_per.2'  = paste0("No certification active\n(",
+                                                    length(students[students$grade<.7,]$user_id)," students)")))
+modType <- as_labeller(c("html+block" = "HTML/Text\nModule",
+                         "openassessment+block" = "Open Assessment\nModule",
+                         "problem+block" = "Problem\nModule",
+                         "video+block"  = "Video\nModule"))
+modLed <- c("HTML/Text\nModule", "Open Assessment\nModule", "Problem\nModule","Video\nModule")
+```
+
+##Figure Vertical Lines 
+```{r vlines}
+#Sets Vertical Line Set for Modules by Week of course
+vline <- as.data.frame(unique(mod_unq$L1))
+names(vline)[1] <- "L1"
+vline$mod <- NA
+for(i in 1:nrow(vline)){
+  vline[i,]$mod <- max(mod_unq[mod_unq$L1==vline[i,1],]$order)
 }
 ```
 
+##Figure 4 Scatter Plot of Overall Module Use and Unique Number of Student Users
 
-
-##Figure 4
 ```{r figure 4}
-
+ggplot(mod_unq, aes(x=mod_unq$order,y=mod_unq$value))+
+    geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype="dashed") +
+    geom_point(aes(colour=mod_unq$module.type)) +
+    scale_colour_manual(values=modColors, labels=modLed) +
+    labs(y="Percent of Students Interacting\nwith a Course Module",x="Course Module Sequence") +
+    facet_wrap( ~ variable, nrow=3, 
+                strip.position="top",
+                labeller =userGrps) +
+    theme(legend.position="bottom",
+          legend.title=element_blank(),
+          strip.background = element_rect(fill=strip),
+          strip.text=element_text(color = "Black"))
 ```
 
+##Figure 5 Average Events per Module by Students in Percentile Groups
 
-##Figure 5
 ```{r figure 5}
-
+#5A 
+#HTML/Text Modules()
+p1 <- ggplot(mod_event[mod_event$module.type=="html+block",], aes(x=order,y=val2)) +
+        geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype="dashed") +
+        geom_point(aes(colour=module.type, size=val1)) +
+        scale_size(range = c(0, 2.5)) +
+        scale_colour_manual(values=modColors[1]) +
+        labs(y="Mean Interaction Events per Student", title="A") +
+        theme(plot.title = element_text(hjust = 0),
+              legend.position="none", 
+              strip.background = element_rect(fill=strip),
+              strip.text=element_text(color = "Black"),
+              axis.title.x = element_blank()) +
+        facet_wrap( ~ var1, nrow=4, strip.position="right", labeller =userGrps2)    
+#5B
+#Video Modules
+p2 <- ggplot(mod_event[mod_event$module.type=="video+block",], aes(x=order,y=val2)) +
+        geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype="dashed") +
+        geom_point(aes(colour=module.type, size=val1)) +
+        scale_size(range = c(0, 2.5)) +
+        scale_colour_manual(values=modColors[4]) +
+        labs(title="B") +
+        theme(plot.title = element_text(hjust = 0),
+              legend.position="none", 
+              strip.background = element_rect(fill=strip),
+              strip.text=element_text(color = "Black"),
+              axis.title = element_blank()) +
+        facet_wrap( ~ var1, nrow=4, strip.position="right", labeller =userGrps2)
+#5C
+#Problem Modules
+p3 <- ggplot(mod_event[mod_event$module.type=="problem+block",], aes(x=order,y=val2)) +
+        geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype="dashed") +
+        geom_point(aes(colour=module.type, size=val1)) +
+        scale_size(range = c(0, 2.5)) +
+        scale_colour_manual(values=modColors[3]) +
+        labs(x="Course Module Sequence", 
+             y="Mean Interaction Events per Student",
+             title="C")+
+        theme(plot.title = element_text(hjust = 0),
+             legend.position="none", 
+             strip.background = element_rect(fill=strip),
+             strip.text=element_text(color = "Black")) +
+        facet_wrap( ~ var1, nrow=4, strip.position="right", labeller =userGrps2)
+#5D
+#Open Assessment Modules
+p4 <- ggplot(mod_event[mod_event$module.type=="openassessment+block",], aes(x=order,y=val2)) +
+        geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype="dashed") +
+        geom_point(aes(colour=module.type, size=val1)) +
+        scale_size(range = c(0, 2.5)) +
+        scale_colour_manual(values=modColors[2]) +
+        labs(x="Course Module Sequence",title="D") +
+        theme(plot.title = element_text(hjust = 0),
+              legend.position="none", 
+              strip.background = element_rect(fill=strip),
+              strip.text=element_text(color = "Black"),
+              axis.title.y = element_blank()) +
+        facet_wrap( ~ var1, nrow=4, strip.position="right", labeller =userGrps2)
+#Final Layout
+multiplot(p1,p3,p2,p4,cols=2)
 ```

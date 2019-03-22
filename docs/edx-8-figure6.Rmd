@@ -35,6 +35,13 @@ str(students)
 
 
 
+
+
+
+
+
+
+
 #Visualization of Results
 
 ##Multiplot Layout
@@ -42,6 +49,7 @@ The multiplot function allows for multiple visualizations to be added into a sin
 the Winston Chang. (2017). *Cookbook for R*. [http://www.cookbook-r.com/](http://www.cookbook-r.com/).
 
 ```{r layout}
+#Layout
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   # Make a list from the ... arguments and plotlist
   plots <- c(list(...), plotlist)
@@ -84,34 +92,10 @@ Before visualizing the results, themes for the visualization are set for the ggp
 #Theme for ggplot2
 theme_set(theme_light())
 
+##Color Scales and setting for graphs
+strip <- c("#DCDCDC") #Grey
+
 #Univariate color scale
-#Multi-color univariate color palette for the module type variables
-#Dark blue to yellow green
-pal1 <- function (n, h = c(360, 45), c. = c(17, 100), l = c(2, 76), 
-                  power = c(2.53333333333333, 1.6), fixup = TRUE, gamma = NULL, 
-                  alpha = 1, ...) 
-                  {
-                    if (!is.null(gamma)) 
-                      warning("'gamma' is deprecated and has no effect")
-                    if (n < 1L) 
-                      return(character(0L))
-                    h <- rep(h, length.out = 2L)
-                    c <- rep(c., length.out = 2L)
-                    l <- rep(l, length.out = 2L)
-                    power <- rep(power, length.out = 2L)
-                    rval <- seq(1, 0, length = n)
-                    rval <- hex(polarLUV(L = l[2L] - diff(l) * rval^power[2L], 
-                                         C = c[2L] - diff(c) * rval^power[1L], H = h[2L] - diff(h) * 
-                                           rval), fixup = fixup, ...)
-                    if (!missing(alpha)) {
-                      alpha <- pmax(pmin(alpha, 1), 0)
-                      alpha <- format(as.hexmode(round(alpha * 255 + 0.0001)), 
-                                      width = 2L, upper.case = TRUE)
-                      rval <- paste(rval, alpha, sep = "")
-                    }
-                    return(rval)
-                  }
-                  
 #Multi-color univariate color palette color palette for the student group variables
 #Pink/Orange/Yellow
 pal2 <- function (n, h = c(-83, 43), c. = c(100, 43), l = c(56, 86), 
@@ -139,36 +123,195 @@ pal2 <- function (n, h = c(-83, 43), c. = c(100, 43), l = c(56, 86),
                       return(rval)
                     }
 
-##Divergent color scales - variable neutral
-#Orange to Blue
-pal3 <- function (n, h = c(40, -117), c = 100, l = c(67, 97), power = 1.33333333333333, 
-                  fixup = TRUE, gamma = NULL, alpha = 1, ...) 
-                    {
-                      if (!is.null(gamma)) 
-                        warning("'gamma' is deprecated and has no effect")
-                      if (n < 1L) 
-                        return(character(0L))
-                      h <- rep(h, length.out = 2L)
-                      c <- c[1L]
-                      l <- rep(l, length.out = 2L)
-                      power <- rep(power, length.out = 2L)
-                      rval <- seq(1, -1, length = n)
-                      rval <- hex(polarLUV(L = l[2L] - diff(l) * abs(rval)^power[2L], 
-                                           C = c * abs(rval)^power[1L], H = ifelse(rval > 0, h[1L], 
-                                                                                   h[2L])), fixup = fixup, ...)
-                      if (!missing(alpha)) {
-                        alpha <- pmax(pmin(alpha, 1), 0)
-                        alpha <- format(as.hexmode(round(alpha * 255 + 0.0001)), 
-                                        width = 2L, upper.case = TRUE)
-                        rval <- paste(rval, alpha, sep = "")
-                      }
-                      return(rval)
-}
+#Color Scales for Student Certification Cohort Assignments
+stdColors <- pal2(3)
 ```
 
-
+##Figure Labels
+```{r labels}
+##Label groups
+#Certification Groups
+userGrps <- as_labeller(c('unq_stu_per' = paste0("All students (", length(students$user_id)," students)"),
+                           'unq_stu_per.1'  = paste0("Certificate granted, grades between 100%-70% (",
+                                                     length(students[students$grade>=.7,]$user_id)," students)"),  
+                           'unq_stu_per.2'  = paste0("No certification but active, with grades less than 70% (",
+                                                     length(students[students$grade<.7,]$user_id)," students)")))
+userGrps2 <- as_labeller(c('unq_stu_per' = paste0("All students\n(", length(students$user_id)," students)"),
+                          'unq_stu_per.1'  = paste0("Certificate granted\n(",
+                                                    length(students[students$grade>=.7,]$user_id)," students)"),  
+                          'unq_stu_per.2'  = paste0("No certification active\n(",
+                                                    length(students[students$grade<.7,]$user_id)," students)")))
+```
 
 ##Figure 6
-```{r figure 6, eval=FALSE, include=FALSE}
+```{r figure 6}
+#6A Grades vs Events (Unq.)
+m <- glm(grade ~ poly(events,3), data = students[students$grade>0,])
+eq <- substitute(italic(y) == b %.%italic(x)^3* c %.%italic(x)^2* + d %.%italic(x)* + a*","~~italic(r)^2~"="~r2,
+                 list( a=format(coef(m)[1], digits=3), 
+                       b=format(coef(m)[2], digits=3),
+                       c=format(coef(m)[3], digits=3),
+                       d=format(coef(m)[4], digits=3),
+                       r2=format(1-(m$deviance/m$null.deviance), digits = 3)))
+p4 <- ggplot(students[students$grade>0 & abs(scale(students$events))<=5,], aes(x=grade,y=events)) +
+        geom_point(aes(color=cert_status)) +
+        geom_smooth(method = "glm", formula = y ~ poly(x,3),fullrange=F) +
+        geom_text(x = .43, y = 2264, aes(label = eq), data=data.frame(eq=as.character(as.expression(eq))), parse=TRUE) +
+        scale_colour_manual(values=stdColors[1:2]) + 
+        labs(x="Final Grade",y="Events (within 5 sd. of mean)") +
+        theme(legend.position="none")
 
+#6B Grades vs Mods Accessed (Unq.)
+m <- glm(grade ~ poly(mods_unq,3), data = students[students$grade>0,])
+eq <- substitute(italic(y) == b %.%italic(x)^3* c %.%italic(x)^2* + d %.%italic(x)* + a*","~~italic(r)^2~"="~r2,
+                 list( a=format(coef(m)[1], digits=3), 
+                       b=format(coef(m)[2], digits=3),
+                       c=format(coef(m)[3], digits=3),
+                       d=format(coef(m)[4], digits=3),
+                       r2=format(1-(m$deviance/m$null.deviance), digits = 3)))
+
+p3 <- ggplot(students[students$grade>0,], aes(x=grade,y=mods_unq)) +
+        geom_point(aes(color=cert_status)) +
+        geom_smooth(method = "glm", formula = y ~ poly(x,3),fullrange=F) +
+        geom_text(x = .46, y = 258, aes(label = eq), data=data.frame(eq=as.character(as.expression(eq))), parse=TRUE) +
+        scale_colour_manual(values=stdColors[1:2]) + 
+        labs(x="Final Grade",y="Modules Accessed (Unq.)") +
+        theme(legend.position="none")
+
+#6C Grades vs Open Assessment Events
+m <- glm(grade ~ poly(oa_events,3), data = students[students$grade>0,])
+eq <- substitute(italic(y) == b %.%italic(x)^3* c %.%italic(x)^2* + d %.%italic(x)* + a*","~~italic(r)^2~"="~r2,
+                 list( a=format(coef(m)[1], digits=3), 
+                       b=format(coef(m)[2], digits=3),
+                       c=format(coef(m)[3], digits=3),
+                       d=format(coef(m)[4], digits=3),
+                       r2=format(1-(m$deviance/m$null.deviance), digits = 3)))
+p5 <- ggplot(students[students$grade>0 & abs(scale(students$oa_events))<=2,], aes(x=grade,y=oa_events)) +
+        geom_point(aes(color=cert_status)) +
+        geom_smooth(method = "glm", formula = y ~ poly(x,3),fullrange=F) +
+        geom_text(x = .43, y = 61.5, aes(label = eq), data=data.frame(eq=as.character(as.expression(eq))), parse=TRUE) +
+        scale_colour_manual(values=stdColors[1:2]) + 
+        labs(x="Final Grade",y="Open Assessment Events (within 2 sd. of mean)") +
+        theme(legend.position="none")
+
+#6D Events vs Sessions
+m <- glm(sessions ~ poly(events,3), data = students[students$grade>0 & abs(scale(students$events))<=5,])
+eq <- substitute(italic(y) == b %.%italic(x)^3* c %.%italic(x)^2* + d %.%italic(x)* + a*","~~italic(r)^2~"="~r2,
+                 list( a=format(coef(m)[1], digits=3), 
+                       b=format(coef(m)[2], digits=3),
+                       c=format(coef(m)[3], digits=3),
+                       d=format(coef(m)[4], digits=3),
+                       r2=format(1-(m$deviance/m$null.deviance), digits = 3)))
+p7 <- ggplot(students[students$grade>0 & abs(scale(students$events))<=5,], aes(x=events,y=sessions)) +
+        geom_point(aes(color=cert_status)) +
+        geom_smooth(method = "glm", formula = y ~ poly(x,3),fullrange=F) +
+        geom_text(x =1150, y=145, aes(label = eq), data=data.frame(eq=as.character(as.expression(eq))), parse=TRUE) +
+        scale_colour_manual(values=stdColors[1:2]) + 
+        labs(x="Events",y="Sessions")+
+        theme(legend.position="none")
+
+#6E Events vs Problem Attempts
+p10 <- ggplot(students[students$grade>0 & abs(scale(students$events))<=4,], aes(x=events,y=prb_attempts)) +
+  geom_point(aes(color=cert_status)) +
+  scale_colour_manual(values=stdColors[1:2]) + 
+  labs(x="Events",y="Problem Attempts") +
+  theme(legend.position="none")
+
+#6F Events vs OA Events
+p11 <- ggplot(students[students$grade>0 & abs(scale(students$events))<=5,], aes(x=events,y=oa_events))  +
+        geom_point(aes(color=cert_status)) +
+        scale_colour_manual(values=stdColors[1:2]) + 
+        labs(x="Events",y="Open Assessment Events") +
+        theme(legend.position="none")
+
+
+multiplot(p4+ggtitle("A")+ theme(plot.title = element_text(hjust = 0)),
+          p3+ggtitle("B")+ theme(plot.title = element_text(hjust = 0)),
+          p5+ggtitle("C")+ theme(plot.title = element_text(hjust = 0)),
+          p7+ggtitle("D")+ theme(plot.title = element_text(hjust = 0)),
+          p10+ggtitle("E")+ theme(plot.title = element_text(hjust = 0)),
+          p11+ggtitle("F")+ theme(plot.title = element_text(hjust = 0)),
+          cols=2)
+```
+
+```{r alts}
+# #6A Grades vs Total Time
+# # m <- glm(grade ~ poly(sessions,2), data = students[students$grade>0,])
+# eq <- substitute(italic(y) == b %.%italic(x)^2* c %.%italic(x) + a*","~~italic(r)^2~"="~r2,
+#                  list( a=format(coef(m)[1], digits=3), 
+#                        b=format(coef(m)[2], digits=3),
+#                        c=format(coef(m)[3], digits=3),
+#                        r2=format(1-(m$deviance/m$null.deviance), digits = 3)))
+# 
+# p1 <- ggplot(students[students$grade>0,], aes(x=grade,y=sessions)) +
+#         geom_point(aes(color=cert_status)) +
+#         geom_smooth(method = "glm", formula = y ~ poly(x,2) ,fullrange=F) +
+#         geom_text(x = .35, y = 145, aes(label = eq), data=data.frame(eq=as.character(as.expression(eq))), parse=TRUE) +
+#         scale_colour_manual(values=stdColors[1:2]) + 
+#         labs(x="Final Grade",y="Sessions") +
+#         theme(legend.position="none")
+# 
+# #6B Grades vs Total Time
+# m <- glm(grade ~ poly(total_time,3), data = students[students$grade>0,])
+# eq <- substitute(italic(y) == b %.%italic(x)^3* c %.%italic(x)^2* + d %.%italic(x)* + a*","~~italic(r)^2~"="~r2,
+#                  list( a=format(coef(m)[1], digits=3),
+#                        b=format(coef(m)[2], digits=3),
+#                        c=format(coef(m)[3], digits=3),
+#                        d=format(coef(m)[4], digits=3),
+#                        r2=format(1-(m$deviance/m$null.deviance), digits = 3)))
+# p2 <- ggplot(students[students$grade>0 & abs(scale(students$total_time))<=3.5,], aes(x=grade,y=total_time)) +
+#         geom_point(aes(color=cert_status)) +
+#         geom_smooth(method = "glm", formula = y ~ x,fullrange=F) +
+#         geom_text(x = .43, y = 3600, aes(label = eq), data=data.frame(eq=as.character(as.expression(eq))), parse=TRUE) +
+#         scale_colour_manual(values=stdColors[1:2]) +
+#         labs(x="Final Grade",y="Cumulative Time (within 3.5 sd. of mean)") +
+#         theme(legend.position="none")
+
+
+# #6F Grades vs Problem Attempts
+# m <- glm(grade ~ poly(prb_attempts,3), data = students[students$grade>0,])
+# eq <- substitute(italic(y) == b %.%italic(x)^3* c %.%italic(x)^2* + d %.%italic(x)^2* + a*","~~italic(r)^2~"="~r2,
+#                  list( a=format(coef(m)[1], digits=3), 
+#                        b=format(coef(m)[2], digits=3),
+#                        c=format(coef(m)[3], digits=3),
+#                        d=format(coef(m)[4], digits=3),
+#                        r2=format(1-(m$deviance/m$null.deviance), digits = 3)))
+# p6 <- ggplot(students[students$grade>0 ,], aes(x=grade,y=prb_attempts)) +
+#         geom_point(aes(color=cert_status)) +
+#         geom_smooth(method = "glm", formula = y ~ poly(x,3),fullrange=F) +
+#         geom_text(x = .43, y = 313, aes(label = eq), data=data.frame(eq=as.character(as.expression(eq))), parse=TRUE) +
+#         scale_colour_manual(values=stdColors[1:2]) + 
+#         labs(x="Final Grade",y="Problem Attempts (events)") +
+#         theme(legend.position="none")
+
+# #6B Events vs Total Time
+# m <- glm(total_time/60 ~ poly(events,3), data = students[students$grade>0 & abs(scale(students$events))<=5,])
+# eq <- substitute(italic(y) == b %.%italic(x)^3* c %.%italic(x)^2* + d %.%italic(x)* + a*","~~italic(r)^2~"="~r2,
+#                  list( a=format(coef(m)[1], digits=3), 
+#                        b=format(coef(m)[2], digits=3),
+#                        c=format(coef(m)[3], digits=3),
+#                        d=format(coef(m)[4], digits=3),
+#                        r2=format(1-(m$deviance/m$null.deviance), digits = 3)))
+# p8 <- ggplot(students[students$grade>0 & abs(scale(students$events))<=5,], aes(x=events,y=total_time/60)) +
+#         geom_point(aes(color=cert_status)) +
+#         geom_smooth(method = "glm", formula = y ~ poly(x,3),fullrange=F) +
+#         geom_text(x=1150, y=83.25, aes(label = eq), data=data.frame(eq=as.character(as.expression(eq))), parse=TRUE) +
+#         scale_colour_manual(values=stdColors[1:2]) + 
+#         labs(x="Events",y="Cumulative Time (Hours)")+
+#         theme(legend.position="none")
+
+# #6C Events vs Mods Accessed (Unq.)
+# m <- glm(log(mods_unq) ~ log(events) + sqrt(events), data = students[students$grade>0 & abs(scale(students$events))<=5,])
+# eq <- substitute(italic(log(y)) == b %.%italic(log(x))* c %.%italic(sqrt(x))* a*","~~italic(r)^2~"="~r2,
+#                  list( a=format(coef(m)[1], digits=3), 
+#                        b=format(coef(m)[2], digits=3),
+#                        c=format(coef(m)[3], digits=3),
+#                        r2=format(1-(m$deviance/m$null.deviance), digits = 3)))
+# p9 <- ggplot(students[students$grade>0 & abs(scale(students$events))<=5,], aes(x=events,y=log(mods_unq)))  +
+#         geom_point(aes(color=cert_status)) +
+#         stat_smooth(method = "glm", method.args = list(family="gaussian"), formula = y ~ log(sqrt(x))+sqrt(x), fullrange=F) +
+#         geom_text(x = 1600, y = 2.55, aes(label = eq), data=data.frame(eq=as.character(as.expression(eq))), parse=TRUE) +
+#         scale_colour_manual(values=stdColors[1:2]) + 
+#         labs(x="Events",y="Modules Accessed (Unq.) (Log transform)") +
+#         theme(legend.position="none")
 ```

@@ -330,9 +330,90 @@ require(&quot;GGally&quot;) </code></pre>
 </div>
 <div id="loading-data" class="section level1">
 <h1>Loading Data</h1>
-<p>Sample Data E is used for both figures. The data was created from 3 sets of results from script <a href="https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-6-moduleUseAnalysis.R">edX-6-moduleUseAnalysis.R</a>. Data represents an overall module engagement statistics for for certification groups identified from analysis of edX course user certification data.</p>
+<p>The data set loaded as students was created by the script <a href="https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-7-studentFeatureExtraction.R">edX-7-studentFeatureExtraction.R</a>. Data represents an each active student’s overall engagement statistics for the</p>
+<pre class="r"><code>#Load Sample Data Set D
+students &lt;- read.csv(text=getURL(&quot;https://raw.githubusercontent.com/cns-iu/edx-learnertrajectorynetpipeline/master/data/dataD.csv&quot;,ssl.verifypeer = FALSE), header=T)
+str(students)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    1565 obs. of  35 variables:
+##  $ user_id            : logi  NA NA NA NA NA NA ...
+##  $ grade              : num  0.94 0 0.94 0.83 0.97 0.52 0 1 0.94 0.96 ...
+##  $ cert_status        : Factor w/ 2 levels &quot;downloadable&quot;,..: 1 2 1 1 1 2 2 1 1 1 ...
+##  $ gender             : logi  NA NA NA NA NA NA ...
+##  $ yob                : logi  NA NA NA NA NA NA ...
+##  $ loe                : logi  NA NA NA NA NA NA ...
+##  $ sessions           : int  65 22 53 45 54 28 5 24 48 37 ...
+##  $ days_unq           : int  38 12 29 31 28 14 4 18 36 31 ...
+##  $ mods_unq           : int  284 141 291 255 291 150 86 289 289 274 ...
+##  $ vid_mods           : int  46 23 47 47 47 26 12 47 48 37 ...
+##  $ prb_mod            : int  130 64 139 102 139 65 40 139 139 136 ...
+##  $ oa_mods            : int  5 1 5 5 5 2 1 4 5 5 ...
+##  $ events             : int  4110 439 1200 747 954 680 254 900 832 985 ...
+##  $ vid_events         : int  3379 138 497 273 339 315 73 302 285 280 ...
+##  $ prb_events         : int  224 90 271 150 256 133 98 267 225 267 ...
+##  $ oa_events          : int  43 5 47 21 47 13 3 41 47 50 ...
+##  $ oa_peerAccessEvents: int  9 0 9 3 9 0 0 9 9 9 ...
+##  $ oa_getPeerEvents   : int  18 0 20 6 20 0 0 19 21 26 ...
+##  $ seqNextEvents      : int  66 37 67 64 61 33 23 58 64 64 ...
+##  $ seqPrevEvents      : int  13 0 7 7 12 11 3 5 11 10 ...
+##  $ seqGotoEvents      : int  16 5 18 23 22 14 0 24 0 3 ...
+##  $ modAccessEvents    : int  54 31 54 52 54 32 20 53 54 53 ...
+##  $ total_time         : num  3236 1074 2738 1369 2021 ...
+##  $ vid_time           : num  1724 265 776 436 698 ...
+##  $ prb_time           : num  187 62.7 220.1 96.6 163.1 ...
+##  $ oa_time            : num  200.37 3.88 168.27 12.42 199.32 ...
+##  $ oa_peerAccessTime  : num  5.517 0 47.25 0.467 23.9 ...
+##  $ oa_getPeerTime     : num  107.62 0 100.72 5.43 165.03 ...
+##  $ seqNextTime        : num  462 443 816 347 458 ...
+##  $ seqPrevTime        : num  29 0 27.68 42.73 7.68 ...
+##  $ seqGotoTime        : num  61.55 2.75 103.07 87.1 74.03 ...
+##  $ modAccessTime      : num  443 223 356 344 342 ...
+##  $ prb_attempts       : int  185 85 211 142 217 96 83 202 199 222 ...
+##  $ prb_correct        : int  119 62 122 93 150 58 72 126 121 120 ...
+##  $ prb_totalPoints    : int  128 67 133 97 159 63 74 140 131 132 ...</code></pre>
+<p>Sample Data E is used for both figures, and is loaded in to the data frame modules. The data was created from 3 sets of results from script <a href="https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-6-moduleUseAnalysis.R">edX-6-moduleUseAnalysis.R</a>. Data represents an overall module engagement statistics for for certification groups identified from analysis of edX course user certification data.</p>
 <pre class="r"><code>#Load Sample Data Set E
-moduleUse &lt;- read.csv(text=getURL(&quot;https://raw.githubusercontent.com/cns-iu/edx-learnertrajectorynetpipeline/master/data/dataE.csv&quot;,ssl.verifypeer = FALSE), header=T)</code></pre>
+modules &lt;- read.csv(text=getURL(&quot;https://raw.githubusercontent.com/cns-iu/edx-learnertrajectorynetpipeline/master/data/dataE.csv&quot;,ssl.verifypeer = FALSE), header=T)</code></pre>
+<pre class="r"><code>##Feature generation and reshaping data for plots
+#Scatter 1: plot of unique number of students using a module 
+#split by different student percentile groups, which are based students&#39; 
+#final grade. For cross-group comparison, the values are scaled based on the 
+#proportion of a percentile groups visiting a module.
+modules$unq_stu_per&lt;- modules$unq_stu/max(modules$unq_stu)
+modules$unq_stu_per.1&lt;- modules$unq_stu.1/max(modules$unq_stu.1)
+modules$unq_stu_per.2&lt;- modules$unq_stu.2/max(modules$unq_stu.2)
+
+#Reshape data for scatter plot visualization 1 using melt 
+#module unique students by certificate group
+#Modules with Zero events are not visualized.
+mod_unq &lt;- melt(modules[modules$events&gt;0,c(1:9,19:21)], id.vars=c(1:9))
+
+length(modules[modules$events&gt;0,c(1:9,19:21)]$mod_hex_id)</code></pre>
+<pre><code>## [1] 310</code></pre>
+<pre class="r"><code>#Scatter 2 set 2: plot the mean number of events per student, based on the 
+#number of students in a grade percentile group that use a given module.  
+#Average module events per students visiting a module
+modules$events_meanStd     &lt;- ifelse(modules$unq_stu&gt;0,modules$events/modules$unq_stu,0)
+modules$events_meanStd.1 &lt;- ifelse(modules$unq_stu.1&gt;0,modules$events.1/modules$unq_stu.1,0)
+modules$events_meanStd.2  &lt;- ifelse(modules$unq_stu.2&gt;0,modules$events.2/modules$unq_stu.2,0)
+
+#Reshape data for scatter plot
+#Modules with Zero events are not visualized
+mod_event &lt;- cbind(mod_unq, melt(modules[modules$events&gt;0,c(1:9,22:24)], id.vars=c(1:9))[10:11])
+names(mod_event) [10:13] &lt;- c(&quot;var1&quot;,&quot;val1&quot;,&quot;var2&quot;,&quot;val2&quot;)
+mod_event$module.type &lt;- factor(mod_event$module.type)
+
+#Scatter Set 3: plot the mean time spent per student on a module, based on the 
+#number of students in a grade percentile group that use a given module. 
+modules$time_meanStd &lt;- ifelse(modules$unq_stu&gt;0,modules$totalTime/modules$unq_stu,0)
+modules$time_meanStd.1 &lt;- ifelse(modules$unq_stu.1&gt;0,modules$totalTime.1/modules$unq_stu.1,0)
+modules$time_meanStd.2  &lt;- ifelse(modules$unq_stu.2&gt;0,modules$totalTime.2/modules$unq_stu.2,0)
+
+#Reshape data for scatter plot
+#Modules with Zero events are not visualized
+mod_time &lt;- melt(modules[modules$events&gt;0,c(1:9,25:27)],id.vars=c(1:9))
+mod_time &lt;- cbind(mod_unq, mod_time[10:11])
+names(mod_time) [10:13] &lt;- c(&quot;var1&quot;,&quot;val1&quot;,&quot;var2&quot;,&quot;val2&quot;)
+mod_time$module.type &lt;- factor(mod_time$module.type)</code></pre>
 </div>
 <div id="visualization-of-results" class="section level1">
 <h1>Visualization of Results</h1>
@@ -379,6 +460,9 @@ moduleUse &lt;- read.csv(text=getURL(&quot;https://raw.githubusercontent.com/cns
 <pre class="r"><code>#Theme for ggplot2
 theme_set(theme_light())
 
+##Color Scales and setting for graphs
+strip &lt;- c(&quot;#DCDCDC&quot;) #Grey
+
 #Univariate color scale
 #Multi-color univariate color palette for the module type variables
 #Dark blue to yellow green
@@ -406,65 +490,119 @@ pal1 &lt;- function (n, h = c(360, 45), c. = c(17, 100), l = c(2, 76),
                     }
                     return(rval)
                   }
-                  
-#Multi-color univariate color palette color palette for the student group variables
-#Pink/Orange/Yellow
-pal2 &lt;- function (n, h = c(-83, 43), c. = c(100, 43), l = c(56, 86), 
-                  power = c(0.166666666666667, 0.9), fixup = TRUE, gamma = NULL, 
-                  alpha = 1, ...) 
-                    {
-                      if (!is.null(gamma)) 
-                        warning(&quot;&#39;gamma&#39; is deprecated and has no effect&quot;)
-                      if (n &lt; 1L) 
-                        return(character(0L))
-                      h &lt;- rep(h, length.out = 2L)
-                      c &lt;- rep(c., length.out = 2L)
-                      l &lt;- rep(l, length.out = 2L)
-                      power &lt;- rep(power, length.out = 2L)
-                      rval &lt;- seq(1, 0, length = n)
-                      rval &lt;- hex(polarLUV(L = l[2L] - diff(l) * rval^power[2L], 
-                                           C = c[2L] - diff(c) * rval^power[1L], H = h[2L] - diff(h) * 
-                                             rval), fixup = fixup, ...)
-                      if (!missing(alpha)) {
-                        alpha &lt;- pmax(pmin(alpha, 1), 0)
-                        alpha &lt;- format(as.hexmode(round(alpha * 255 + 1e-04)), 
-                                        width = 2L, upper.case = TRUE)
-                        rval &lt;- paste(rval, alpha, sep = &quot;&quot;)
-                      }
-                      return(rval)
-                    }
 
-##Divergent color scales - variable neutral
-#Orange to Blue
-pal3 &lt;- function (n, h = c(40, -117), c = 100, l = c(67, 97), power = 1.33333333333333, 
-                  fixup = TRUE, gamma = NULL, alpha = 1, ...) 
-                    {
-                      if (!is.null(gamma)) 
-                        warning(&quot;&#39;gamma&#39; is deprecated and has no effect&quot;)
-                      if (n &lt; 1L) 
-                        return(character(0L))
-                      h &lt;- rep(h, length.out = 2L)
-                      c &lt;- c[1L]
-                      l &lt;- rep(l, length.out = 2L)
-                      power &lt;- rep(power, length.out = 2L)
-                      rval &lt;- seq(1, -1, length = n)
-                      rval &lt;- hex(polarLUV(L = l[2L] - diff(l) * abs(rval)^power[2L], 
-                                           C = c * abs(rval)^power[1L], H = ifelse(rval &gt; 0, h[1L], 
-                                                                                   h[2L])), fixup = fixup, ...)
-                      if (!missing(alpha)) {
-                        alpha &lt;- pmax(pmin(alpha, 1), 0)
-                        alpha &lt;- format(as.hexmode(round(alpha * 255 + 0.0001)), 
-                                        width = 2L, upper.case = TRUE)
-                        rval &lt;- paste(rval, alpha, sep = &quot;&quot;)
-                      }
-                      return(rval)
+#Color Scales for Module Types
+modColors &lt;- pal1(4)
+modColors &lt;- modColors[c(2,1,3,4)]</code></pre>
+</div>
+<div id="figure-labels" class="section level2">
+<h2>Figure Labels</h2>
+<pre class="r"><code>##Label groups
+#Certification Groups
+userGrps &lt;- as_labeller(c(&#39;unq_stu_per&#39; = paste0(&quot;All students (&quot;, length(students$user_id),&quot; students)&quot;),
+                           &#39;unq_stu_per.1&#39;  = paste0(&quot;Certificate granted, grades between 100%-70% (&quot;,
+                                                     length(students[students$grade&gt;=.7,]$user_id),&quot; students)&quot;),  
+                           &#39;unq_stu_per.2&#39;  = paste0(&quot;No certification but active, with grades less than 70% (&quot;,
+                                                     length(students[students$grade&lt;.7,]$user_id),&quot; students)&quot;)))
+userGrps2 &lt;- as_labeller(c(&#39;unq_stu_per&#39; = paste0(&quot;All students\n(&quot;, length(students$user_id),&quot; students)&quot;),
+                          &#39;unq_stu_per.1&#39;  = paste0(&quot;Certificate granted\n(&quot;,
+                                                    length(students[students$grade&gt;=.7,]$user_id),&quot; students)&quot;),  
+                          &#39;unq_stu_per.2&#39;  = paste0(&quot;No certification active\n(&quot;,
+                                                    length(students[students$grade&lt;.7,]$user_id),&quot; students)&quot;)))
+modType &lt;- as_labeller(c(&quot;html+block&quot; = &quot;HTML/Text\nModule&quot;,
+                         &quot;openassessment+block&quot; = &quot;Open Assessment\nModule&quot;,
+                         &quot;problem+block&quot; = &quot;Problem\nModule&quot;,
+                         &quot;video+block&quot;  = &quot;Video\nModule&quot;))
+modLed &lt;- c(&quot;HTML/Text\nModule&quot;, &quot;Open Assessment\nModule&quot;, &quot;Problem\nModule&quot;,&quot;Video\nModule&quot;)</code></pre>
+</div>
+<div id="figure-vertical-lines" class="section level2">
+<h2>Figure Vertical Lines</h2>
+<pre class="r"><code>#Sets Vertical Line Set for Modules by Week of course
+vline &lt;- as.data.frame(unique(mod_unq$L1))
+names(vline)[1] &lt;- &quot;L1&quot;
+vline$mod &lt;- NA
+for(i in 1:nrow(vline)){
+  vline[i,]$mod &lt;- max(mod_unq[mod_unq$L1==vline[i,1],]$order)
 }</code></pre>
 </div>
-<div id="figure-4" class="section level2">
-<h2>Figure 4</h2>
+<div id="figure-4-scatter-plot-of-overall-module-use-and-unique-number-of-student-users" class="section level2">
+<h2>Figure 4 Scatter Plot of Overall Module Use and Unique Number of Student Users</h2>
+<pre class="r"><code>ggplot(mod_unq, aes(x=mod_unq$order,y=mod_unq$value))+
+    geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype=&quot;dashed&quot;) +
+    geom_point(aes(colour=mod_unq$module.type)) +
+    scale_colour_manual(values=modColors, labels=modLed) +
+    labs(y=&quot;Percent of Students Interacting\nwith a Course Module&quot;,x=&quot;Course Module Sequence&quot;) +
+    facet_wrap( ~ variable, nrow=3, 
+                strip.position=&quot;top&quot;,
+                labeller =userGrps) +
+    theme(legend.position=&quot;bottom&quot;,
+          legend.title=element_blank(),
+          strip.background = element_rect(fill=strip),
+          strip.text=element_text(color = &quot;Black&quot;))</code></pre>
+<p><img src="edx-8-figure4and5_files/figure-html/figure%204-1.png" width="672" /></p>
 </div>
-<div id="figure-5" class="section level2">
-<h2>Figure 5</h2>
+<div id="figure-5-average-events-per-module-by-students-in-percentile-groups" class="section level2">
+<h2>Figure 5 Average Events per Module by Students in Percentile Groups</h2>
+<pre class="r"><code>#5A 
+#HTML/Text Modules()
+p1 &lt;- ggplot(mod_event[mod_event$module.type==&quot;html+block&quot;,], aes(x=order,y=val2)) +
+        geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype=&quot;dashed&quot;) +
+        geom_point(aes(colour=module.type, size=val1)) +
+        scale_size(range = c(0, 2.5)) +
+        scale_colour_manual(values=modColors[1]) +
+        labs(y=&quot;Mean Interaction Events per Student&quot;, title=&quot;A&quot;) +
+        theme(plot.title = element_text(hjust = 0),
+              legend.position=&quot;none&quot;, 
+              strip.background = element_rect(fill=strip),
+              strip.text=element_text(color = &quot;Black&quot;),
+              axis.title.x = element_blank()) +
+        facet_wrap( ~ var1, nrow=4, strip.position=&quot;right&quot;, labeller =userGrps2)    
+#5B
+#Video Modules
+p2 &lt;- ggplot(mod_event[mod_event$module.type==&quot;video+block&quot;,], aes(x=order,y=val2)) +
+        geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype=&quot;dashed&quot;) +
+        geom_point(aes(colour=module.type, size=val1)) +
+        scale_size(range = c(0, 2.5)) +
+        scale_colour_manual(values=modColors[4]) +
+        labs(title=&quot;B&quot;) +
+        theme(plot.title = element_text(hjust = 0),
+              legend.position=&quot;none&quot;, 
+              strip.background = element_rect(fill=strip),
+              strip.text=element_text(color = &quot;Black&quot;),
+              axis.title = element_blank()) +
+        facet_wrap( ~ var1, nrow=4, strip.position=&quot;right&quot;, labeller =userGrps2)
+#5C
+#Problem Modules
+p3 &lt;- ggplot(mod_event[mod_event$module.type==&quot;problem+block&quot;,], aes(x=order,y=val2)) +
+        geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype=&quot;dashed&quot;) +
+        geom_point(aes(colour=module.type, size=val1)) +
+        scale_size(range = c(0, 2.5)) +
+        scale_colour_manual(values=modColors[3]) +
+        labs(x=&quot;Course Module Sequence&quot;, 
+             y=&quot;Mean Interaction Events per Student&quot;,
+             title=&quot;C&quot;)+
+        theme(plot.title = element_text(hjust = 0),
+             legend.position=&quot;none&quot;, 
+             strip.background = element_rect(fill=strip),
+             strip.text=element_text(color = &quot;Black&quot;)) +
+        facet_wrap( ~ var1, nrow=4, strip.position=&quot;right&quot;, labeller =userGrps2)
+#5D
+#Open Assessment Modules
+p4 &lt;- ggplot(mod_event[mod_event$module.type==&quot;openassessment+block&quot;,], aes(x=order,y=val2)) +
+        geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype=&quot;dashed&quot;) +
+        geom_point(aes(colour=module.type, size=val1)) +
+        scale_size(range = c(0, 2.5)) +
+        scale_colour_manual(values=modColors[2]) +
+        labs(x=&quot;Course Module Sequence&quot;,title=&quot;D&quot;) +
+        theme(plot.title = element_text(hjust = 0),
+              legend.position=&quot;none&quot;, 
+              strip.background = element_rect(fill=strip),
+              strip.text=element_text(color = &quot;Black&quot;),
+              axis.title.y = element_blank()) +
+        facet_wrap( ~ var1, nrow=4, strip.position=&quot;right&quot;, labeller =userGrps2)
+#Final Layout
+multiplot(p1,p3,p2,p4,cols=2)</code></pre>
+<p><img src="edx-8-figure4and5_files/figure-html/figure%205-1.png" width="672" /></p>
 </div>
 </div>
 
