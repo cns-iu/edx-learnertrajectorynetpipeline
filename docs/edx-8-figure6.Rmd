@@ -144,7 +144,7 @@ userGrps2 <- as_labeller(c('unq_stu_per' = paste0("All students\n(", length(stud
 ```
 
 ##Figure 6
-```{r figure 6}
+```{r figure 6, fig.height=12, fig.width=11}
 #6A Grades vs Events (Unq.)
 m <- glm(grade ~ poly(events,3), data = students[students$grade>0,])
 eq <- substitute(italic(y) == b %.%italic(x)^3* c %.%italic(x)^2* + d %.%italic(x)* + a*","~~italic(r)^2~"="~r2,
@@ -234,7 +234,7 @@ multiplot(p4+ggtitle("A")+ theme(plot.title = element_text(hjust = 0)),
           cols=2)
 ```
 
-```{r alts}
+```{r alts, eval=FALSE, include=FALSE}
 # #6A Grades vs Total Time
 # # m <- glm(grade ~ poly(sessions,2), data = students[students$grade>0,])
 # eq <- substitute(italic(y) == b %.%italic(x)^2* c %.%italic(x) + a*","~~italic(r)^2~"="~r2,
