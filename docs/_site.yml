@@ -7,8 +7,12 @@ navbar:
     href: index.html
   - text: "Figure 1.B"
     href: edx-8-figure1-B.html
-  - text: "Figure 3"
-    href: edx-8-figure3.html
+  - text: "Figure 3 and 4"
+    href: edx-8-figure3and4.html
+  - text: "Figure 5"
+    href: edx-8-figure5.html
+  - text: "Figure 6"
+    href: edx-8-figure6.html
 output:
   html_document:
     theme: cosmo

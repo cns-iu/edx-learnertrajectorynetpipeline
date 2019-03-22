@@ -5,7 +5,7 @@ title: "Figure 1, Inset B - Visualizing Difference Between Instructor Estimate a
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-This R Markdown script reproduces visualization presented in the paper, ""; specifically *Figure 1, Inset B*. The visualizations documented here use analytic results for the MITxPro course, *Architecture of Complex Systems, Fall 2016*, (MITProfessionalX+SysEngxB1+3T2016) with the **edX Learner and Course Analytics Pipeline**, scripts 1 through 6.
+This R Markdown script reproduces *Figure 1, Inset B* from the paper, CITATION. The visualization documented here use analytic results for the MITxPro course, *Architecture of Complex Systems, Fall 2016*, (MITProfessionalX+SysEngxB1+3T2016) with the **edX Learner and Course Analytics Pipeline**. More information about the data used in this visualization is available at [Sample Data Index](https://cns-iu.github.io/edx-learnertrajectorynetpipeline/index.html).
 
 # Environment Setup
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
@@ -24,7 +24,7 @@ require("ggplot2")    #GGplot 2 graphics library
 ```
 
 # Loading Data
-The data set loaded as moduels was created by the script [edX-1-courseStructureMeta.R](https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-1-courseStructureMeta.R). Data represents the course structure used to represent the content of an edX course.
+The data set loaded as modules was created by the script [edX-1-courseStructureMeta.R](https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-1-courseStructureMeta.R). Data represents the course structure used to represent the content of an edX course.
 
 The data set loaded as moduleUse was created by the script [edX-6-moduleUseAnalysis.R](https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-6-moduleUseAnalysis.R). Data represents an overall module engagement statistics for an identified group/cohort of student active in edX Course.
 ```{r data}

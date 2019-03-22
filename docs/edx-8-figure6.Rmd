@@ -1,0 +1,210 @@
+---
+title: "Figure 6"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This R Markdown script reproduces *Figure 6* from the paper, CITATION. The visualizations documented here use analytic results for the MITxPro course, *Architecture of Complex Systems, Fall 2016*, (MITProfessionalX+SysEngxB1+3T2016) with the **edX Learner and Course Analytics Pipeline**. More information about the data used in this visualization is available at [Sample Data Index](https://cns-iu.github.io/edx-learnertrajectorynetpipeline/index.html).
+
+# Environment Setup
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+```{r setup_environment, warning = FALSE,message = FALSE}
+#Clean environment
+rm(list=ls())
+options(scipen=90)
+
+#Load required packages
+require("RCurl")      #Loading data from web
+require("grid")       #Visualizations base
+require("reshape2")   #Reshape data package
+require("colorspace") #ColorSpace color pallete selection
+require("ggplot2")    #GGplot 2 graphics library
+require("GGally") 
+```
+
+# Loading Data
+The data set loaded as students was created by the script [edX-7-studentFeatureExtraction.R](https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-7-studentFeatureExtraction.R). Data represents an each active student's overall engagement statistics for the 
+
+```{r data}
+#Load Sample Data Set D
+students <- read.csv(text=getURL("https://raw.githubusercontent.com/cns-iu/edx-learnertrajectorynetpipeline/master/data/dataD.csv",ssl.verifypeer = FALSE), header=T)
+str(students)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Visualization of Results
+
+##Multiplot Layout
+The multiplot function allows for multiple visualizations to be added into a single image. The [multiplot](http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)/) function for ggplot2 was taken from
+the Winston Chang. (2017). *Cookbook for R*. [http://www.cookbook-r.com/](http://www.cookbook-r.com/).
+
+```{r layout}
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+  
+  numPlots = length(plots)
+  
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the  panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+
+  if (numPlots==1) {
+    print(plots[[1]])
+    
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+```
+
+##Setting up visualization themes and parameters
+Before visualizing the results, themes for the visualization are set for the ggplot2 package. A set of color palettes are added as well.
+
+```{r themes}
+#Theme for ggplot2
+theme_set(theme_light())
+
+#Univariate color scale
+#Multi-color univariate color palette for the module type variables
+#Dark blue to yellow green
+pal1 <- function (n, h = c(360, 45), c. = c(17, 100), l = c(2, 76), 
+                  power = c(2.53333333333333, 1.6), fixup = TRUE, gamma = NULL, 
+                  alpha = 1, ...) 
+                  {
+                    if (!is.null(gamma)) 
+                      warning("'gamma' is deprecated and has no effect")
+                    if (n < 1L) 
+                      return(character(0L))
+                    h <- rep(h, length.out = 2L)
+                    c <- rep(c., length.out = 2L)
+                    l <- rep(l, length.out = 2L)
+                    power <- rep(power, length.out = 2L)
+                    rval <- seq(1, 0, length = n)
+                    rval <- hex(polarLUV(L = l[2L] - diff(l) * rval^power[2L], 
+                                         C = c[2L] - diff(c) * rval^power[1L], H = h[2L] - diff(h) * 
+                                           rval), fixup = fixup, ...)
+                    if (!missing(alpha)) {
+                      alpha <- pmax(pmin(alpha, 1), 0)
+                      alpha <- format(as.hexmode(round(alpha * 255 + 0.0001)), 
+                                      width = 2L, upper.case = TRUE)
+                      rval <- paste(rval, alpha, sep = "")
+                    }
+                    return(rval)
+                  }
+                  
+#Multi-color univariate color palette color palette for the student group variables
+#Pink/Orange/Yellow
+pal2 <- function (n, h = c(-83, 43), c. = c(100, 43), l = c(56, 86), 
+                  power = c(0.166666666666667, 0.9), fixup = TRUE, gamma = NULL, 
+                  alpha = 1, ...) 
+                    {
+                      if (!is.null(gamma)) 
+                        warning("'gamma' is deprecated and has no effect")
+                      if (n < 1L) 
+                        return(character(0L))
+                      h <- rep(h, length.out = 2L)
+                      c <- rep(c., length.out = 2L)
+                      l <- rep(l, length.out = 2L)
+                      power <- rep(power, length.out = 2L)
+                      rval <- seq(1, 0, length = n)
+                      rval <- hex(polarLUV(L = l[2L] - diff(l) * rval^power[2L], 
+                                           C = c[2L] - diff(c) * rval^power[1L], H = h[2L] - diff(h) * 
+                                             rval), fixup = fixup, ...)
+                      if (!missing(alpha)) {
+                        alpha <- pmax(pmin(alpha, 1), 0)
+                        alpha <- format(as.hexmode(round(alpha * 255 + 1e-04)), 
+                                        width = 2L, upper.case = TRUE)
+                        rval <- paste(rval, alpha, sep = "")
+                      }
+                      return(rval)
+                    }
+
+##Divergent color scales - variable neutral
+#Orange to Blue
+pal3 <- function (n, h = c(40, -117), c = 100, l = c(67, 97), power = 1.33333333333333, 
+                  fixup = TRUE, gamma = NULL, alpha = 1, ...) 
+                    {
+                      if (!is.null(gamma)) 
+                        warning("'gamma' is deprecated and has no effect")
+                      if (n < 1L) 
+                        return(character(0L))
+                      h <- rep(h, length.out = 2L)
+                      c <- c[1L]
+                      l <- rep(l, length.out = 2L)
+                      power <- rep(power, length.out = 2L)
+                      rval <- seq(1, -1, length = n)
+                      rval <- hex(polarLUV(L = l[2L] - diff(l) * abs(rval)^power[2L], 
+                                           C = c * abs(rval)^power[1L], H = ifelse(rval > 0, h[1L], 
+                                                                                   h[2L])), fixup = fixup, ...)
+                      if (!missing(alpha)) {
+                        alpha <- pmax(pmin(alpha, 1), 0)
+                        alpha <- format(as.hexmode(round(alpha * 255 + 0.0001)), 
+                                        width = 2L, upper.case = TRUE)
+                        rval <- paste(rval, alpha, sep = "")
+                      }
+                      return(rval)
+}
+```
+
+
+
+##Figure 6
+```{r figure 6}
+
+```
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
