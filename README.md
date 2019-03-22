@@ -6,7 +6,7 @@ The edX Learner and Course Analytics and Visualization Pipeline is analytics and
 * analyze the learener use of course content modules; and 
 * aggregate student performance and interaction measurements for a given course.
 
-A generalize protocol is available at Protocols.io, [edX Learner and Course Analytics and Visualization Pipeline, V.2](https://www.protocols.io/view/edx-learner-and-course-analytics-and-visualization-zckf2uw) [dx.doi.org/10.17504/protocols.io.zckf2uw](dx.doi.org/10.17504/protocols.io.zckf2uw).
+A generalize protocol is available at Protocols.io, [edX Learner and Course Analytics and Visualization Pipeline, V.3](https://www.protocols.io/view/edx-learner-and-course-analytics-and-visualization-zckf2uw) [dx.doi.org/10.17504/protocols.io.zfhf3j6](dx.doi.org/10.17504/protocols.io.zfhf3j6).
 
 ## Data Processing and Analysis Pipeline
 Each script in the data processing and Analysis pipeline is briefly described below:
@@ -24,9 +24,8 @@ Sample data sets are provided in the **[Data](https://github.com/cns-iu/edx-lear
 
 ## Visualization Documentation
 The visualizations generated from the data processing and analysis pipeline are visualizations created using R are available for replicated as R Markdown websites. 
-1. [Figure 1.b](https://cns-iu.github.io/edx-learnertrajectorynetpipeline/edx-8-figure1-B.html)
-2. [Figures 3 and 4](https://cns-iu.github.io/edx-learnertrajectorynetpipeline/edx-8-figure3and4.html)
-3. [Figure 5](https://cns-iu.github.io/edx-learnertrajectorynetpipeline/edx-8-figure5.html)
+1. [Figure 2.B](https://cns-iu.github.io/edx-learnertrajectorynetpipeline/edx-8-figure2-B.html)
+2. [Figures 4 and 5](https://cns-iu.github.io/edx-learnertrajectorynetpipeline/edx-8-figure4and5.html)
 6. [Figure 6](https://cns-iu.github.io/edx-learnertrajectorynetpipeline/edx-8-figure6.html)
 
 ## A Note on Using the Learner Trajectory Network Pipeline
