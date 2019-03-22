@@ -121,7 +121,7 @@ str(pageEst)
 
 
 ###Combining the Chapter Level and the Page Level Time Estimates of Completion
-Note, some sequential pages do not have estimates for the time necessary to completion. For the course profiled, the page modules without time to completion estimates happen to be survey instruments administed by instructional designers. 
+Note, some sequential pages do not have estimates for the time necessary to completion. For the course profiled, the page modules without time to completion estimates happen to be survey instruments administer by instructional designers. 
 
 A review of the chapter level estimates for these surveys range between 15 and 300 minutes; the 300 minute estimate for a chapter with multiple units, and is too large for a apply to the survey. Instead, we take the mode of estimate used for all survey instruments (15 minutes) to apply 
 
@@ -148,7 +148,7 @@ str(pageEst)
 ```
 
 ##Calculating Temporal Use Measures of edX Course's Chapters
-Next, Data C contains descriptive for use each content and assessment module for the course based on analysis of all active students in the course. The course's chapter, sequential and vertical modules are excluded from the data; however, the hiearachical relationships of content and assessment modules to chapter and sequential modules identifiers through the **L1** and **L2** fields.
+Next, Data C contains descriptive for use each content and assessment module for the course based on analysis of all active students in the course. The course's chapter, sequential and vertical modules are excluded from the data; however, the hierarchical relationships of content and assessment modules to chapter and sequential modules identifiers through the **L1** and **L2** fields.
 
 The *ddply* function is used to calculate the total of average time spent using sequential modules by active students in an edX course. The function uses an average time spent per content module, which was calculated in **Script 7** by dividing the *totalTime* by *unq_stu* field.
 
@@ -175,7 +175,7 @@ ddply(moduleUse,.(L2),summarize,
 ```
 
 ## Combining edX course chapter temporal completion estimates with chapters average time used by students
-Now that the estimates of time to complete a sequential page and the total average time taken by students on sequenial page modules can be combined into a single dataframe.
+Now that the estimates of time to complete a sequential page and the total average time taken by students on sequential page modules can be combined into a single data frame.
 
 The difference between the estimated times to completion and total average time taken by students with sequential pages is calculated. The value sign for each difference measurement (positive or negative) are created as factors used to assign color in the visualization.
 ```{r , echo=FALSE}
