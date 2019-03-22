@@ -3,7 +3,7 @@ output_dir: "."
 navbar:
   title: "edX Learner and Course Analytics and Visualization Pipeline"
   left:
-  - text: "Home"
+  - text: "Sample Data Index"
     href: index.html
   - text: "Figure 1.B"
     href: edx-8-figure1-B.html

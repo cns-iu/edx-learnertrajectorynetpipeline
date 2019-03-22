@@ -1,5 +1,5 @@
 ---
-title: "edX Learner and Course Analytics and Visualization Pipeline - Sample Data Index"
+title: "Sample Data Index"
 date: "March 21, 2019"
 ---
 ```{r setup, include=FALSE}
