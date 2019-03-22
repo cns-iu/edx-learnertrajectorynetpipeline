@@ -7,6 +7,8 @@ navbar:
     href: index.html
   - text: "Figure 1.B"
     href: edx-8-figure1-B.html
+  - text: "Figure 3"
+    href: edx-8-figure3.html
 output:
   html_document:
     theme: cosmo

@@ -5,7 +5,7 @@ title: "Figure 1, Inset B - Visualizing Difference Between Instructor Estimate a
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-This R Markdown script reproduces visualization presented in the paper, ""; specifically *Figure 1, Inset B*. The visualizations documented here use analytic results for the MITxPro course, *Architecture of Complex Systems, Fall 2016,* (MITProfessionalX+SysEngxB1+3T2016) with the **edX Learner and Course Analytics Pipeline** scripts 1 through 6.
+This R Markdown script reproduces visualization presented in the paper, ""; specifically *Figure 1, Inset B*. The visualizations documented here use analytic results for the MITxPro course, *Architecture of Complex Systems, Fall 2016*, (MITProfessionalX+SysEngxB1+3T2016) with the **edX Learner and Course Analytics Pipeline**, scripts 1 through 6.
 
 # Environment Setup
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
