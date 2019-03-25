@@ -57,8 +57,6 @@ modules$unq_stu_per.2<- modules$unq_stu.2/max(modules$unq_stu.2)
 #Modules with Zero events are not visualized.
 mod_unq <- melt(modules[modules$events>0,c(1:9,19:21)], id.vars=c(1:9))
 
-length(modules[modules$events>0,c(1:9,19:21)]$mod_hex_id)
-
 #Scatter 2 set 2: plot the mean number of events per student, based on the 
 #number of students in a grade percentile group that use a given module.  
 #Average module events per students visiting a module
@@ -235,7 +233,7 @@ p1 <- ggplot(mod_event[mod_event$module.type=="html+block",], aes(x=order,y=val2
               strip.text=element_text(color = "Black"),
               axis.title.x = element_blank()) +
         facet_wrap( ~ var1, nrow=4, strip.position="right", labeller =userGrps2)
-p1
+p1 + xlab("Course Module Sequence")
 ```
 
 ##Fig 5B Mean Number of Events per Video Module
@@ -251,7 +249,8 @@ p2 <- ggplot(mod_event[mod_event$module.type=="video+block",], aes(x=order,y=val
               strip.text=element_text(color = "Black"),
               axis.title = element_blank()) +
         facet_wrap( ~ var1, nrow=4, strip.position="right", labeller =userGrps2)
-p2
+p2 + labs(x="Course Module Sequence", 
+             y="Mean Interaction Events per Student")
 ```
 
 ##Fig 5C Mean Number of Events per Problem Module
@@ -285,7 +284,7 @@ p4 <- ggplot(mod_event[mod_event$module.type=="openassessment+block",], aes(x=or
               strip.text=element_text(color = "Black"),
               axis.title.y = element_blank()) +
         facet_wrap( ~ var1, nrow=4, strip.position="right", labeller =userGrps2)
-p4
+p4 + ylab("Mean Interaction Events per Student")
 ```
 
 ##Fig 5 Composite

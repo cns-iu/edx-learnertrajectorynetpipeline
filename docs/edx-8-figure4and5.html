@@ -387,9 +387,7 @@ modules$unq_stu_per.2&lt;- modules$unq_stu.2/max(modules$unq_stu.2)
 #Modules with Zero events are not visualized.
 mod_unq &lt;- melt(modules[modules$events&gt;0,c(1:9,19:21)], id.vars=c(1:9))
 
-length(modules[modules$events&gt;0,c(1:9,19:21)]$mod_hex_id)</code></pre>
-<pre><code>## [1] 310</code></pre>
-<pre class="r"><code>#Scatter 2 set 2: plot the mean number of events per student, based on the 
+#Scatter 2 set 2: plot the mean number of events per student, based on the 
 #number of students in a grade percentile group that use a given module.  
 #Average module events per students visiting a module
 modules$events_meanStd     &lt;- ifelse(modules$unq_stu&gt;0,modules$events/modules$unq_stu,0)
@@ -557,7 +555,7 @@ for(i in 1:nrow(vline)){
               strip.text=element_text(color = &quot;Black&quot;),
               axis.title.x = element_blank()) +
         facet_wrap( ~ var1, nrow=4, strip.position=&quot;right&quot;, labeller =userGrps2)
-p1</code></pre>
+p1 + xlab(&quot;Course Module Sequence&quot;)</code></pre>
 <p><img src="edx-8-figure4and5_files/figure-html/figure%205A-1.png" width="576" /></p>
 </div>
 <div id="fig-5b-mean-number-of-events-per-video-module" class="section level2">
@@ -573,7 +571,8 @@ p1</code></pre>
               strip.text=element_text(color = &quot;Black&quot;),
               axis.title = element_blank()) +
         facet_wrap( ~ var1, nrow=4, strip.position=&quot;right&quot;, labeller =userGrps2)
-p2</code></pre>
+p2 + labs(x=&quot;Course Module Sequence&quot;, 
+             y=&quot;Mean Interaction Events per Student&quot;)</code></pre>
 <p><img src="edx-8-figure4and5_files/figure-html/figure%205B-1.png" width="576" /></p>
 </div>
 <div id="fig-5c-mean-number-of-events-per-problem-module" class="section level2">
@@ -607,7 +606,7 @@ p3</code></pre>
               strip.text=element_text(color = &quot;Black&quot;),
               axis.title.y = element_blank()) +
         facet_wrap( ~ var1, nrow=4, strip.position=&quot;right&quot;, labeller =userGrps2)
-p4</code></pre>
+p4 + ylab(&quot;Mean Interaction Events per Student&quot;)</code></pre>
 <p><img src="edx-8-figure4and5_files/figure-html/figure%205D-1.png" width="576" /></p>
 </div>
 <div id="fig-5-composite" class="section level2">
