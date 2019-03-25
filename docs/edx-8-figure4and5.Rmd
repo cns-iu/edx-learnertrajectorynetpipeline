@@ -222,13 +222,13 @@ ggplot(mod_unq, aes(x=mod_unq$order,y=mod_unq$value))+
 #Figure 5 Average Events per Module by Students in Percentile Groups
 
 ##Fig 5A Mean Number of Events per Html/Text Module
-```{r figure 5A, fig.height=7, fig.width=5}
+```{r figure 5A, fig.height=6, fig.width=6}
 p1 <- ggplot(mod_event[mod_event$module.type=="html+block",], aes(x=order,y=val2)) +
         geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype="dashed") +
         geom_point(aes(colour=module.type, size=val1)) +
         scale_size(range = c(0, 2.5)) +
         scale_colour_manual(values=modColors[1]) +
-        labs(y="Mean Interaction Events per Student", title="A") +
+        labs(y="Mean Interaction Events per Student") +
         theme(plot.title = element_text(hjust = 0),
               legend.position="none", 
               strip.background = element_rect(fill=strip),
@@ -239,13 +239,12 @@ p1
 ```
 
 ##Fig 5B Mean Number of Events per Video Module
-```{r figure 5B, fig.height=7, fig.width=5}
+```{r figure 5B, fig.height=6, fig.width=6}
 p2 <- ggplot(mod_event[mod_event$module.type=="video+block",], aes(x=order,y=val2)) +
         geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype="dashed") +
         geom_point(aes(colour=module.type, size=val1)) +
         scale_size(range = c(0, 2.5)) +
         scale_colour_manual(values=modColors[4]) +
-        labs(title="B") +
         theme(plot.title = element_text(hjust = 0),
               legend.position="none", 
               strip.background = element_rect(fill=strip),
@@ -256,15 +255,14 @@ p2
 ```
 
 ##Fig 5C Mean Number of Events per Problem Module
-```{r figure 5C, fig.height=7, fig.width=5}
+```{r figure 5C, fig.height=6, fig.width=6}
 p3 <- ggplot(mod_event[mod_event$module.type=="problem+block",], aes(x=order,y=val2)) +
         geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype="dashed") +
         geom_point(aes(colour=module.type, size=val1)) +
         scale_size(range = c(0, 2.5)) +
         scale_colour_manual(values=modColors[3]) +
         labs(x="Course Module Sequence", 
-             y="Mean Interaction Events per Student",
-             title="C")+
+             y="Mean Interaction Events per Student")+
         theme(plot.title = element_text(hjust = 0),
              legend.position="none", 
              strip.background = element_rect(fill=strip),
@@ -274,13 +272,13 @@ p3
 ```
 
 ##Fig 5D Mean Number of Events per Open Assessment Module
-```{r figure 5D, fig.height=7, fig.width=5}
+```{r figure 5D, fig.height=6, fig.width=6}
 p4 <- ggplot(mod_event[mod_event$module.type=="openassessment+block",], aes(x=order,y=val2)) +
         geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype="dashed") +
         geom_point(aes(colour=module.type, size=val1)) +
         scale_size(range = c(0, 2.5)) +
         scale_colour_manual(values=modColors[2]) +
-        labs(x="Course Module Sequence",title="D") +
+        labs(x="Course Module Sequence") +
         theme(plot.title = element_text(hjust = 0),
               legend.position="none", 
               strip.background = element_rect(fill=strip),
@@ -293,5 +291,8 @@ p4
 ##Fig 5 Composite
 ```{r figure 5, fig.height=9, fig.width=7}
 #Final Layout
-multiplot(p1,p3,p2,p4,cols=2)
+multiplot(p1 + ggtitle("A")+ theme(plot.title = element_text(hjust = 0)),
+          p3 + ggtitle("B")+ theme(plot.title = element_text(hjust = 0)),
+          p2 + ggtitle("C")+ theme(plot.title = element_text(hjust = 0)),
+          p4 + ggtitle("D")+ theme(plot.title = element_text(hjust = 0)),cols=2)
 ```
