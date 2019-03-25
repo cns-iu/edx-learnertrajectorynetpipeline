@@ -1,10 +1,10 @@
 auto.snapshot: FALSE
-use.cache: FALSE
+use.cache: TRUE
 print.banner.on.startup: auto
 vcs.ignore.lib: TRUE
 vcs.ignore.src: TRUE
 external.packages: 
-local.repos: C:/Users/mginda/AppData/Local/Temp/RtmpKazSxF/downloaded_packages
+local.repos: /Users/mginda/AppData/Local/Temp/RtmpKazSxF/downloaded_packages
 load.external.packages.on.startup: TRUE
 ignored.packages: 
 ignored.directories:
