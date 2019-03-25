@@ -290,7 +290,7 @@ $(document).ready(function () {
   <a href="edx-8-figure2-B.html">Figure 2B</a>
 </li>
 <li>
-  <a href="edx-8-figure4and5.html">Figure 4 and 5</a>
+  <a href="edx-8-figure4and5.html">Figures 4 and 5</a>
 </li>
 <li>
   <a href="edx-8-figure6.html">Figure 6</a>
@@ -411,17 +411,17 @@ multiplot &lt;- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   }
 }</code></pre>
 </div>
-<div id="setting-up-visualization-themes-and-parameters" class="section level2">
-<h2>Setting up visualization themes and parameters</h2>
-<p>Before visualizing the results, themes for the visualization are set for the ggplot2 package. A set of color palettes are added as well.</p>
+<div id="visualization-themes-and-parameters" class="section level2">
+<h2>Visualization themes and parameters</h2>
+<p>Before visualizing the results, ggplot2 package themes are set. A categorical color palettes is generate using the colorspace package. Labels used for the student groups based on certificate status.</p>
+<div id="themes-and-color-palette" class="section level3">
+<h3>Themes and color Palette</h3>
 <pre class="r"><code>#Theme for ggplot2
 theme_set(theme_light())
 
 ##Color Scales and setting for graphs
 strip &lt;- c(&quot;#DCDCDC&quot;) #Grey
 
-#Univariate color scale
-#Multi-color univariate color palette color palette for the student group variables
 #Pink/Orange/Yellow
 pal2 &lt;- function (n, h = c(-83, 43), c. = c(100, 43), l = c(56, 86), 
                   power = c(0.166666666666667, 0.9), fixup = TRUE, gamma = NULL, 
@@ -451,8 +451,8 @@ pal2 &lt;- function (n, h = c(-83, 43), c. = c(100, 43), l = c(56, 86),
 #Color Scales for Student Certification Cohort Assignments
 stdColors &lt;- pal2(3)</code></pre>
 </div>
-<div id="figure-labels" class="section level2">
-<h2>Figure Labels</h2>
+<div id="figure-labels" class="section level3">
+<h3>Figure Labels</h3>
 <pre class="r"><code>##Label groups
 #Certification Groups
 userGrps &lt;- as_labeller(c(&#39;unq_stu_per&#39; = paste0(&quot;All students (&quot;, length(students$user_id),&quot; students)&quot;),
@@ -466,8 +466,12 @@ userGrps2 &lt;- as_labeller(c(&#39;unq_stu_per&#39; = paste0(&quot;All students\
                           &#39;unq_stu_per.2&#39;  = paste0(&quot;No certification active\n(&quot;,
                                                     length(students[students$grade&lt;.7,]$user_id),&quot; students)&quot;)))</code></pre>
 </div>
-<div id="figure-6" class="section level2">
-<h2>Figure 6</h2>
+</div>
+</div>
+<div id="figure-6" class="section level1">
+<h1>Figure 6</h1>
+<div id="a-student-grades-and-number-of-events" class="section level2">
+<h2>6A Student Grades and Number of Events</h2>
 <pre class="r"><code>#6A Grades vs Events (Unq.)
 m &lt;- glm(grade ~ poly(events,3), data = students[students$grade&gt;0,])
 eq &lt;- substitute(italic(y) == b %.%italic(x)^3* c %.%italic(x)^2* + d %.%italic(x)* + a*&quot;,&quot;~~italic(r)^2~&quot;=&quot;~r2,
@@ -483,8 +487,12 @@ p4 &lt;- ggplot(students[students$grade&gt;0 &amp; abs(scale(students$events))&l
         scale_colour_manual(values=stdColors[1:2]) + 
         labs(x=&quot;Final Grade&quot;,y=&quot;Events (within 5 sd. of mean)&quot;) +
         theme(legend.position=&quot;none&quot;)
-
-#6B Grades vs Mods Accessed (Unq.)
+p4</code></pre>
+<p><img src="edx-8-figure6_files/figure-html/figure%206A-1.png" width="528" /></p>
+</div>
+<div id="b-student-grades-and-number-of-unique-modules-accessed" class="section level2">
+<h2>6B Student Grades and Number of Unique Modules Accessed</h2>
+<pre class="r"><code>#6B Grades vs Mods Accessed (Unq.)
 m &lt;- glm(grade ~ poly(mods_unq,3), data = students[students$grade&gt;0,])
 eq &lt;- substitute(italic(y) == b %.%italic(x)^3* c %.%italic(x)^2* + d %.%italic(x)* + a*&quot;,&quot;~~italic(r)^2~&quot;=&quot;~r2,
                  list( a=format(coef(m)[1], digits=3), 
@@ -500,8 +508,12 @@ p3 &lt;- ggplot(students[students$grade&gt;0,], aes(x=grade,y=mods_unq)) +
         scale_colour_manual(values=stdColors[1:2]) + 
         labs(x=&quot;Final Grade&quot;,y=&quot;Modules Accessed (Unq.)&quot;) +
         theme(legend.position=&quot;none&quot;)
-
-#6C Grades vs Open Assessment Events
+p3</code></pre>
+<p><img src="edx-8-figure6_files/figure-html/figure%206B-1.png" width="528" /></p>
+</div>
+<div id="c-student-grades-and-number-of-open-assessment-events" class="section level2">
+<h2>6C Student Grades and Number of Open Assessment Events</h2>
+<pre class="r"><code>#6C Grades vs Open Assessment Events
 m &lt;- glm(grade ~ poly(oa_events,3), data = students[students$grade&gt;0,])
 eq &lt;- substitute(italic(y) == b %.%italic(x)^3* c %.%italic(x)^2* + d %.%italic(x)* + a*&quot;,&quot;~~italic(r)^2~&quot;=&quot;~r2,
                  list( a=format(coef(m)[1], digits=3), 
@@ -516,8 +528,12 @@ p5 &lt;- ggplot(students[students$grade&gt;0 &amp; abs(scale(students$oa_events)
         scale_colour_manual(values=stdColors[1:2]) + 
         labs(x=&quot;Final Grade&quot;,y=&quot;Open Assessment Events (within 2 sd. of mean)&quot;) +
         theme(legend.position=&quot;none&quot;)
-
-#6D Events vs Sessions
+p5</code></pre>
+<p><img src="edx-8-figure6_files/figure-html/figure%206C-1.png" width="528" /></p>
+</div>
+<div id="d-student-events-and-number-of-sessions" class="section level2">
+<h2>6D Student Events and Number of Sessions</h2>
+<pre class="r"><code>#6D Events vs Sessions
 m &lt;- glm(sessions ~ poly(events,3), data = students[students$grade&gt;0 &amp; abs(scale(students$events))&lt;=5,])
 eq &lt;- substitute(italic(y) == b %.%italic(x)^3* c %.%italic(x)^2* + d %.%italic(x)* + a*&quot;,&quot;~~italic(r)^2~&quot;=&quot;~r2,
                  list( a=format(coef(m)[1], digits=3), 
@@ -532,23 +548,34 @@ p7 &lt;- ggplot(students[students$grade&gt;0 &amp; abs(scale(students$events))&l
         scale_colour_manual(values=stdColors[1:2]) + 
         labs(x=&quot;Events&quot;,y=&quot;Sessions&quot;)+
         theme(legend.position=&quot;none&quot;)
-
-#6E Events vs Problem Attempts
+p7</code></pre>
+<p><img src="edx-8-figure6_files/figure-html/figure%206D-1.png" width="528" /></p>
+</div>
+<div id="e-number-of-student-events-and-number-of-problem-attempts" class="section level2">
+<h2>6E Number of Student Events and Number of Problem Attempts</h2>
+<pre class="r"><code>#6E Events vs Problem Attempts
 p10 &lt;- ggplot(students[students$grade&gt;0 &amp; abs(scale(students$events))&lt;=4,], aes(x=events,y=prb_attempts)) +
   geom_point(aes(color=cert_status)) +
   scale_colour_manual(values=stdColors[1:2]) + 
   labs(x=&quot;Events&quot;,y=&quot;Problem Attempts&quot;) +
   theme(legend.position=&quot;none&quot;)
-
-#6F Events vs OA Events
+p10</code></pre>
+<p><img src="edx-8-figure6_files/figure-html/figure%206E-1.png" width="528" /></p>
+</div>
+<div id="f-number-of-student-events-and-number-of-open-assessment-events" class="section level2">
+<h2>6F Number of Student Events and Number of Open Assessment Events</h2>
+<pre class="r"><code>#6F Events vs OA Events
 p11 &lt;- ggplot(students[students$grade&gt;0 &amp; abs(scale(students$events))&lt;=5,], aes(x=events,y=oa_events))  +
         geom_point(aes(color=cert_status)) +
         scale_colour_manual(values=stdColors[1:2]) + 
         labs(x=&quot;Events&quot;,y=&quot;Open Assessment Events&quot;) +
         theme(legend.position=&quot;none&quot;)
-
-
-multiplot(p4+ggtitle(&quot;A&quot;)+ theme(plot.title = element_text(hjust = 0)),
+p11</code></pre>
+<p><img src="edx-8-figure6_files/figure-html/figure%206F-1.png" width="528" /></p>
+</div>
+<div id="composite-of-fig-6" class="section level2">
+<h2>Composite of Fig 6</h2>
+<pre class="r"><code>multiplot(p4+ggtitle(&quot;A&quot;)+ theme(plot.title = element_text(hjust = 0)),
           p3+ggtitle(&quot;B&quot;)+ theme(plot.title = element_text(hjust = 0)),
           p5+ggtitle(&quot;C&quot;)+ theme(plot.title = element_text(hjust = 0)),
           p7+ggtitle(&quot;D&quot;)+ theme(plot.title = element_text(hjust = 0)),

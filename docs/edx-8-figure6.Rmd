@@ -33,15 +33,6 @@ students <- read.csv(text=getURL("https://raw.githubusercontent.com/cns-iu/edx-l
 str(students)
 ```
 
-
-
-
-
-
-
-
-
-
 #Visualization of Results
 
 ##Multiplot Layout
@@ -85,9 +76,10 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 }
 ```
 
-##Setting up visualization themes and parameters
-Before visualizing the results, themes for the visualization are set for the ggplot2 package. A set of color palettes are added as well.
+##Visualization themes and parameters
+Before visualizing the results, ggplot2 package themes are set. A categorical color palettes is generate using the colorspace package. Labels used for the student groups based on certificate status.
 
+###Themes and color Palette
 ```{r themes}
 #Theme for ggplot2
 theme_set(theme_light())
@@ -95,8 +87,6 @@ theme_set(theme_light())
 ##Color Scales and setting for graphs
 strip <- c("#DCDCDC") #Grey
 
-#Univariate color scale
-#Multi-color univariate color palette color palette for the student group variables
 #Pink/Orange/Yellow
 pal2 <- function (n, h = c(-83, 43), c. = c(100, 43), l = c(56, 86), 
                   power = c(0.166666666666667, 0.9), fixup = TRUE, gamma = NULL, 
@@ -127,7 +117,7 @@ pal2 <- function (n, h = c(-83, 43), c. = c(100, 43), l = c(56, 86),
 stdColors <- pal2(3)
 ```
 
-##Figure Labels
+###Figure Labels
 ```{r labels}
 ##Label groups
 #Certification Groups
@@ -143,8 +133,11 @@ userGrps2 <- as_labeller(c('unq_stu_per' = paste0("All students\n(", length(stud
                                                     length(students[students$grade<.7,]$user_id)," students)")))
 ```
 
-##Figure 6
-```{r figure 6, fig.height=12, fig.width=11}
+
+#Figure 6
+
+##6A Student Grades and Number of Events
+```{r figure 6A, fig.height=6, fig.width=5.5}
 #6A Grades vs Events (Unq.)
 m <- glm(grade ~ poly(events,3), data = students[students$grade>0,])
 eq <- substitute(italic(y) == b %.%italic(x)^3* c %.%italic(x)^2* + d %.%italic(x)* + a*","~~italic(r)^2~"="~r2,
@@ -160,7 +153,11 @@ p4 <- ggplot(students[students$grade>0 & abs(scale(students$events))<=5,], aes(x
         scale_colour_manual(values=stdColors[1:2]) + 
         labs(x="Final Grade",y="Events (within 5 sd. of mean)") +
         theme(legend.position="none")
+p4
+```
 
+##6B Student Grades and Number of Unique Modules Accessed
+```{r figure 6B, fig.height=6, fig.width=5.5}
 #6B Grades vs Mods Accessed (Unq.)
 m <- glm(grade ~ poly(mods_unq,3), data = students[students$grade>0,])
 eq <- substitute(italic(y) == b %.%italic(x)^3* c %.%italic(x)^2* + d %.%italic(x)* + a*","~~italic(r)^2~"="~r2,
@@ -177,7 +174,11 @@ p3 <- ggplot(students[students$grade>0,], aes(x=grade,y=mods_unq)) +
         scale_colour_manual(values=stdColors[1:2]) + 
         labs(x="Final Grade",y="Modules Accessed (Unq.)") +
         theme(legend.position="none")
+p3
+```
 
+##6C Student Grades and Number of Open Assessment Events
+```{r figure 6C, fig.height=6, fig.width=5.5}
 #6C Grades vs Open Assessment Events
 m <- glm(grade ~ poly(oa_events,3), data = students[students$grade>0,])
 eq <- substitute(italic(y) == b %.%italic(x)^3* c %.%italic(x)^2* + d %.%italic(x)* + a*","~~italic(r)^2~"="~r2,
@@ -193,7 +194,11 @@ p5 <- ggplot(students[students$grade>0 & abs(scale(students$oa_events))<=2,], ae
         scale_colour_manual(values=stdColors[1:2]) + 
         labs(x="Final Grade",y="Open Assessment Events (within 2 sd. of mean)") +
         theme(legend.position="none")
+p5
+```
 
+##6D Student Events and Number of Sessions
+```{r figure 6D, fig.height=6, fig.width=5.5}
 #6D Events vs Sessions
 m <- glm(sessions ~ poly(events,3), data = students[students$grade>0 & abs(scale(students$events))<=5,])
 eq <- substitute(italic(y) == b %.%italic(x)^3* c %.%italic(x)^2* + d %.%italic(x)* + a*","~~italic(r)^2~"="~r2,
@@ -209,22 +214,33 @@ p7 <- ggplot(students[students$grade>0 & abs(scale(students$events))<=5,], aes(x
         scale_colour_manual(values=stdColors[1:2]) + 
         labs(x="Events",y="Sessions")+
         theme(legend.position="none")
+p7
+```
 
+##6E Number of Student Events and Number of Problem Attempts
+```{r figure 6E, fig.height=6, fig.width=5.5}
 #6E Events vs Problem Attempts
 p10 <- ggplot(students[students$grade>0 & abs(scale(students$events))<=4,], aes(x=events,y=prb_attempts)) +
   geom_point(aes(color=cert_status)) +
   scale_colour_manual(values=stdColors[1:2]) + 
   labs(x="Events",y="Problem Attempts") +
   theme(legend.position="none")
+p10
+```
 
+##6F Number of Student Events and Number of Open Assessment Events
+```{r figure 6F, fig.height=6, fig.width=5.5}
 #6F Events vs OA Events
 p11 <- ggplot(students[students$grade>0 & abs(scale(students$events))<=5,], aes(x=events,y=oa_events))  +
         geom_point(aes(color=cert_status)) +
         scale_colour_manual(values=stdColors[1:2]) + 
         labs(x="Events",y="Open Assessment Events") +
         theme(legend.position="none")
+p11
+```
 
-
+##Composite of Fig 6
+```{r figure 6, fig.height=12, fig.width=11}
 multiplot(p4+ggtitle("A")+ theme(plot.title = element_text(hjust = 0)),
           p3+ggtitle("B")+ theme(plot.title = element_text(hjust = 0)),
           p5+ggtitle("C")+ theme(plot.title = element_text(hjust = 0)),
