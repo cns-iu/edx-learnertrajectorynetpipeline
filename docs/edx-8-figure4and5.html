@@ -525,8 +525,9 @@ for(i in 1:nrow(vline)){
   vline[i,]$mod &lt;- max(mod_unq[mod_unq$L1==vline[i,1],]$order)
 }</code></pre>
 </div>
-<div id="figure-4-scatter-plot-of-overall-module-use-and-unique-number-of-student-users" class="section level2">
-<h2>Figure 4 Scatter Plot of Overall Module Use and Unique Number of Student Users</h2>
+</div>
+<div id="figure-4-scatter-plot-of-overall-module-use-and-unique-number-of-student-users" class="section level1">
+<h1>Figure 4 Scatter Plot of Overall Module Use and Unique Number of Student Users</h1>
 <pre class="r"><code>ggplot(mod_unq, aes(x=mod_unq$order,y=mod_unq$value))+
     geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype=&quot;dashed&quot;) +
     geom_point(aes(colour=mod_unq$module.type)) +
@@ -541,10 +542,11 @@ for(i in 1:nrow(vline)){
           strip.text=element_text(color = &quot;Black&quot;))</code></pre>
 <p><img src="edx-8-figure4and5_files/figure-html/figure%204-1.png" width="672" /></p>
 </div>
-<div id="figure-5-average-events-per-module-by-students-in-percentile-groups" class="section level2">
-<h2>Figure 5 Average Events per Module by Students in Percentile Groups</h2>
-<pre class="r"><code>#5A 
-#HTML/Text Modules()
+<div id="figure-5-average-events-per-module-by-students-in-percentile-groups" class="section level1">
+<h1>Figure 5 Average Events per Module by Students in Percentile Groups</h1>
+<div id="fig-5a-mean-number-of-events-per-htmltext-module" class="section level2">
+<h2>Fig 5A Mean Number of Events per Html/Text Module</h2>
+<pre class="r"><code>#5A HTML/Text Modules
 p1 &lt;- ggplot(mod_event[mod_event$module.type==&quot;html+block&quot;,], aes(x=order,y=val2)) +
         geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype=&quot;dashed&quot;) +
         geom_point(aes(colour=module.type, size=val1)) +
@@ -556,9 +558,13 @@ p1 &lt;- ggplot(mod_event[mod_event$module.type==&quot;html+block&quot;,], aes(x
               strip.background = element_rect(fill=strip),
               strip.text=element_text(color = &quot;Black&quot;),
               axis.title.x = element_blank()) +
-        facet_wrap( ~ var1, nrow=4, strip.position=&quot;right&quot;, labeller =userGrps2)    
-#5B
-#Video Modules
+        facet_wrap( ~ var1, nrow=4, strip.position=&quot;right&quot;, labeller =userGrps2)
+p1</code></pre>
+<p><img src="edx-8-figure4and5_files/figure-html/figure%205A-1.png" width="672" /></p>
+</div>
+<div id="fig-5b-mean-number-of-events-per-video-module" class="section level2">
+<h2>Fig 5B Mean Number of Events per Video Module</h2>
+<pre class="r"><code>#5B Video Modules
 p2 &lt;- ggplot(mod_event[mod_event$module.type==&quot;video+block&quot;,], aes(x=order,y=val2)) +
         geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype=&quot;dashed&quot;) +
         geom_point(aes(colour=module.type, size=val1)) +
@@ -571,8 +577,12 @@ p2 &lt;- ggplot(mod_event[mod_event$module.type==&quot;video+block&quot;,], aes(
               strip.text=element_text(color = &quot;Black&quot;),
               axis.title = element_blank()) +
         facet_wrap( ~ var1, nrow=4, strip.position=&quot;right&quot;, labeller =userGrps2)
-#5C
-#Problem Modules
+p2</code></pre>
+<p><img src="edx-8-figure4and5_files/figure-html/figure%205B-1.png" width="672" /></p>
+</div>
+<div id="fig-5c-mean-number-of-events-per-problem-module" class="section level2">
+<h2>Fig 5C Mean Number of Events per Problem Module</h2>
+<pre class="r"><code>#5C Problem Modules
 p3 &lt;- ggplot(mod_event[mod_event$module.type==&quot;problem+block&quot;,], aes(x=order,y=val2)) +
         geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype=&quot;dashed&quot;) +
         geom_point(aes(colour=module.type, size=val1)) +
@@ -586,8 +596,12 @@ p3 &lt;- ggplot(mod_event[mod_event$module.type==&quot;problem+block&quot;,], ae
              strip.background = element_rect(fill=strip),
              strip.text=element_text(color = &quot;Black&quot;)) +
         facet_wrap( ~ var1, nrow=4, strip.position=&quot;right&quot;, labeller =userGrps2)
-#5D
-#Open Assessment Modules
+p3</code></pre>
+<p><img src="edx-8-figure4and5_files/figure-html/figure%205C-1.png" width="672" /></p>
+</div>
+<div id="fig-5d-mean-number-of-events-per-open-assessment-module" class="section level2">
+<h2>Fig 5D Mean Number of Events per Open Assessment Module</h2>
+<pre class="r"><code>#5D Open Assessment Modules
 p4 &lt;- ggplot(mod_event[mod_event$module.type==&quot;openassessment+block&quot;,], aes(x=order,y=val2)) +
         geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype=&quot;dashed&quot;) +
         geom_point(aes(colour=module.type, size=val1)) +
@@ -600,7 +614,12 @@ p4 &lt;- ggplot(mod_event[mod_event$module.type==&quot;openassessment+block&quot
               strip.text=element_text(color = &quot;Black&quot;),
               axis.title.y = element_blank()) +
         facet_wrap( ~ var1, nrow=4, strip.position=&quot;right&quot;, labeller =userGrps2)
-#Final Layout
+p4</code></pre>
+<p><img src="edx-8-figure4and5_files/figure-html/figure%205D-1.png" width="672" /></p>
+</div>
+<div id="fig-5-composite" class="section level2">
+<h2>Fig 5 Composite</h2>
+<pre class="r"><code>#Final Layout
 multiplot(p1,p3,p2,p4,cols=2)</code></pre>
 <p><img src="edx-8-figure4and5_files/figure-html/figure%205-1.png" width="672" /></p>
 </div>

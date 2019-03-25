@@ -87,13 +87,6 @@ mod_time$module.type <- factor(mod_time$module.type)
 ```
 
 
-
-
-
-
-
-
-
 #Visualization of Results
 
 ##Multiplot Layout
@@ -211,8 +204,7 @@ for(i in 1:nrow(vline)){
 }
 ```
 
-##Figure 4 Scatter Plot of Overall Module Use and Unique Number of Student Users
-
+#Figure 4 Scatter Plot of Overall Module Use and Unique Number of Student Users
 ```{r figure 4}
 ggplot(mod_unq, aes(x=mod_unq$order,y=mod_unq$value))+
     geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype="dashed") +
@@ -228,11 +220,11 @@ ggplot(mod_unq, aes(x=mod_unq$order,y=mod_unq$value))+
           strip.text=element_text(color = "Black"))
 ```
 
-##Figure 5 Average Events per Module by Students in Percentile Groups
+#Figure 5 Average Events per Module by Students in Percentile Groups
 
-```{r figure 5}
-#5A 
-#HTML/Text Modules()
+##Fig 5A Mean Number of Events per Html/Text Module
+```{r figure 5A}
+#5A HTML/Text Modules
 p1 <- ggplot(mod_event[mod_event$module.type=="html+block",], aes(x=order,y=val2)) +
         geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype="dashed") +
         geom_point(aes(colour=module.type, size=val1)) +
@@ -244,9 +236,13 @@ p1 <- ggplot(mod_event[mod_event$module.type=="html+block",], aes(x=order,y=val2
               strip.background = element_rect(fill=strip),
               strip.text=element_text(color = "Black"),
               axis.title.x = element_blank()) +
-        facet_wrap( ~ var1, nrow=4, strip.position="right", labeller =userGrps2)    
-#5B
-#Video Modules
+        facet_wrap( ~ var1, nrow=4, strip.position="right", labeller =userGrps2)
+p1
+```
+
+##Fig 5B Mean Number of Events per Video Module
+```{r figure 5B}
+#5B Video Modules
 p2 <- ggplot(mod_event[mod_event$module.type=="video+block",], aes(x=order,y=val2)) +
         geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype="dashed") +
         geom_point(aes(colour=module.type, size=val1)) +
@@ -259,8 +255,12 @@ p2 <- ggplot(mod_event[mod_event$module.type=="video+block",], aes(x=order,y=val
               strip.text=element_text(color = "Black"),
               axis.title = element_blank()) +
         facet_wrap( ~ var1, nrow=4, strip.position="right", labeller =userGrps2)
-#5C
-#Problem Modules
+p2
+```
+
+##Fig 5C Mean Number of Events per Problem Module
+```{r figure 5C}
+#5C Problem Modules
 p3 <- ggplot(mod_event[mod_event$module.type=="problem+block",], aes(x=order,y=val2)) +
         geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype="dashed") +
         geom_point(aes(colour=module.type, size=val1)) +
@@ -274,8 +274,12 @@ p3 <- ggplot(mod_event[mod_event$module.type=="problem+block",], aes(x=order,y=v
              strip.background = element_rect(fill=strip),
              strip.text=element_text(color = "Black")) +
         facet_wrap( ~ var1, nrow=4, strip.position="right", labeller =userGrps2)
-#5D
-#Open Assessment Modules
+p3
+```
+
+##Fig 5D Mean Number of Events per Open Assessment Module
+```{r figure 5D}
+#5D Open Assessment Modules
 p4 <- ggplot(mod_event[mod_event$module.type=="openassessment+block",], aes(x=order,y=val2)) +
         geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype="dashed") +
         geom_point(aes(colour=module.type, size=val1)) +
@@ -288,6 +292,11 @@ p4 <- ggplot(mod_event[mod_event$module.type=="openassessment+block",], aes(x=or
               strip.text=element_text(color = "Black"),
               axis.title.y = element_blank()) +
         facet_wrap( ~ var1, nrow=4, strip.position="right", labeller =userGrps2)
+p4
+```
+
+##Fig 5 Composite
+```{r figure 5}
 #Final Layout
 multiplot(p1,p3,p2,p4,cols=2)
 ```
