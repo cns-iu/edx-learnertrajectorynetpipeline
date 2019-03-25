@@ -515,10 +515,9 @@ modType &lt;- as_labeller(c(&quot;html+block&quot; = &quot;HTML/Text\nModule&quo
                          &quot;video+block&quot;  = &quot;Video\nModule&quot;))
 modLed &lt;- c(&quot;HTML/Text\nModule&quot;, &quot;Open Assessment\nModule&quot;, &quot;Problem\nModule&quot;,&quot;Video\nModule&quot;)</code></pre>
 </div>
-<div id="figure-vertical-lines" class="section level2">
-<h2>Figure Vertical Lines</h2>
-<pre class="r"><code>#Sets Vertical Line Set for Modules by Week of course
-vline &lt;- as.data.frame(unique(mod_unq$L1))
+<div id="set-vertical-lines-found-in-figure" class="section level2">
+<h2>Set vertical lines found in figure</h2>
+<pre class="r"><code>vline &lt;- as.data.frame(unique(mod_unq$L1))
 names(vline)[1] &lt;- &quot;L1&quot;
 vline$mod &lt;- NA
 for(i in 1:nrow(vline)){
@@ -546,8 +545,7 @@ for(i in 1:nrow(vline)){
 <h1>Figure 5 Average Events per Module by Students in Percentile Groups</h1>
 <div id="fig-5a-mean-number-of-events-per-htmltext-module" class="section level2">
 <h2>Fig 5A Mean Number of Events per Html/Text Module</h2>
-<pre class="r"><code>#5A HTML/Text Modules
-p1 &lt;- ggplot(mod_event[mod_event$module.type==&quot;html+block&quot;,], aes(x=order,y=val2)) +
+<pre class="r"><code>p1 &lt;- ggplot(mod_event[mod_event$module.type==&quot;html+block&quot;,], aes(x=order,y=val2)) +
         geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype=&quot;dashed&quot;) +
         geom_point(aes(colour=module.type, size=val1)) +
         scale_size(range = c(0, 2.5)) +
@@ -564,8 +562,7 @@ p1</code></pre>
 </div>
 <div id="fig-5b-mean-number-of-events-per-video-module" class="section level2">
 <h2>Fig 5B Mean Number of Events per Video Module</h2>
-<pre class="r"><code>#5B Video Modules
-p2 &lt;- ggplot(mod_event[mod_event$module.type==&quot;video+block&quot;,], aes(x=order,y=val2)) +
+<pre class="r"><code>p2 &lt;- ggplot(mod_event[mod_event$module.type==&quot;video+block&quot;,], aes(x=order,y=val2)) +
         geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype=&quot;dashed&quot;) +
         geom_point(aes(colour=module.type, size=val1)) +
         scale_size(range = c(0, 2.5)) +
@@ -582,8 +579,7 @@ p2</code></pre>
 </div>
 <div id="fig-5c-mean-number-of-events-per-problem-module" class="section level2">
 <h2>Fig 5C Mean Number of Events per Problem Module</h2>
-<pre class="r"><code>#5C Problem Modules
-p3 &lt;- ggplot(mod_event[mod_event$module.type==&quot;problem+block&quot;,], aes(x=order,y=val2)) +
+<pre class="r"><code>p3 &lt;- ggplot(mod_event[mod_event$module.type==&quot;problem+block&quot;,], aes(x=order,y=val2)) +
         geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype=&quot;dashed&quot;) +
         geom_point(aes(colour=module.type, size=val1)) +
         scale_size(range = c(0, 2.5)) +
@@ -601,8 +597,7 @@ p3</code></pre>
 </div>
 <div id="fig-5d-mean-number-of-events-per-open-assessment-module" class="section level2">
 <h2>Fig 5D Mean Number of Events per Open Assessment Module</h2>
-<pre class="r"><code>#5D Open Assessment Modules
-p4 &lt;- ggplot(mod_event[mod_event$module.type==&quot;openassessment+block&quot;,], aes(x=order,y=val2)) +
+<pre class="r"><code>p4 &lt;- ggplot(mod_event[mod_event$module.type==&quot;openassessment+block&quot;,], aes(x=order,y=val2)) +
         geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype=&quot;dashed&quot;) +
         geom_point(aes(colour=module.type, size=val1)) +
         scale_size(range = c(0, 2.5)) +

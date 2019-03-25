@@ -193,9 +193,8 @@ modType <- as_labeller(c("html+block" = "HTML/Text\nModule",
 modLed <- c("HTML/Text\nModule", "Open Assessment\nModule", "Problem\nModule","Video\nModule")
 ```
 
-##Figure Vertical Lines 
+##Set vertical lines found in figure
 ```{r vlines}
-#Sets Vertical Line Set for Modules by Week of course
 vline <- as.data.frame(unique(mod_unq$L1))
 names(vline)[1] <- "L1"
 vline$mod <- NA
@@ -224,7 +223,6 @@ ggplot(mod_unq, aes(x=mod_unq$order,y=mod_unq$value))+
 
 ##Fig 5A Mean Number of Events per Html/Text Module
 ```{r figure 5A}
-#5A HTML/Text Modules
 p1 <- ggplot(mod_event[mod_event$module.type=="html+block",], aes(x=order,y=val2)) +
         geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype="dashed") +
         geom_point(aes(colour=module.type, size=val1)) +
@@ -242,7 +240,6 @@ p1
 
 ##Fig 5B Mean Number of Events per Video Module
 ```{r figure 5B}
-#5B Video Modules
 p2 <- ggplot(mod_event[mod_event$module.type=="video+block",], aes(x=order,y=val2)) +
         geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype="dashed") +
         geom_point(aes(colour=module.type, size=val1)) +
@@ -260,7 +257,6 @@ p2
 
 ##Fig 5C Mean Number of Events per Problem Module
 ```{r figure 5C}
-#5C Problem Modules
 p3 <- ggplot(mod_event[mod_event$module.type=="problem+block",], aes(x=order,y=val2)) +
         geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype="dashed") +
         geom_point(aes(colour=module.type, size=val1)) +
@@ -279,7 +275,6 @@ p3
 
 ##Fig 5D Mean Number of Events per Open Assessment Module
 ```{r figure 5D}
-#5D Open Assessment Modules
 p4 <- ggplot(mod_event[mod_event$module.type=="openassessment+block",], aes(x=order,y=val2)) +
         geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype="dashed") +
         geom_point(aes(colour=module.type, size=val1)) +
