@@ -204,7 +204,7 @@ for(i in 1:nrow(vline)){
 ```
 
 #Figure 4 Scatter Plot of Overall Module Use and Unique Number of Student Users
-```{r figure 4}
+```{r figure 4, fig.height=6, fig.width=6}
 ggplot(mod_unq, aes(x=mod_unq$order,y=mod_unq$value))+
     geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype="dashed") +
     geom_point(aes(colour=mod_unq$module.type)) +
@@ -222,7 +222,7 @@ ggplot(mod_unq, aes(x=mod_unq$order,y=mod_unq$value))+
 #Figure 5 Average Events per Module by Students in Percentile Groups
 
 ##Fig 5A Mean Number of Events per Html/Text Module
-```{r figure 5A}
+```{r figure 5A, fig.height=7, fig.width=5}
 p1 <- ggplot(mod_event[mod_event$module.type=="html+block",], aes(x=order,y=val2)) +
         geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype="dashed") +
         geom_point(aes(colour=module.type, size=val1)) +
@@ -239,7 +239,7 @@ p1
 ```
 
 ##Fig 5B Mean Number of Events per Video Module
-```{r figure 5B}
+```{r figure 5B, fig.height=7, fig.width=5}
 p2 <- ggplot(mod_event[mod_event$module.type=="video+block",], aes(x=order,y=val2)) +
         geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype="dashed") +
         geom_point(aes(colour=module.type, size=val1)) +
@@ -256,7 +256,7 @@ p2
 ```
 
 ##Fig 5C Mean Number of Events per Problem Module
-```{r figure 5C}
+```{r figure 5C, fig.height=7, fig.width=5}
 p3 <- ggplot(mod_event[mod_event$module.type=="problem+block",], aes(x=order,y=val2)) +
         geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype="dashed") +
         geom_point(aes(colour=module.type, size=val1)) +
@@ -274,7 +274,7 @@ p3
 ```
 
 ##Fig 5D Mean Number of Events per Open Assessment Module
-```{r figure 5D}
+```{r figure 5D, fig.height=7, fig.width=5}
 p4 <- ggplot(mod_event[mod_event$module.type=="openassessment+block",], aes(x=order,y=val2)) +
         geom_vline(xintercept=vline[1:nrow(vline)-1,2],linetype="dashed") +
         geom_point(aes(colour=module.type, size=val1)) +
@@ -291,7 +291,7 @@ p4
 ```
 
 ##Fig 5 Composite
-```{r figure 5}
+```{r figure 5, fig.height=9, fig.width=7}
 #Final Layout
 multiplot(p1,p3,p2,p4,cols=2)
 ```
