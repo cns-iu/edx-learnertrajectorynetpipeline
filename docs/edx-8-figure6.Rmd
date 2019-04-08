@@ -25,7 +25,7 @@ require("GGally")
 ```
 
 # Loading Data
-The data set loaded as students was created by the script [edX-7-studentFeatureExtraction.R](https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-7-studentFeatureExtraction.R). Data represents an each active student's overall engagement statistics for the 
+The data set loaded as students was created by the script [edX-7-studentFeatureExtraction.R](https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-7-studentFeatureExtraction.R).  Data represents the overall performance and interaction statistics for each active student in the course, based on their log activity for the full duration of the course.
 
 ```{r data}
 #Load Sample Data Set D
