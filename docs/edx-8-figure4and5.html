@@ -330,7 +330,7 @@ require(&quot;GGally&quot;) </code></pre>
 </div>
 <div id="loading-data" class="section level1">
 <h1>Loading Data</h1>
-<p>The data set loaded as students was created by the script <a href="https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-7-studentFeatureExtraction.R">edX-7-studentFeatureExtraction.R</a>. Data represents an each active student’s overall engagement statistics for the</p>
+<p>The data set loaded as students was created by the script <a href="https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-7-studentFeatureExtraction.R">edX-7-studentFeatureExtraction.R</a>. Data represents the overall performance and interaction statistics for each active student in the course, based on their log activity for the full duration of the course.</p>
 <pre class="r"><code>#Load Sample Data Set D
 students &lt;- read.csv(text=getURL(&quot;https://raw.githubusercontent.com/cns-iu/edx-learnertrajectorynetpipeline/master/data/dataD.csv&quot;,ssl.verifypeer = FALSE), header=T)
 str(students)</code></pre>
@@ -370,7 +370,7 @@ str(students)</code></pre>
 ##  $ prb_attempts       : int  185 85 211 142 217 96 83 202 199 222 ...
 ##  $ prb_correct        : int  119 62 122 93 150 58 72 126 121 120 ...
 ##  $ prb_totalPoints    : int  128 67 133 97 159 63 74 140 131 132 ...</code></pre>
-<p>Sample Data E is used for both figures, and is loaded in to the data frame modules. The data was created from 3 sets of results from script <a href="https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-6-moduleUseAnalysis.R">edX-6-moduleUseAnalysis.R</a>. Data represents an overall module engagement statistics for for certification groups identified from analysis of edX course user certification data.</p>
+<p>Sample Data E is used for both figures, and is loaded in to the data frame modules. The data was created from 3 sets of results from script <a href="https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-6-moduleUseAnalysis.R">edX-6-moduleUseAnalysis.R</a>. Data represents three sets of module interaction statistics for certification groups identified from analysis of edX course’s user certificate data (e.g. all students, certified and uncertified students).</p>
 <pre class="r"><code>#Load Sample Data Set E
 modules &lt;- read.csv(text=getURL(&quot;https://raw.githubusercontent.com/cns-iu/edx-learnertrajectorynetpipeline/master/data/dataE.csv&quot;,ssl.verifypeer = FALSE), header=T)</code></pre>
 <pre class="r"><code>##Feature generation and reshaping data for plots

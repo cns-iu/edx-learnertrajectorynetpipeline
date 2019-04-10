@@ -330,7 +330,7 @@ require(&quot;GGally&quot;) </code></pre>
 </div>
 <div id="loading-data" class="section level1">
 <h1>Loading Data</h1>
-<p>The data set loaded as students was created by the script <a href="https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-7-studentFeatureExtraction.R">edX-7-studentFeatureExtraction.R</a>. Data represents an each active student’s overall engagement statistics for the</p>
+<p>The data set loaded as students was created by the script <a href="https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-7-studentFeatureExtraction.R">edX-7-studentFeatureExtraction.R</a>. Data represents the overall performance and interaction statistics for each active student in the course, based on their log activity for the full duration of the course.</p>
 <pre class="r"><code>#Load Sample Data Set D
 students &lt;- read.csv(text=getURL(&quot;https://raw.githubusercontent.com/cns-iu/edx-learnertrajectorynetpipeline/master/data/dataD.csv&quot;,ssl.verifypeer = FALSE), header=T)
 str(students)</code></pre>
