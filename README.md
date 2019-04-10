@@ -4,7 +4,7 @@ The edX Learner and Course Analytics and Visualization Pipeline is analytics and
 * to extract and process course structures, learners’ event logs, demographic and performance data;
 * create learner trajectory networks (see [Visualizations of learning trajectories in online courses (cns-iu/learning-trajectories)](https://github.com/cns-iu/learning-trajectories) for example visualization implementation);
 * analyze the learner use of course content modules; and
-* aggregate performance and interaction measurements for a given course.
+* analyze overall performance and interaction measurements for a given course.
 rse.
 
 ## Protocol
