@@ -1,11 +1,10 @@
 # edX Learner and Course Analytics and Visualization Pipeline
-The edX Learner and Course Analytics and Visualization Pipeline is analytics and visualization pipeline using edX course database and user logs, written in R:
+The edX Learner and Course Analytics and Visualization Pipeline is a R script processing pipeline used to with course and student level data from an edX course database or edX Data Package. The pipeline was designed to:
 
-* to extract and process course structures, learners’ event logs, demographic and performance data;
+* extract and process course structures, learners’ event logs, demographic and performance data;
 * create learner trajectory networks (see [Visualizations of learning trajectories in online courses (cns-iu/learning-trajectories)](https://github.com/cns-iu/learning-trajectories) for example visualization implementation);
 * analyze the learner use of course content modules; and
 * analyze overall performance and interaction measurements for a given course.
-rse.
 
 ## Protocol
 A generalize protocol is available at Protocols.io, [edX Learner and Course Analytics and Visualization Pipeline, V.3](https://www.protocols.io/view/edx-learner-and-course-analytics-and-visualization-zckf2uw) [dx.doi.org/10.17504/protocols.io.zfhf3j6](dx.doi.org/10.17504/protocols.io.zfhf3j6).
