@@ -7,7 +7,7 @@ The edX Learner and Course Analytics and Visualization Pipeline is a R script pr
 * analyze overall performance and interaction measurements for a given course.
 
 ## Protocol
-A generalize protocol is available at Protocols.io, [edX Learner and Course Analytics and Visualization Pipeline, V.3](https://www.protocols.io/view/edx-learner-and-course-analytics-and-visualization-zckf2uw) [dx.doi.org/10.17504/protocols.io.zfhf3j6](dx.doi.org/10.17504/protocols.io.zfhf3j6).
+A generalize protocol is available at Protocols.io, [edX Learner and Course Analytics and Visualization Pipeline, V.3](https://www.protocols.io/view/edx-learner-and-course-analytics-and-visualization-zckf2uw) [dx.doi.org/10.17504/protocols.io.zfhf3j6](dx.doi.org/10.17504/protocols.io.zfhf3j6), and covers the process for using Scripts 1-7; script 0 should applied after extracting and setting up the data directory, and before the remaining scripts are run.
 
 ## Data Processing and Analysis Pipeline
 Each script in the data processing and Analysis pipeline is briefly described below:
