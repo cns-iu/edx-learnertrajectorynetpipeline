@@ -64,6 +64,7 @@
 #               correct columns in the modlist when updated with the temp object; added
 #               a control statement to level 4 parent ModuleID look-up.
 #   2018.07.02  File input stack updates.
+#   2019.05.13  Changes to course metadata extracted.
 ## ====================================================================================== ##
 #### Environment Setup ####
 ## Clean the environment
@@ -120,13 +121,13 @@ courseStrMeta <- function(fileList,path){
   id <- strsplit(strsplit(as.character(coursemeta$children1),":")[[1]][2],"\\+")
   id <- paste0(id[[1]][1],"+",id[[1]][2],"+",id[[1]][3])
   #reduces to relevant categories
-  coursemeta <- coursemeta[,c("metadata.display_name","category","metadata.start","metadata.end","metadata.enrollment_start","metadata.enrollment_end")]
+  coursemeta <- coursemeta[,c("metadata.display_name","category","metadata.start","metadata.end")]
   coursemeta <- cbind(id,coursemeta)
   #converts dates to POSIXCT
   coursemeta[,4] <- as.POSIXct(coursemeta[,4], tz="EST",format='%Y-%m-%dT%H:%M:%SZ')
   coursemeta[,5] <- as.POSIXct(coursemeta[,5], tz="EST",format='%Y-%m-%dT%H:%M:%SZ')
-  coursemeta[,6] <- as.POSIXct(coursemeta[,6], tz="EST",format='%Y-%m-%dT%H:%M:%SZ')
-  coursemeta[,7] <- as.POSIXct(coursemeta[,7], tz="EST",format='%Y-%m-%dT%H:%M:%SZ')
+  # coursemeta[,6] <- as.POSIXct(coursemeta[,6], tz="EST",format='%Y-%m-%dT%H:%M:%SZ')
+  # coursemeta[,7] <- as.POSIXct(coursemeta[,7], tz="EST",format='%Y-%m-%dT%H:%M:%SZ')
   #Saves metadata
   write.csv(coursemeta,file=paste0(path_output,"/course/",id,"-meta.csv"),row.names = F)
   rm(coursemeta,cols)
