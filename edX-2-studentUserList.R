@@ -32,12 +32,27 @@
 #                     
 # File input stack: 
 #            1) An edX course "state" directory an edX course;
-#            2) An data table of users for an edX course:
-#               - {org}-{course Identifier}-{term}-auth_user-{server}-analytics.sql
-#                 (source: edX research documentation);
+#            2) A data table of users for an edX course:
+#               - {org}-{course Identifier}-{term}-auth_user-{server}-analytics.sql 
+#                 or .csv file (source: edX research documentation);
 #            3) A data table of user profiles from an edX course:
 #               - {org}-{course Identifier}-{term}-auth_userprofile-{server}-analytics.sql
-#                 (source: edX research documentation)
+#                 or .csv file (source: edX research documentation);
+#            4) A data table of course enrollments
+#               - {org}-{course Identifier}-{term}-enrollments-{server}-analytics.sql
+#                 or .csv file (source: edX research documentation);
+#            5) A data table of grades for students in the course
+#               - {org}-{course Identifier}-{term}-coursegrades-{server}-analytics.sql
+#                 or .csv file (source: edX research documentation);
+#            6) A data table of course certificates awarded to students
+#               - {org}-{course Identifier}-{term}-certificates-{server}-analytics.sql
+#                 or .csv file (source: edX research documentation);
+#            7) A data table of roles for users in the course.
+#               - {org}-{course Identifier}-{term}-rolecourse-{server}-analytics.sql
+#                 or .csv file (source: edX research documentation).
+#
+# Note: File names may vary based on how edX Data Czar exports data sets. Efforts have
+# been made to ensure that potential variations for user data files may be loaded.
 # 
 # Output files:  
 #            1) A data table of student user identifiers, grade, certificate status
@@ -47,7 +62,7 @@
 #                 * edX-3-eventLogExtractor.R
 #                 * edX-4-eventLogFormatter.R
 #
-# Package dependencies: tcltk, plyr, stringr
+# Package dependencies: tcltk, plyr, stringr, Hmisc
 #
 # Change log:
 #   2017.04.04. Initial Code
@@ -66,12 +81,14 @@
 #               user roles or grades provided directly in edX data package; limit fields
 #               returned in final user data.
 #   2018.09.20  Update to reorder script lines that update "letter_grade" field.
+#   2019.05.13  Update data loading, preserved fields and their order 
+#               in output file "...auth_user-students.csv"; updated file input stack.
 #
 ## ====================================================================================== ##
 #### Environment setup ####
 ## Clean the R environment
-rm(list=ls()) 
-
+#rm(list=ls()) 
+rm(course,coursemeta,mod,modList,temp,cols,fileList,i,id,moduleID,start)
 ## Load required packages 
 require("tcltk2")     #for OS independent GUI file and folder selection
 require("stringr")    #for string manipulation
@@ -80,10 +97,11 @@ require("Hmisc")      # %nin% function
 
 #### Paths #### 
 #Assigns path to directory where R may read in a course' state data from the edX data package 
-path_data = tclvalue(tkchooseDirectory())
-
+#path_data = tclvalue(tkchooseDirectory())
+path_data <- p2
 #Assigns path where R saves processing outputs for user logs
-path_output = tclvalue(tkchooseDirectory())
+#path_output = tclvalue(tkchooseDirectory())
+path_output <- p_o2
 
 ## Start timer to track how long the script takes to execute
 start <-  proc.time() #save the time (to compute elapsed time of script)
@@ -94,7 +112,7 @@ userFilename <- list.files(full.names = TRUE, recursive = FALSE,
                        path = paste0(path_data,"/state/"),
                        pattern = "users")
 
-# Tests if user data is found with given pattern
+#Tests if user data is found with given pattern
 if(length(userFilename)==0){
   userFilename <- list.files(full.names = TRUE, recursive = FALSE, 
                              path = paste0(path_data,"/state/"),
@@ -117,7 +135,7 @@ enroll <- list.files(full.names = TRUE, recursive = FALSE,
 #Overall course grade data
 grade <- list.files(full.names = TRUE, recursive = FALSE, 
                      path = paste0(path_data,"/state/"),
-                     pattern = "coursegrade.csv$")
+                     pattern = "coursegrade")
 
 #Course Roles
 role <- list.files(full.names = TRUE, recursive = FALSE, 
@@ -126,11 +144,19 @@ role <- list.files(full.names = TRUE, recursive = FALSE,
 
 #### Processing Parameters ####
 ## Parameter to remove known research users from course lists
-#True means these users are removed, False means they are kept in the data.
+#TRUE means these users are removed, FALSE means they are kept in the data.
 researchers=T
 
-## Sets course certificate (grading) threshold
-pass_grade=.7
+## Sets course certificate (grading) threshold based on grading policy for the course overall
+if(length(list.files(full.names = TRUE, recursive = FALSE, 
+                       path = paste0(path_data,"/state/"),
+                       pattern = "grading_policy.csv$"))>0){
+  pass_grade = read.csv(list.files(full.names = TRUE, recursive = FALSE, 
+                                   path = paste0(path_data,"/state/"),
+                                   pattern = "grading_policy.csv$"),header = T)$overall_cutoff_for_pass[1]
+} else {
+  pass_grade = .65
+}
 
 ## Student Age User settings
 #Sets maximum age boundary for year of birth
@@ -149,9 +175,9 @@ if(grepl("\\.sql",userFilename)==T){
 } else {
   users <- read.csv(userFilename[1],header=T)[,c(1,7,8,11)]
   userProf <- read.csv(userProf[1],header=T)[,c(2,8,10:11,14)]
-  certs <- read.csv(certs[1],header=T)[,c(2,12)]
+  certs <- read.csv(certs[1],header=T)[,c(2,12,4,8)]
   enroll <- read.csv(enroll[1],header=T)[,c(2,4)]
-  names(certs)[2] <- c("cert_created_date")  
+  names(certs)[2:4] <- c("cert_created_date","percent_grade","letter_grade")
 }
 names(userProf)[1] <- names(enroll)[1] <- names(certs)[1] <- 'id'
 names(enroll)[2] <-c("enroll_created_date")
@@ -160,13 +186,15 @@ names(enroll)[2] <-c("enroll_created_date")
 #Loads in grade data OR creates the grade data frame based on certificate data set
 if(length(grade)>0){
   grade <- read.csv(grade[1],header=T)[,c(2,4:8)]
-  names(grade)[1] <- "id"
+  names(grade)[c(1,5,6)] <- c("id","grade_created_date","grade_modified_date")
 } else {
   if(ncol(certs)==4){
     grade <- certs[,c(1,3,4)]
     grade$letter_grade <- as.character(grade$letter_grade)
-    grade[grade$letter_grade!="downloadable",]$letter_grade <- "Not Passing"
-    grade[grade$letter_grade=="downloadable",]$letter_grade <- "Pass"
+     if(length(grade[grade$letter_grade!="downloadable",]$letter_grade)>0){
+       grade[grade$letter_grade!="downloadable",]$letter_grade <- "Not Passing" 
+     }
+       grade[grade$letter_grade=="downloadable",]$letter_grade <- "Pass"
     certs <- certs[,c(1,2)]
   }
 }
@@ -186,7 +214,7 @@ users <- join(users,certs,by="id")
 rm(userProf,certs,enroll,grade)
 
 #Rearrange columns
-users<-users[c(1:3,5:8,4,9,12,10,11)]
+users <- users[c(1:3,5:8,10,11,4,9,12:15)]
 
 #### Subset to remove staff and researchers #### 
 #Subset users to remove non-students from the list
@@ -211,9 +239,9 @@ if(nrow(users[is.na(users$percent_grade),])>0){
   users[is.na(users$percent_grade),]$percent_grade <- 0.00  
 }
 
-if(nrow(users[grepl("Pass",users$letter_grade)==F & is.na(users$letter_grade),])>0) {
+if(nrow(users[grepl("Pass",users$letter_grade)==F,])>0) {
   users$letter_grade <- as.character(users$letter_grade)
-  users[grepl("Pass",users$letter_grade)==F & is.na(users$letter_grade),]$letter_grade <- "Not Passing"
+  users[grepl("Pass",users$letter_grade)==F,]$letter_grade <- "Not Passing"
 }
 
 ## Creates Percentiles and Certification Group Field used in GLMs and Visualization Groupings
@@ -264,8 +292,14 @@ rm(clean,i)
 
 #Updates names of student demographi and performance data
 names(users)[c(5,6,12)] <- c("yob","loe","cert_status")
+
+#Clean up country field
+if(nrow(users[users$country=="NULL",])>0){
+  users[users$country=="NULL",]$country <- ""  
+}
+
 #Reorders columns
-users <- users[,c(1,4:7,11,13,8:10,12,14)]
+users <- users[,c(1,4:7,8:9,16,17,10,11,13,14,12,15)]
 
 #### Exporting the user data set ####
 ## Load Course Metadata
@@ -289,6 +323,5 @@ message("\n**** Complete! ****\n")
 #print the amount of time the script required
 cat("\n\n\nComplete script processing time details (in sec):\n")
 print((proc.time()[3] - start[3])/60)
-
 ## Clear environment variables
-rm(list=ls())
+rm(researchers,meta,users,start,userFilename)
