@@ -11,6 +11,7 @@ A generalize protocol is available at Protocols.io, [edX Learner and Course Anal
 
 ## Data Processing and Analysis Pipeline
 Each script in the data processing and Analysis pipeline is briefly described below:
+
 0.  [edX-0-userDataAnonymizer.R](https://github.com/mginda/edx-learnertrajectorynetpipeline/blob/master/edX-0-userDataAnonymizer.R) script loads data sets with potential user identifying data (e.g. names, emails and personal addresses) and removes processes theses datasets to ensure usere and student privacy is maintained for analysis.
 1.	[edX-1-courseStructureMeta.R](https://github.com/mginda/edx-learnertrajectorynetpipeline/blob/master/edX-1-courseStructureMeta.R) script extracts a the course structure from the edX Data Package files. The course structure is used in processing log files and creating the node lists in learner trajectory networks.
 2.	[edX-2-studentUserList.R](https://github.com/mginda/edx-learnertrajectorynetpipeline/blob/master/edX-2-studentUserList.R) script processes user profile datasets from the edX Data Package to identify active students in the course, and exclude instructors, teaching assistants and beta testers from the user log datasets. The script generates a list of learners’ edX user IDs.
