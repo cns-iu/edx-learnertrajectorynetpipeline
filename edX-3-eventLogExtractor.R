@@ -79,13 +79,15 @@ rm(list=ls())
 require("jsonlite")   #for working with JSON files (esp. read and write)
 require("ndjson")     #needed to read the non-standard JSON log files (NDJSON format)
 require("tcltk2")     #for OS independent GUI file and folder selection
-require("plyr")       #for joining user tables together
+#require("plyr")       #for joining user tables together
+require("dplyr")      #for selecting columns and joining user tables together
 
 #### Functions ####
 #logExtractor 
 # @param curUserIDS is the file location of course structure data
 # @param eventLog==NULL sets a dummy eventLog dataframe
 # @param filelist a list of daily event logs from a course's edX Data Package
+# @param varNames a list of variables that will be extracted from logs for a user
 # @param path indicates the path used to save outputs files
 ## The logExtractor function is a modification of code provided by Purdue University team
 ## to allow mass extracting individual student's event logs from course event logs, based on known set 
@@ -93,67 +95,27 @@ require("plyr")       #for joining user tables together
 ## saved as either a JSON or CSV formatted file. The function currently set up to save as CSV,
 ## alternatively can be set for user defined action such as format=T csv if format=F, JSON set up possible.
 
-# logExtractor <- function(curUserIDS,eventLog,fileList,path){      
-#   numStudents <- length(curUserIDS)
-#   numLogFiles <- length(fileList) 
-#   for(j in 1:numStudents){
-#     curUser <- curUserIDS[56]
-#     message("Processing student ", j, " of ", numStudents)
-#     for(i in 1:numLogFiles){
-#       curFileName <- fileList[i] 
-#       #print update message to console
-#       message("Processing log file ", i, " of ", numLogFiles)
-#       print(proc.time() - start)
-#       #read log data (NOTE: logs are in NDJSON format, not typical JSON format)
-#       ndData <- ndjson::stream_in(curFileName)
-#       #extract events for a single user, add to the complete eventLog for that user
-#       eventLog <- rbind.data.frame(eventLog, subset(ndData,ndData$context.user_id==curUser), fill=TRUE)
-#       id <- curUser
-#     }
-#     #Identifies all columns that are maintained for the rest of the workflow
-#     
-#     
-#     
-#     eventLog <- subset(eventLog,select=c(#"accept_language",
-#                                          "agent",#"augmented.country_code",
-#                                          "context.course_id","context.org_id","context.user_id","event",
-#                                          "event_source","event_type","time","username","name","session",
-#                                          "context.module.display_name","context.module.usage_key",
-#                                          "event.problem_id","event.attempts","event.grade","event.max_grade",
-#                                          "event.state.seed","event.success","event.answer.file_key",
-#                                          "event.attempt_number","event.created_at","event.submission_uuid",
-#                                          "event.submitted_at","event.feedback","event.feedback_text",
-#                                          "event.rubric.content_hash","event.score_type","event.scored_at",
-#                                          "event.scorer_id"))
-# 
-#     #Write student log file
-#     write.csv(x = eventLog, file = paste0(path_output,"/",id,".csv"),
-#               row.names = F)
-#     #Clears the event log df for next student
-#     eventLog <- NULL
-#   }
-# }
 
 #### Paths ####
 #Assigns path where R may read in events logs from the edX data package 
 #path_data = tclvalue(tkchooseDirectory())
 #TESTING REMOVE ON COMPLETE
-p4 = tclvalue(tkchooseDirectory())
-p3 = tclvalue(tkchooseDirectory())
-p2 = tclvalue(tkchooseDirectory())
-p1 = tclvalue(tkchooseDirectory())
+# p4 = tclvalue(tkchooseDirectory())
+# p3 = tclvalue(tkchooseDirectory())
+# p2 = tclvalue(tkchooseDirectory())
+# p1 = tclvalue(tkchooseDirectory())
 #WORKING
-path_data = p1
+path_data = p3
 
 #Assigns path where R saves processing outputs for user logs
 #path_output = paste0(tclvalue(tkchooseDirectory()))
 #TESTING REMOVE ON COMPLETE
-o1 = tclvalue(tkchooseDirectory())
-o2 = tclvalue(tkchooseDirectory())
-o3 = tclvalue(tkchooseDirectory())
-o4 = tclvalue(tkchooseDirectory())
+# o1 = tclvalue(tkchooseDirectory())
+# o2 = tclvalue(tkchooseDirectory())
+# o3 = tclvalue(tkchooseDirectory())
+# o4 = tclvalue(tkchooseDirectory())
 #WORKING
-path_output = o1
+path_output = o3
 
 #### Build list of all event files for course ####
 #Store all the filenames of JSON formatted edX event logs within a user selected directory 
@@ -170,64 +132,80 @@ users <- list.files(full.names = T, recursive = FALSE,
 users <- read.csv(users, header=T)[1]
 
 #Sets ID list for processing
-users <- users$id #this converts dataframe of user ids to integer list needed for the function
+users <- users$id 
+#this converts dataframe of user ids to integer list needed for the function
 #Removes user list related objects
 
+##Variable List - identifies variables of interst for a research based on comparison
+# of extacted MITxPro event logs
+varNames <- c("context.user_id","agent","context.course_id","context.org_id",
+              "time","session","event","name","event_source","event_type","module_id",
+              "context.module.display_name","problem_id","attempts","grade","max_grade",
+              "state.done","submission","success","failure","query","POST","GET")
+              
 #### Main processing ####
 ## Start timer to track how long the script takes to execute
 start <-  proc.time() #save the time (to compute elapsed time of script)
-
-#Creates a dummy eventLog object used in logCapture function
-eventLog <- NULL
-
+path = o4
 ## Log Capture function for list of users
-  path=paste0(path_output,"studentevents/")#)
-  logExtractor <- function(users,eventLog,fileList,path){      
+#logExtractor <- function(users,eventLog,fileList,varNames,path){
+    #Clean variables for fun
+    extractLog <- NULL
+    tempLog <- NULL
+    #Loop counts number of students and logs
     numStudents <- length(users)
-    numLogFiles <- length(fileList) 
+    numLogFiles <- length(fileList)
+    path <- paste0(path,"/studentEvents/")
+    #Loops through students
     for(j in 1:numStudents){
-      curUser <- users[56]
+      curUser <- users[1]
       message("Processing student ", j, " of ", numStudents)
+      #Loops through event logs
       for(i in 1:numLogFiles){
-        curFileName <- fileList[i] 
         #print update message to console
         message("Processing log file ", i, " of ", numLogFiles)
         print(proc.time() - start)
         #read log data (NOTE: logs are in NDJSON format, not typical JSON format)
-        ndData <- ndjson::stream_in(curFileName)
+        ndData <- ndjson::stream_in(fileList[i])
         #extract events for a single user, add to the complete eventLog for that user
-        eventLog <- rbind.data.frame(eventLog, subset(ndData,ndData$context.user_id==curUser), fill=TRUE)
-        id <- curUser
+        extractLog <- rbind.data.frame(extractLog, subset(ndData,ndData$context.user_id==curUser), fill=TRUE)
       }
-      #Identifies all columns that are maintained for the rest of the workflow
-      #Logic checks for types of log formats that have been provided by MITxPro across multiple courses.
+      ##Number of rows identified in student's extracted log file
+      extractRows <- nrow(extractLog)
       
-      
-      
-      
-      
-      eventLog <- subset(eventLog,select=c(#"accept_language",
-        "agent",#"augmented.country_code",
-        "context.course_id","context.org_id","context.user_id","event",
-        "event_source","event_type","time","username","name","session",
-        "context.module.display_name","context.module.usage_key",
-        "event.problem_id","event.attempts","event.grade","event.max_grade",
-        "event.state.seed","event.success","event.answer.file_key",
-        "event.attempt_number","event.created_at","event.submission_uuid",
-        "event.submitted_at","event.feedback","event.feedback_text",
-        "event.rubric.content_hash","event.score_type","event.scored_at",
-        "event.scorer_id"))
-      
-      # #Write student log file
-      # write.csv(x = eventLog, file = paste0(path_output,"/",id,".csv"),
-      #           row.names = F)
-      # #Clears the event log df for next student
-      # eventLog <- NULL
+      ##Next check extracted logs for data variables of interest
+      #Tests to see if the event log extracted has 
+      if(extractRows>1){ 
+        
+        #Creates a column with first variable in varNames vector
+        #Test if variable name is in fill list (as is); Then test as a match, else an empty set
+        
+        if(length(extractLog[,grep(varNames[1],names(extractLog))])==1){
+          tempLog <- select(extractLog,matches(varNames[1]))
+        } else {
+          tempLog <- data.frame(as.character(matrix("", nrow=extractRows, ncol=1)))
+        }
+        #Loop through each remaining variable to check if it is in the extracted log for a student
+        for(k in 2:length(varNames)){
+          if(length(extractLog[,grep(varNames[k],names(extractLog))])==1){
+            tempLog <- cbind(tempLog,select(extractLog,matches(varNames[k])))
+          } else {
+            tempLog <- cbind(tempLog,as.character(matrix("", nrow=extractRows, ncol=1)))  
+          }
+        }
+        #Names final data frame with the variables
+        names(tempLog) <- varNames
+      } 
+      #Tests if tempLog has data attached before saving a log record
+      if(is.null(tempLog)==F){
+        #Write student log file
+        write.csv(x = tempLog, file = paste0(path,curUser,".csv"),
+                  row.names = F)
+      }
+      extractLog <- NULL
     }
-  }
+#  }
 
-              
-              
 #### Finishing details ####
 #Indicate completion
 message("\n**** Complete! ****\n")
@@ -239,4 +217,5 @@ print((proc.time()[3] - start[3])/60)
 
 ## Clear environment variables
 #rm(list=ls())
-rm()
+#rm(extractLog,extractRows,numStudents,numLogFiles,i,k,curUser,tempLog)
+
