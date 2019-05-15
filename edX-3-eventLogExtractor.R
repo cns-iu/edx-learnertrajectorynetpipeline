@@ -68,7 +68,7 @@
 #               used for loading results of prior scripts.
 #   2018.05.21  Script format alignment.
 #   2018.07.02  File out/input stack updates.
-#   2019.05.14  Log extractor function now checks log outputs provided by edX LMS
+#   2019.05.15  Log extractor function now checks log outputs provided by edX LMS
 #               for data format variations.
 ## ====================================================================================== ##
 #### Environment Setup #####
@@ -155,24 +155,10 @@ logExtractor <- function(users,extractLog,fileList,varNames,path_output){
 
 #### Paths ####
 #Assigns path where R may read in events logs from the edX data package 
-#path_data = tclvalue(tkchooseDirectory())
-#TESTING REMOVE ON COMPLETE
-# p4 = tclvalue(tkchooseDirectory())
-# p3 = tclvalue(tkchooseDirectory())
-# p2 = tclvalue(tkchooseDirectory())
-# p1 = tclvalue(tkchooseDirectory())
-#WORKING
-path_data = p3
+path_data = tclvalue(tkchooseDirectory())
 
 #Assigns path where R saves processing outputs for user logs
-#path_output = paste0(tclvalue(tkchooseDirectory()))
-#TESTING REMOVE ON COMPLETE
-# o1 = tclvalue(tkchooseDirectory())
-# o2 = tclvalue(tkchooseDirectory())
-# o3 = tclvalue(tkchooseDirectory())
-# o4 = tclvalue(tkchooseDirectory())
-#WORKING
-path_output = o3
+path_output = paste0(tclvalue(tkchooseDirectory()))
 
 #### Build list of all event files for course ####
 #Store all the filenames of JSON formatted edX event logs within a user selected directory 
@@ -219,6 +205,4 @@ print((proc.time()[3] - start[3])/60)
 
 ## Clear environment variables
 #rm(list=ls())
-#rm(extractLog,extractRows,numStudents,numLogFiles,i,k,curUser,tempLog)
-rm(curUser,extractRows,fileList,i,j,k,numLogFiles,numStudents,path)
-
+rm(logExtractor,start,users,varNames,fileList,extractLog)
