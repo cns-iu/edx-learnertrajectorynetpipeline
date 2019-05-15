@@ -45,7 +45,7 @@
 #               - Used in scripts:
 #                 * edX-3-eventLogFormatter.R
 #
-# Package dependencies: jsonlite, ndjson, plyr, tcltk
+# Package dependencies: jsonlite, ndjson, dplyr, tcltk
 #
 # Change log:
 #   2017.08.11. Initial Code 
@@ -68,68 +68,88 @@
 #               used for loading results of prior scripts.
 #   2018.05.21  Script format alignment.
 #   2018.07.02  File out/input stack updates.
-#   2018.07.03  
+#   2019.05.15  Log extractor function now checks log outputs provided by edX LMS
+#               for data format variations.
 ## ====================================================================================== ##
 #### Environment Setup #####
 ## _Clean the environment 
 rm(list=ls()) 
 
-## Start timer to track how long the script takes to execute
-start <-  proc.time() #save the time (to compute elapsed time of script)
-
 ## Load required packages 
 require("jsonlite")   #for working with JSON files (esp. read and write)
 require("ndjson")     #needed to read the non-standard JSON log files (NDJSON format)
 require("tcltk2")     #for OS independent GUI file and folder selection
-require("plyr")       #for joining user tables together
+require("dplyr")      #for selecting columns and joining user tables together
 
 #### Functions ####
 #logExtractor 
 # @param curUserIDS is the file location of course structure data
 # @param eventLog==NULL sets a dummy eventLog dataframe
 # @param filelist a list of daily event logs from a course's edX Data Package
-# @param path indicates the path used to save outputs files
+# @param varNames a list of variables that will be extracted from logs for a user
+# @param path_output indicates the path used to save outputs files
 ## The logExtractor function is a modification of code provided by Purdue University team
 ## to allow mass extracting individual student's event logs from course event logs, based on known set 
 ## of student IDs for an edX course. The function creates a unique log file for each student ID in the list, 
 ## saved as either a JSON or CSV formatted file. The function currently set up to save as CSV,
 ## alternatively can be set for user defined action such as format=T csv if format=F, JSON set up possible.
-
-logExtractor <- function(curUserIDS,eventLog,fileList,path){      
-  numStudents <- length(curUserIDS)
-  numLogFiles <- length(fileList) 
+logExtractor <- function(users,extractLog,fileList,varNames,path_output){
+  #Clean variables for fun
+  tempLog <- NULL
+  #Loop counts number of students and logs
+  numStudents <- length(users)
+  numLogFiles <- length(fileList)
+  path_output <- paste0(path_output,"/studentEvents/")
+  #Loops through students
   for(j in 1:numStudents){
-    curUser <- curUserIDS[j]
+    curUser <- users[j]
     message("Processing student ", j, " of ", numStudents)
+    #Loops through event logs
     for(i in 1:numLogFiles){
-      curFileName <- fileList[i] 
       #print update message to console
       message("Processing log file ", i, " of ", numLogFiles)
       print(proc.time() - start)
       #read log data (NOTE: logs are in NDJSON format, not typical JSON format)
-      ndData <- ndjson::stream_in(curFileName)
+      ndData <- ndjson::stream_in(fileList[i])
       #extract events for a single user, add to the complete eventLog for that user
-      eventLog <- rbind.data.frame(eventLog, subset(ndData,ndData$context.user_id==curUser), fill=TRUE)
-      id <- curUser
+      extractLog <- rbind.data.frame(extractLog, subset(ndData,ndData$context.user_id==curUser), fill=TRUE)
     }
-    #Identifies all columns that are maintained for the rest of the workflow
-    eventLog<-subset(eventLog,select=c("accept_language",
-                                       "agent","augmented.country_code",
-                                       "context.course_id","context.org_id","context.user_id","event",
-                                       "event_source","event_type","time","username","name","session",
-                                       "context.module.display_name","context.module.usage_key",
-                                       "event.problem_id","event.attempts","event.grade","event.max_grade",
-                                       "event.state.seed","event.success","event.answer.file_key",
-                                       "event.attempt_number","event.created_at","event.submission_uuid",
-                                       "event.submitted_at","event.feedback","event.feedback_text",
-                                       "event.rubric.content_hash","event.score_type","event.scored_at",
-                                       "event.scorer_id"))
-
-    #Write student log file
-    write.csv(x = eventLog, file = paste0(path,"/",id,".csv"),
-              row.names = F)
-    #Clears the event log df for next student
-    eventLog <- NULL
+    ##Number of rows identified in student's extracted log file
+    extractRows <- nrow(extractLog)
+    
+    ##Next check extracted logs for data variables of interest
+    #Tests to see if the event log extracted has 
+    if(extractRows>1){ 
+      
+      #Creates a column with first variable in varNames vector
+      #Test if variable name is in fill list (as is); Then test as a match, else an empty set
+      if(varNames[1] %in% colnames(extractLog)){
+        tempLog <- select(extractLog,varNames[1])
+      } else if(length(extractLog[,grep(varNames[1],names(extractLog))])>1){
+        tempLog <- select(extractLog,matches(varNames[1]))
+      } else {
+        tempLog <- data.frame(as.character(matrix("", nrow=extractRows, ncol=1)))
+      }
+      #Loop through each remaining variable to check if it is in the extracted log for a student
+      for(k in 2:length(varNames)){
+        if(varNames[k] %in% colnames(extractLog)){
+          tempLog <- cbind(tempLog,select(extractLog,varNames[k]))
+        } else if(length(extractLog[,grep(varNames[k],names(extractLog))])>=1){
+          tempLog <- cbind(tempLog,select(extractLog,matches(varNames[k])[[1]]))
+        } else {
+          tempLog <- cbind(tempLog,as.character(matrix("", nrow=extractRows, ncol=1)))  
+        }
+      }
+      #Names final data frame with the variables
+      names(tempLog) <- varNames
+    } 
+    #Tests if tempLog has data attached before saving a log record
+    if(is.null(tempLog)==F){
+      #Write student log file
+      write.csv(x = tempLog, file = paste0(path_output,curUser,".csv"),
+                row.names = F)
+    }
+    extractLog <- NULL
   }
 }
 
@@ -144,30 +164,35 @@ path_output = paste0(tclvalue(tkchooseDirectory()))
 #Store all the filenames of JSON formatted edX event logs within a user selected directory 
 # (files ending with ".log.gz").
 fileList <- list.files(full.names = TRUE, recursive = FALSE, 
-                       path = paste0(path_data,"/events"),
+                       path = paste0(path_data,"/events/"),
                        pattern = ".gz$")
 
 #### Identifies the output of the student user list for an edX course ####
 #The pattern parameter identifies the outputs of the edX-1-studentUserList.R script
 users <- list.files(full.names = T, recursive = FALSE, 
-                    path = paste0(path_output,"/userlists"),
+                    path = paste0(path_output,"/userlists/"),
                     pattern = "-students.csv$")
 users <- read.csv(users, header=T)[1]
-
 #Sets ID list for processing
-curUserIDS <- users$id #this converts dataframe of user ids to integer list needed for the function
-#Removes user list related objects
-rm(users)
+users <- users$id 
+
+##Extract log null
+extractLog <- NULL
+
+##Variable List - identifies variables of interst for a research based on comparison
+# of extacted MITxPro event logs
+varNames <- c("context.user_id","agent","context.course_id","context.org_id","context.path",
+              "time","session","event","name","event_source","event_type","module_id",
+              "context.module.display_name","problem_id","attempts","grade","max_grade",
+              "state.done","submission","success","failure","query","POST","GET")
 
 #### Main processing ####
 ## Start timer to track how long the script takes to execute
 start <-  proc.time() #save the time (to compute elapsed time of script)
 
-#Creates a dummy eventLog object used in logCapture function
-eventLog <- NULL
-
 ## Log Capture function for list of users
-logExtractor(curUserIDS,eventLog,fileList,path=paste0(path_output,"studentevents/"))
+logExtractor(users=users,extractLog = extractLog, fileList = fileList,
+             varNames = varNames, path_output = path_output)
 
 #### Finishing details ####
 #Indicate completion
@@ -179,4 +204,5 @@ cat("\n\n\nComplete script processing time details (in sec):\n")
 print((proc.time()[3] - start[3])/60)
 
 ## Clear environment variables
-rm(list=ls())
+#rm(list=ls())
+rm(logExtractor,start,users,varNames,fileList,extractLog)

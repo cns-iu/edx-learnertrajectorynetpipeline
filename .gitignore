@@ -34,3 +34,6 @@ vignettes/*.pdf
 .Rproj.user
 packrat/lib*/
 packrat/src/
+
+#lab notes
+resources
