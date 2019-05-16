@@ -93,15 +93,16 @@ require("dplyr")      #for selecting columns and joining user tables together
 ## of student IDs for an edX course. The function creates a unique log file for each student ID in the list, 
 ## saved as either a JSON or CSV formatted file. The function currently set up to save as CSV,
 ## alternatively can be set for user defined action such as format=T csv if format=F, JSON set up possible.
-logExtractor <- function(users,extractLog,fileList,varNames,path_output){
+logExtractor <- function(users,fileList,varNames,path_output){
   #Clean variables for fun
-  tempLog <- NULL
   #Loop counts number of students and logs
   numStudents <- length(users)
   numLogFiles <- length(fileList)
   path_output <- paste0(path_output,"/studentEvents/")
   #Loops through students
   for(j in 1:numStudents){
+    extractLog <- NULL
+    tempLog <- NULL
     curUser <- users[j]
     message("Processing student ", j, " of ", numStudents)
     #Loops through event logs
@@ -116,11 +117,9 @@ logExtractor <- function(users,extractLog,fileList,varNames,path_output){
     }
     ##Number of rows identified in student's extracted log file
     extractRows <- nrow(extractLog)
-    
     ##Next check extracted logs for data variables of interest
     #Tests to see if the event log extracted has 
     if(extractRows>1){ 
-      
       #Creates a column with first variable in varNames vector
       #Test if variable name is in fill list (as is); Then test as a match, else an empty set
       if(varNames[1] %in% colnames(extractLog)){
@@ -149,7 +148,6 @@ logExtractor <- function(users,extractLog,fileList,varNames,path_output){
       write.csv(x = tempLog, file = paste0(path_output,curUser,".csv"),
                 row.names = F)
     }
-    extractLog <- NULL
   }
 }
 
@@ -169,15 +167,11 @@ fileList <- list.files(full.names = TRUE, recursive = FALSE,
 
 #### Identifies the output of the student user list for an edX course ####
 #The pattern parameter identifies the outputs of the edX-1-studentUserList.R script
-users <- list.files(full.names = T, recursive = FALSE, 
+users <- read.csv(list.files(full.names = T, recursive = FALSE, 
                     path = paste0(path_output,"/userlists/"),
-                    pattern = "-students.csv$")
-users <- read.csv(users, header=T)[1]
+                    pattern = "-students.csv$"), header=T)[1]
 #Sets ID list for processing
 users <- users$id 
-
-##Extract log null
-extractLog <- NULL
 
 ##Variable List - identifies variables of interst for a research based on comparison
 # of extacted MITxPro event logs
@@ -205,4 +199,4 @@ print((proc.time()[3] - start[3])/60)
 
 ## Clear environment variables
 #rm(list=ls())
-rm(logExtractor,start,users,varNames,fileList,extractLog)
+rm(logExtractor,start,users,varNames,fileList)
