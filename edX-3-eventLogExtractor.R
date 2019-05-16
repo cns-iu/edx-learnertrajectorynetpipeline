@@ -48,28 +48,7 @@
 # Package dependencies: jsonlite, ndjson, dplyr, tcltk
 #
 # Change log:
-#   2017.08.11. Initial Code 
-#   2017.08.13. Added user output and user save as for output file
-#   2017.08.15. Changed to extracting single user's activity
-#   2017.08.28. Fixed require statement bug (moved required packages in individual
-#               require statements)
-#   2017.08.29. Update to comments, file saving updates, added save to RData file 
-#               (added to JSON and CSV)
-#   2017.09.29. Updating file for sharing
-#   2017.10.19. Updated file create function to produce event trajectory logs from 
-#               a list of student IDs
-#   2017.10.31. Updated function to maintain only relevant fields
-#   2018.02.05. Cleaned-Up script to list all fields perserved in final logs CSV files
-#   2018.04.04. Description, title, and file input stack corrections; updated  
-#               function parameter definitions; creates lists of users for
-#               extraction for course.
-#   2018.04.05. Forked the user list creation to a new script, simplifying package 
-#               dependencies, file stack and data input sources. Path_output now are 
-#               used for loading results of prior scripts.
-#   2018.05.21  Script format alignment.
-#   2018.07.02  File out/input stack updates.
-#   2019.05.15  Log extractor function now checks log outputs provided by edX LMS
-#               for data format variations.
+#   2019.05.16  Bug fixed for log extractor function updates from 2019.05.15. 
 ## ====================================================================================== ##
 #### Environment Setup #####
 ## _Clean the environment 
@@ -185,7 +164,7 @@ varNames <- c("context.user_id","agent","context.course_id","context.org_id","co
 start <-  proc.time() #save the time (to compute elapsed time of script)
 
 ## Log Capture function for list of users
-logExtractor(users=users,extractLog = extractLog, fileList = fileList,
+logExtractor(users=users, fileList = fileList,
              varNames = varNames, path_output = path_output)
 
 #### Finishing details ####
