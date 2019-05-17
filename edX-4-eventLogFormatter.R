@@ -237,12 +237,12 @@ oas=FALSE
 
 #Indicates number of log files to be processed by the loop.
 numLogs <- length(fileList)
-for(i in 1:numlogs){
+for(i in 1:numLogs){
   message("Processing log file ", i, " of ", numLogs)
   print(proc.time() - start)
+  
   #Load data set
   data <- read.csv(fileList[i])
-  
   if(nrow(data)==0){
     data <- as.data.frame(matrix(data=NA,nrow=1,ncol=14))
     names(data) <- c("user_id","mod_hex_id","order","mod_parent_id","module_type","event_type",
@@ -257,9 +257,6 @@ for(i in 1:numlogs){
     #Creates a course ID by removing "course-v1:" text, which is not used in the module ID.
     courseID <- strsplit(as.character(data$context.course_id[1]),'\\:')[[1]][2]
     uid <- data$context.user_id[1]
-    
-    #removes fields unused in processing, modeling, analysis, or visualization
-    data <- data[,-c(1:3,11,14,20,22:32)]
     
     ##Data format updates and column creation/organization
     #Updates Time field to R compliant format
@@ -302,7 +299,7 @@ for(i in 1:numlogs){
     #Backfills tsess session ids to all events after determining all sessions were 
     #identified
     data$tsess <- na.locf(data$tsess,fromLast=T)
-    
+
     #Backfill fix for server events without a session ID; events to be removed.
     data<-rbind(data,NA)
     levels <- levels(data$session)
@@ -424,9 +421,6 @@ for(i in 1:numlogs){
       #Creates column to identify the appropriate current child of higher-level modules (i.e. chapters and page sequences)
       data[c("mod.child.ref")] <- NA
       
-      #Problem events (e.g. problem_check, save_problem_success, showanswer) and Openassessmentblock events (all but .upload_file)
-      data$module.key <- paste0(data$context.module.usage_key)
-      
       #Problem_show events
       if(nrow(data[grepl('problem_show',data$event_type)==T,])>0){
         data[grepl('problem\\_show',data$event_type)==T,]$module.key <- 
@@ -488,7 +482,7 @@ for(i in 1:numlogs){
       #event or inferred to the first child, when a child reference was unavailable.
       
       #Create bridge lookup for events from sequential blocks (level 2 of course hierarchy)
-      look <- data[grepl("sequential",data$module.key)==T,18:19]
+      look <- data[grepl("sequential",data$module.key)==T,c("module.key","mod.child.ref")]
       look$parentid <- str_extract(look$module.key,"[:alnum:]{32}")
       look$childref <- paste(look$parentid,look$mod.child.ref,sep="/")
       look[,"replace"]<-NA
@@ -577,11 +571,8 @@ for(i in 1:numlogs){
         }
       }
       
-      #Maintain only fields that are needed for analysis
-      data <- data[,c(3,19,21,22,20,6,7,16,9,17,12:15)]
-      names(data) <- c("user_id","mod_hex_id","order","mod_parent_id","module_type","event_type",
-                       "time","period","session","tsess","event.attempts","event.grade",
-                       "event.max_grade","event.success")
+      # data <- data[,c(1,12,28,30,31,29,6,25,7,26,11,8,10,14:17,19,20,18,3,4)]
+      # names(data)[c(1,5,21,22)] <- c("user_id","parent_id","course_id","org_id")
       
       #Writes processed logfile user ID for file saving 
       write.csv(x = data, file = paste0(path,"/studentevents_processed/",uid,".csv"),
@@ -591,6 +582,10 @@ for(i in 1:numlogs){
   k = NULL
   data <- NULL
 } 
+
+
+
+
 
 ## Saves out list of user IDs for students with usable logs and unusable logs
 users <- list.files(path=paste0(path_output,"/studentevents_processed/"),pattern=".csv")
