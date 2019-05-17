@@ -154,10 +154,10 @@ users <- users$id
 
 ##Variable List - identifies variables of interst for a research based on comparison
 # of extacted MITxPro event logs
-varNames <- c("context.user_id","agent","context.course_id","context.org_id","context.path",
-              "time","session","event","name","event_source","event_type","module_id",
-              "context.module.display_name","problem_id","attempts","grade","max_grade",
-              "state.done","submission","success","failure","query","POST","GET")
+varNames <- c("context.org_id","context.course_id","context.user_id","context.path",
+              "time","session","event","event_source","event_type","module_id",
+              "problem_id","attempts","grade","max_grade","state.done","student_answer",
+              "submission","success")
 
 #### Main processing ####
 ## Start timer to track how long the script takes to execute
