@@ -2,7 +2,7 @@
 # Title:        Processing and formatting student's edX events logs for analysis          
 # Project:      edX learner trajectory analysis
 # 
-#     Copyright 2017-2018 Michael Ginda
+#     Copyright 2017-2019 Michael Ginda
 #     Licensed under the Apache License, Version 2.0 (the "License");
 #     you may not use this file except in compliance with the License.
 #     You may obtain a copy of the License at
@@ -85,59 +85,10 @@
 #				        and have no actions in their event logs:
 #               - {org}-{course}-{term}-auth_user-students-inactive.csv; 
 #
-# Package dependencies: magrittr, stringr, plyr, tcltk
+# Package dependencies: magrittr, stringr, plyr, tcltk, zoo
 #
 # Change log:
-#   2017.10.23. Initial Code
-#   2017.10.26. Initial version of function
-#   2017.10.30. Updated function to fix session backfill error; remove events that 
-#               are not useful for analysis
-#   2017.10.31. Final version of function with new session backfill fix, and test 
-#                subject data processed
-#   2017.11.02  Clean-up version for sharing on repository
-#   2017.11.03  Correct error for adding module IDs for course information,  
-#               student progress, and wiki page events
-#   2017.11.14  Clean up script introduction text
-#   2017.11.22  Updated function to better identify edx enrollment and open assessment 
-#               uploads events
-#   2017.12.15  Updated function with nc parameter that determines if non-content 
-#               modules are kept or removed from the network analysis and visualizations
-#   2018.01.05  Updated script to calculated module identifiers in processing script;
-#               added parameters VID to remove specified video (non-user engage) and 
-#               PSE to remove redundant problem events (redundant); 
-#               fixed if statements that caused errors; add module type to events. 
-#   2018.01.12  Updated script with parameter courseStr to add use course structure 
-#               to convert events from higher levels of course structure tree to their
-#               relevant children content modules. Adds "module_type" & "module_order" 
-#               Added tsess session identifiers based on the calculate periods of events.
-#               Added 'modAccess' event_type for access in log that lack specific events 
-#               type categorization. Begin addition of control features to save out
-#               student logs in cases where they logged zero events, or logged events
-#               that are not apart of model.
-#   2018.01.16  Updated script to add new directory for saved results of student 
-#               event log use cases. Added parameters subZ and subN to function
-#               to save special cases (zero events, and no usable events). Creates
-#               list of user identifiers associated with the three special cases.
-#   2018.01.18  Updated logFormatter function to remove events where no "order" is 
-#               found for an module referenced in an event, which indicates that 
-#               the module was not found in the final course module structure. 
-#   2018.02.02  Cleaned-up script for sharing and added function to manually select user
-#               ID list.
-#   2018.02.08  Aligned logFormatter function with outputs of the 
-#               "edX-courseStructureMeta.R" script; added parameter to allow user
-#               to set manual time length for tsess field.
-#   2018.04.05  Update paths used to collect data, removed the getCSVdata function,
-#               updated to read and save files in correct output directories; 
-#               updated description text.
-#   2018.04.09  Update filenames for saved lists of student 
-#               activity use cases (e.g from noEvents to inactive, from unusableEvents to 
-#               unusableActivity, events and active).
-#   2018.04.30  Update time calculations for session events with times of 60 minutes 
-#               or greater.
-#   2018.05.21  Script format alignment.
-#   2018.07.02  File out/input stack updates.
-#   2018.09.20  Removes function for log formatter and simplifies to for loop, which is
-#               easier to update and test. Revised the temporal period estimation loop.
+#   2019.05.20 
 #
 ## ====================================================================================== ##
 #### Environmental Setup ####
@@ -154,11 +105,14 @@ require("plyr")       #DPLYR
 #### Paths #### 
 #Generic Set up
 #Assigns a path to open prior script outputs and to save new processing output files.
-path_output = tclvalue(tkchooseDirectory())
+#path_output = tclvalue(tkchooseDirectory())
+
+#path_data = p4
+path_output = o4
 
 ## Create data processing output sub-directories for student without events
 #students with zero events on load and those with zero events after post-data processing 
-subDir = c("zeroEvents", "noEventsProc")
+subDir = c("noEventsProc")
 for(i in 1:length(subDir)){
   if(!file_test("-d", file.path(paste0(path_output,"/studentevents_processed/"), subDir[i]))){
     if(file_test("-f", file.path(paste0(path_output,"/studentevents_processed/"), subDir[i]))){
@@ -171,11 +125,7 @@ for(i in 1:length(subDir)){
 
 #Creates list of files for student event log processing
 #Load in CSV of students IDs
-fileList <- list.files(full.names = TRUE, recursive = FALSE, 
-                       path = paste0(path_output,"/userlists/"),
-                       pattern = "auth_user-students.csv$")
-fileList <- read.csv(file=fileList,header=T)[1]
-fileList <- paste0(path_output,"/studentevents/",fileList$id,".csv")
+fileList <- list.files(path=paste0(path_output,"/studentevents/"),pattern=".csv")
 
 #Load course structure data module-lookup
 #CSV of course modules data extracted from the Course Structure, found in the
@@ -183,23 +133,17 @@ fileList <- paste0(path_output,"/studentevents/",fileList$id,".csv")
 courseStr <- list.files(full.names = TRUE, recursive = FALSE, 
                        path = paste0(path_output,"/course/"),
                        pattern = "module-lookup.csv")
-courseStr <- read.csv(file=courseStr, header=T)
 #Extracts course identifier
-courseID <- as.character(courseStr $courseID[1])
-courseID <- gsub("\\+","-",courseID)
+courseStr <- read.csv(file=courseStr, header=T)
+courseID <- as.character(courseStr$courseID[1])
 
 #### Log Processing Variables ####
 ## Sets Variables and parameters used in log processing loop
-
 #Start timer to track how long the script takes to execute
 start <- proc.time() #save the time (to compute elapsed time of script)
 
 #path is the sets the path for where output files will be saved.
 path=path_output
-
-#Subdirectory names
-subZ= subDir[1]  # zero events for a student
-subN = subDir[2] # no usable events for a student
 
 #timeB_val is a numeric value setting the number of minutes that must pass for a  
 # temporal session (tsess) to have ended; automatically set at 60 minute threshold.
@@ -226,7 +170,15 @@ pse=FALSE
 
 #VID indicates video events associated with infrequent use (transcript and closed 
 # caption evnts), and video load events, which do not show meaningful use of content module.
-vid=TRUE
+vid=FALSE
+
+#TRANS indicates video transcript events that are removed from the data set
+#activity in the course.
+trans=FALSE
+
+#DRAG indicates drag and drop events that are redundant or provide inaccurate data for student
+#activity in the course.
+drag=FALSE
 
 #OAS indicates that how openassessment event_types are handle to remove redundancy in logs
 oas=FALSE
@@ -237,25 +189,32 @@ oas=FALSE
 
 #Indicates number of log files to be processed by the loop.
 numLogs <- length(fileList)
-for(i in 1:numLogs){
+for(i in 89:numLogs){ 
   message("Processing log file ", i, " of ", numLogs)
   print(proc.time() - start)
-  
   #Load data set
-  data <- read.csv(fileList[i])
+  data <- read.csv(paste0(path_output,"/studentevents/",fileList[i]))
+  #Students without Data
   if(nrow(data)==0){
-    data <- as.data.frame(matrix(data=NA,nrow=1,ncol=14))
-    names(data) <- c("user_id","mod_hex_id","order","mod_parent_id","module_type","event_type",
-                     "time","period","session","tsess","event.attempts","event.grade",
-                     "event.max_grade","event.success")
+    data <- as.data.frame(matrix(data=NA,nrow=1,ncol=24))
+    names(data) <- c("org_id","course_id","user_id","module_id","mod_hex_id","order","parent_id",
+                     "module_type","time","period","session","tsess","context.path","event","event_type","event_source",
+                     "problem_id","attempts","grade","max_grade","state.done","student_answer","submission","success")
     fileName <- as.data.frame(strsplit(fileList[i], split="\\/"))
-    write.csv(x=data, file=paste0(path,"/studentevents_processed/",subZ,"/",fileName[nrow(fileName),]), row.names = F)
+    write.csv(x=data, file=paste0(path,"/studentevents_processed/",subDir[1],"/",fileName[nrow(fileName),]), row.names = F)
     data <- NULL
-    paste0(path_output,"/studentevents_processed/",subZ)
+  #Students with too few rows
+  } else if(nrow(data)<=wl_min){
+    data <- cbind(data, as.data.frame(matrix(data=NA,nrow=nrow(data),ncol=6)))
+    data <- data[,c(1,2,3,10,19:22,5,23,6,24,4,7,9,8,11:18)]
+        names(data) <- c("org_id","course_id","user_id","module_id","mod_hex_id","order","parent_id",
+                     "module_type","time","period","session","tsess","context.path","event","event_type","event_source",
+                     "problem_id","attempts","grade","max_grade","state.done","student_answer","submission","success")
+    fileName <- as.data.frame(strsplit(fileList[i], split="\\/"))
+    write.csv(x=data, file=paste0(path,"/studentevents_processed/",subDir[1],"/",fileName[nrow(fileName),]), row.names = F)
+    data <- NULL
   } else {
-    
     #Creates a course ID by removing "course-v1:" text, which is not used in the module ID.
-    courseID <- strsplit(as.character(data$context.course_id[1]),'\\:')[[1]][2]
     uid <- data$context.user_id[1]
     
     ##Data format updates and column creation/organization
@@ -266,7 +225,8 @@ for(i in 1:numLogs){
     data <- data[order(data$time),]
     rownames(data) <- 1:nrow(data)
     
-    #Calculate measures period of time between events (time taken for action and module)
+    #First period calculation measures period of time between all events
+    #This calculation is used to make a temporal session calculation 
     #Calc made in minutes
     rbind(as.data.frame(as.numeric(difftime(data[2:nrow(data),]$time,data[1:nrow(data)-1,]$time,units="mins"))),NA) -> period
     c("period") -> names(period)
@@ -274,17 +234,15 @@ for(i in 1:numLogs){
     #This needs to be updated to change the value from a rounded 60 to another more meaningful value
     #For example, the value equals the mean time period measured for the module or event type.
     period[period >= timeB_val & !is.na(period), ] <- as.numeric(timeB_val)
-    period[nrow(period), ]<- mean(period$period,na.rm=T)
     data <- cbind(data,period)
-    rm(period)
-    
+
     #Creates temporal session based on the outliers in the period field.
     data$tsess <- NA
     #Searches for outliers periods to demarcate the end of a user session, 
     #id set by seq from 1 to max periods identified; if no max values are found,
     #it is assumed there was only one session.
     if(nrow(data[data$period >= timeB_val,])>1){
-      data[data$period >= timeB_val,]$tsess <- seq(from=1,to=nrow(data[data$period >= timeB_val,]))
+      data[data$period >= timeB_val & !is.na(data$period),]$tsess <- seq(from=1,to=nrow(data[data$period >= timeB_val & !is.na(data$period),]))
     } else(data$tsess <- 1)
     #For logs with multiple sessions ids, there is a chance that the last event has a blank
     #tsess value, and needs to have a final session ID provided.
@@ -316,18 +274,9 @@ for(i in 1:numLogs){
     #Creates a dummy column to ID events without course module identifiers, events are kept if value is 1
     data["kp"] <- 1
     
-    ##Remove events without associated learning object modules
-    ##These come before all actions actions, because they are known missing data cases;
-    ##and server events lack Session IDs, which cause problem if they appear at the 
-    ##end of asorted data file when you back fill session IDs to events.
-    #Identifies events that do not relate to a learning object these include: course information
-    #student progress, wiki pages, course about, and visits to a discussion forum
-    if(nrow(data[grepl('\\{\\}', data$event)==T & grepl('courseware',data$event_type)==F,])>0){
-      data[grepl('\\{\\}', data$event)==T & grepl('courseware',data$event_type)==F,]$kp <- 0
-    }
-    
-    #nc parameter if statement checks to determines if a user wants to keep the non-content modules: course information, 
-    #wiki, and student progress module pages in the analysis or if they need to be removed
+    ##Remove events that are not associated learning object modules
+    #NC parameter checks if a user wants to keep or remove the non-content modules in event logs:
+    #which includes, course information, wiki, student progress, and account settings pages
     if(nc==TRUE){
       #Identifies events that do relate to course information and updates module.key field
       if(length(data[grepl('\\{\\}', data$event)==T & grepl('info',data$event_type)==T,]$event_type) > 0 ){
@@ -339,23 +288,38 @@ for(i in 1:numLogs){
         data[grepl('\\{\\}', data$event)==T & grepl('progress',data$event_type)==T,]$module.key <- 
           paste0("block-v1:",courseID,"+type@progress")
       }
+      if(nrow(data[grepl('\\/progress', data$event)==T,]) > 0 ){
+        data[grepl('\\/progress', data$event)==T,]$module.key <- paste0("block-v1:",courseID,"+type@progress")
+      }
+      #Idenfities events related to setting adjustments
+      if(nrow(data[grepl('\\/settings', data$event)==T,]) > 0 ){
+        data[grepl('\\/settings', data$event)==T,]$module.key <- paste0("block-v1:",courseID,"+type@settings")
+      }
       #Identifies events that do relate to a course wiki pages and updates module.key field
       if(length(data[grepl('\\{\\}', data$event)==T & grepl('wiki',data$event_type)==T,]$event_type) > 0 ){
         data[grepl('\\{\\}', data$event)==T & grepl('wiki',data$event_type)==T,]$module.key <- 
           paste0("block-v1:",courseID,"+type@wiki")
       }
     } else if (nc==FALSE){ 
-      if(length(data[grepl('\\{\\}', data$event)==T & grepl('info',data$event_type)==T,]$event_type) > 0 ){
+      if(nrow(data[grepl('\\{\\}', data$event)==T & grepl('info',data$event_type)==T,]) > 0 ){
         data[grepl('\\{\\}', data$event)==T & grepl('info',data$event_type)==T,]$kp <- 0
       }
       #Identifies events that do not relate to a students progress
-      if(length(data[grepl('\\{\\}', data$event)==T & grepl('progress',data$event_type)==T,]$event_type) > 0 ){
+      if(nrow(data[grepl('\\{\\}', data$event)==T & grepl('progress',data$event_type)==T,]) > 0 ){
         data[grepl('\\{\\}', data$event)==T & grepl('progress',data$event_type)==T,]$kp <- 0
       }
+      if(nrow(data[grepl('\\/progress', data$event)==T,]) > 0 ){
+        data[grepl('\\/progress', data$event)==T,]$kp <- 0
+      }
+      #Idenfities events related to setting adjustments
+      if(nrow(data[grepl('\\/settings', data$event)==T,]) > 0 ){
+        data[grepl('\\/settings', data$event)==T,]$kp <- 0
+      }
       #Identifies events that do not relate to a course wiki pages
-      if(length(data[grepl('\\{\\}', data$event)==T & grepl('wiki',data$event_type)==T,]$event_type) > 0 ){
+      if(nrow(data[grepl('\\{\\}', data$event)==T & grepl('wiki',data$event_type)==T,]) > 0 ){
         data[grepl('\\{\\}', data$event)==T & grepl('wiki',data$event_type)==T,]$kp <- 0
       }
+
     } else stop("invalid 'nc' specification to maintain non-content modules in analysis")
     
     #Identifies Edx Enrollment Events that are not course specific 
@@ -364,14 +328,29 @@ for(i in 1:numLogs){
       data[grepl('edx\\.course\\.enrollment\\.',data$event_type)==T,]$kp <- 0
     }
     
-    #Removes Page_close events
-    if(nrow(data[grepl('page\\_close', data$event_type),])>0){
-      data[grepl('page\\_close', data$event_type)==T,]$kp <- 0 
-    }
-    
     #Applied if student has uploaded a file to the open assessment events
     if(nrow(data[grepl('openassessment\\.upload',data$event_type)==T,]) > 0){
       data[grepl('openassessment\\.upload',data$event_type)==T,]$kp <- 0
+    }
+    
+    #Applied if student has 'edx.grades.problem.submitted'
+    if(nrow(data[grepl('edx\\.grades\\.problem\\.submitted',data$event_type)==T,]) > 0){
+      data[grepl('edx\\.grades\\.problem\\.submitted',data$event_type)==T,]$kp <- 0
+    }
+    if(nrow(data[grepl('edx\\.grades\\.subsection\\.grade\\_calculated',data$event_type)==T,]) > 0){
+      data[grepl('edx\\.grades\\.subsection\\.grade\\_calculated',data$event_type)==T,]$kp <- 0
+    }
+
+    #Removes select drag and drop events from log
+    if(drag==F){
+      if(nrow(data[grepl('type\\@drag\\-and\\-drop\\-v2',data$event_type)==T,]) > 0){
+        data[grepl('type\\@drag\\-and\\-drop\\-v2',data$event_type)==T,]$kp <- 0
+      }
+      #Feedback open is logged every second, and does not accurately indicat
+      #period of time or number of times a student used feedback on drag and drop
+      if(nrow(data[grepl('edx\\.drag\\_and\\_drop\\_v2\\.feedback\\.opened',data$event_type)==T,]) > 0){
+        data[grepl('edx\\.drag\\_and\\_drop\\_v2\\.feedback\\.opened',data$event_type)==T,]$kp <- 0
+      }
     }
     
     #Removes specified problem server events from event logs
@@ -382,14 +361,13 @@ for(i in 1:numLogs){
       if(nrow(data[grepl('showanswer', data$event_type)==T,])>0){
         data[grepl('showanswer', data$event_type)==T,]$kp <- 0 
       }
+      if(nrow(data[grepl('problem_check', data$event_type)==T & data$event_source=="browser",])>0){
+        data[grepl('problem_check', data$event_type)==T & data$event_source=="browser",]$kp <- 0 
+      }
     }
     
     #Removes video events with low insight value or use in logs
     if(vid==FALSE){
-      #removes transcript events
-      if(nrow(data[grepl('\\w\\_transcript',data$event_type)==T,])>0){
-        data[grepl('\\w\\_transcript',data$event_type)==T,]$kp <- 0
-      }
       #removes load video events
       if(nrow(data[grepl('load\\_video', data$event_type)==T,])>0){
         data[grepl('load\\_video', data$event_type)==T,]$kp <- 0  
@@ -401,15 +379,36 @@ for(i in 1:numLogs){
       if(nrow(data[grepl('\\w\\cc\\_menu', data$event_type)==T,])>0){
         data[grepl('\\w\\cc\\_menu', data$event_type)==T,]$kp <- 0
       }
-    } 
-    k <- sum(data[data$kp==1,]$kp)
+    }
+    #Removes transcript related events
+    if(trans==FALSE){
+      #User transcript actions
+      if(nrow(data[grepl('\\w\\_transcript',data$event_type)==T,])>0){
+        data[grepl('\\w\\_transcript',data$event_type)==T,]$kp <- 0
+      }
+      #Server generated transcript actions
+      if(nrow(data[grepl('publish\\_completion',data$event_type)==T,])>0){
+        data[grepl('publish\\_completion',data$event_type)==T,]$kp <- 0
+      }
+    }
+    
+    #Removes server navigation events indicating a user moved to a new page
+    if(nrow(data[grepl('xmodule_handler',data$event_type) | grepl('jump_to',data$event_type),])>0){
+      data[grepl('xmodule_handler',data$event_type) | grepl('jump_to',data$event_type),]$kp <- 0
+    }
     
     #Checks to see if there are any rows kept after removing specified events. If no event is to be kept after
-    #the field checks, the file is saved to a special directory for these cases. Else processing will continue 
-    #to 
-    if(k == 0){
-      write.csv(x = data, file = paste0(path,"/studentevents_processed/",subN,"/",uid,".csv"),
+    #the field checks, the file is saved to a special directory for these cases.
+    if(sum(data[data$kp==1,]$kp) == 0){
+      data <- cbind(data, as.data.frame(matrix(data=NA,nrow=nrow(data),ncol=4)))
+      data <- data[,c(1:3,10,22:25,5,19,6,20,4,7,9,8,11:18)]
+      names(data) <- c("org_id","course_id","user_id","module_id","mod_hex_id","order","parent_id",
+                       "module_type","time","period","session","tsess","context.path","event","event_type","event_source",
+                       "problem_id","attempts","grade","max_grade","state.done","student_answer","submission","success")
+      fileName <- as.data.frame(strsplit(fileList[i], split="\\/"))
+      write.csv(x = data, file = paste0(path,"/studentevents_processed/",subDir[1],"/",uid,".csv"),
                 row.names = F)
+      data <- NULL
     } else {
       ##Extracts or recreate module ID from the log fields for various known modules cases (if not removed by user)
       #Creates column to place learning object moduleID idenfitied for each event
@@ -417,29 +416,23 @@ for(i in 1:numLogs){
       data <- data[data$kp!=0,]
       #Removes the KP field from the data set
       data <- data[-c(length(data))]
+      
+      #Creates the module.key field used
       data[c("module.key")] <- NA
       #Creates column to identify the appropriate current child of higher-level modules (i.e. chapters and page sequences)
       data[c("mod.child.ref")] <- NA
+
+      #All events that have a module_id are converted to the module.key used in the Course Structure (courseStr)
+      if(nrow(data[!is.na(data$module_id),]) > 0 ){
+        data[!is.na(data$module_id),]$module.key <- paste0("block-v1:",courseID,"+type@",
+                                                           vapply(strsplit(as.character(data[!is.na(data$module_id),]$module_id),'\\/'),'[',3,FUN.VALUE=character(1)),
+                                                           "+block@",
+                                                           substring(vapply(strsplit(as.character(data[!is.na(data$module_id),]$module_id),'\\/'),'[',4,FUN.VALUE=character(1)),1,32))
+      }
       
-      #Problem_show events
-      if(nrow(data[grepl('problem_show',data$event_type)==T,])>0){
-        data[grepl('problem\\_show',data$event_type)==T,]$module.key <- 
-          paste0(vapply(strsplit(as.character(data[grepl('problem\\_show',data$event_type)==T,]$event), '\\"'),'[',4,FUN.VALUE=character(1)))
-      }
-      #Videos Events (e.g. seek, load, play, stop, speed)
-      if(length(data[grepl('\\w\\_video',data$event_type)==T,]$event) > 0){
-        #Extracts module ID number and creates module ids for video watching and speed change events
-        data[grepl('\\w\\_video',data$event_type)==T,]$module.key <- 
-          paste0("block-v1:",courseID,"+type@video+block@",str_extract(data[grepl('\\w\\_video',data$event_type)==T,]$event,"[:alnum:]{32}"))
-      }
-      #video Transcripts
-      if(length(data[grepl('\\w\\_transcript',data$event_type)==T,]$event) > 0){
-        #Extracts module ID number and creates module ids for video transcript events
-        data[grepl('\\w\\_transcript',data$event_type)==T,]$module.key <- 
-          paste0("block-v1:",courseID,"+type@video+block@",str_extract(data[grepl('\\w\\_transcript',data$event_type)==T,]$event,"[:alnum:]{32}"))
-      }
-      #Course Branch Blocks (Level 3 of course structure)
-      if(length(data[grepl('/courseware',data$event_type)==T,])>0){
+      ##Extracts child reference for sequential pages
+      #Updates course sequential blocks
+      if(nrow(data[grepl('/courseware',data$event_type)==T,])>0){
         #Extracts module ID number and creates ids for courseware events (high level modules)
         data[grepl('/courseware',data$event_type)==T,]$module.key <- 
           paste0("block-v1:",courseID,"+type@sequential+block@",vapply(strsplit(as.character(data[grepl('/courseware',data$event_type)==T,]$event_type), '\\/'),'[',6,FUN.VALUE=character(1)))
@@ -448,19 +441,13 @@ for(i in 1:numLogs){
         data[grepl('/courseware',data$event_type)==T,]$mod.child.ref <- 1
       }
       #Seq navigation - Goto
-      if(length(data[grepl('\\,\\s\\"widget_placement\\"',data$event)==T,]$event) > 0 ){
-        #Extracts parent module ids for sequential Goto events (which have a different parsed log format than other two sequence events)
-        data[grepl('\\,\\s\\"widget_placement\\"',data$event)==T,]$module.key <- 
-          paste0(vapply(strsplit(as.character(data[grepl('\\,\\s\\"widget_placement\\"',data$event)==T,]$event),'\\"'),'[',18,FUN.VALUE=character(1)))
+      if(nrow(data[grepl('\\,\\s\\"widget_placement\\"',data$event)==T,]) > 0 ){
         #Extracts child leaf for sequential Goto events at lower level of hiearchy (current state)
         data[grepl('\\,\\s\\"widget_placement\\"',data$event)==T,]$mod.child.ref <-
           paste0(vapply(strsplit(as.character(data[grepl('\\,\\s\\"widget_placement\\"',data$event)==T,]$event),'\\"'),'[',9,FUN.VALUE=character(1)))
       }
       #Seq navigation - Prev Next
-      if(length(data[grepl('\\{\\"widget_placement',data$event)==T,]$event) > 0 ){
-        #Extracts parent module ids for sequential Prev and Next events (which have a different parsed log format than other two sequence events)
-        data[grepl('\\{\\"widget_placement',data$event)==T,]$module.key <- 
-          paste0(vapply(strsplit(as.character(data[grepl('\\{\\"widget_placement',data$event)==T,]$event),'\\"'),'[',16,FUN.VALUE=character(1)))
+      if(nrow(data[grepl('\\{\\"widget_placement',data$event)==T,]) > 0 ){
         #Extracts child leaf for sequential Prev & Next events at lower level of hiearchy (current state)
         data[grepl('\\{\\"widget_placement',data$event)==T,]$mod.child.ref <-
           paste0(vapply(strsplit(as.character(data[grepl('\\{\\"widget_placement',data$event)==T,]$event),'\\"'),'[',13,FUN.VALUE=character(1)))
@@ -472,7 +459,7 @@ for(i in 1:numLogs){
       
       #Final Module Look-up table from course structure
       #Module key is set to character to allow matching without the difficulties of factor variables
-      data$module.key <- as.character(data$module.key) 
+      data$module.key <- as.character(data$module.key)
       
       ##Course branch module identifier clean up
       #All module ID for events that reference activity at the 2nd level of the course hiearchy are 
@@ -483,111 +470,142 @@ for(i in 1:numLogs){
       
       #Create bridge lookup for events from sequential blocks (level 2 of course hierarchy)
       look <- data[grepl("sequential",data$module.key)==T,c("module.key","mod.child.ref")]
-      look$parentid <- str_extract(look$module.key,"[:alnum:]{32}")
-      look$childref <- paste(look$parentid,look$mod.child.ref,sep="/")
-      look[,"replace"]<-NA
-      look[,"level"]<-NA
-      
-      #Looks up each sequential block module ID and finds module ID of first child or known child leaf
-      #Known child leaf numbers are taken from the seq_[goto,prev,next] events (1:N), other courseware events given child leaf 1
-      for(i in 1:nrow(look)){
-        if(length(courseStr[courseStr$modparent_childlevel==look[i,]$childref,]$id)>0){
-          look[i,]$replace <- as.character(courseStr[courseStr$modparent_childlevel==look[i,]$childref,]$id)
-          look[i,]$level <- courseStr[courseStr$modparent_childlevel==look[i,]$childref,]$treelevel
-        } 
-        else {
-          look[i,]$replace <- NA
-          look[i,]$level <- NA
-        }
+      if(nrow(look)>0){
+          look$parentid <- str_extract(look$module.key,"[:alnum:]{32}")
+          look$childref <- paste(look$parentid,look$mod.child.ref,sep="/")
+          look[,"replace"]<-NA
+          look[,"level"]<-NA
+          #Looks up each sequential block module ID and finds module ID of first child or known child leaf
+          #Known child leaf numbers are taken from the seq_[goto,prev,next] events (1:N), other courseware events given child leaf 1
+          for(i in 1:nrow(look)){
+            if(length(courseStr[courseStr$modparent_childlevel==look[i,]$childref,]$id)>0){
+              look[i,]$replace <- as.character(courseStr[courseStr$modparent_childlevel==look[i,]$childref,]$id)
+              look[i,]$level <- courseStr[courseStr$modparent_childlevel==look[i,]$childref,]$treelevel
+            } 
+            else {
+              look[i,]$replace <- NA
+              look[i,]$level <- NA
+            }
+          }
+          
+          #All module ID for events that reference activity at the 3rd level of the course hiearchy are 
+          #processed to identify the appropriate 4th level content module that a user navigated too in the course.
+          look$parentid <- str_extract(look$replace,"[:alnum:]{32}")
+          look$childref <- paste(look$parentid,1,sep="/")
+          levels(look$childref) <- levels(courseStr$modparent_childlevel) 
+          
+          #Performs the final module ID look-up
+          for(i in 1:nrow(look)){
+            if(length(courseStr[courseStr$modparent_childlevel==look[i,]$childref,]$id)>0){
+              look[i,]$replace <- as.character(courseStr[courseStr$modparent_childlevel==look[i,]$childref,]$id) 
+              look[i,]$level <- courseStr[courseStr$modparent_childlevel==look[i,]$childref,]$treelevel
+            } else {
+              look[i,]$replace <- NA
+              look[i,]$level <- NA
+            }
+          }
+          #Copies over replacement children module IDs for the original sequential block modules ID
+          data[grepl("sequential",data$module.key)==T, ]$module.key  <- look$replace
       }
-      
-      #All module ID for events that reference activity at the 3rd level of the course hiearchy are 
-      #processed to identify the appropriate 4th level content module that a user navigated too in the course.
-      look$parentid <- str_extract(look$replace,"[:alnum:]{32}")
-      look$childref <- paste(look$parentid,1,sep="/")
-      levels(look$childref) <- levels(courseStr$modparent_childlevel) 
-      
-      #Performs the final module ID look-up
-      for(i in 1:nrow(look)){
-        if(length(courseStr[courseStr$modparent_childlevel==look[i,]$childref,]$id)>0){
-          look[i,]$replace <- as.character(courseStr[courseStr$modparent_childlevel==look[i,]$childref,]$id) 
-          look[i,]$level <- courseStr[courseStr$modparent_childlevel==look[i,]$childref,]$treelevel
-        } else {
-          look[i,]$replace <- NA
-          look[i,]$level <- NA
-        }
-      }
-      #Copies over replacement children module IDs for the original sequential block modules ID
-      data[grepl("sequential",data$module.key)==T, ]$module.key  <- look$replace
       rm(look)
       #Resets module.key as a factor and resets it to course structure levels
       #needed for matching edge and node statistics witht the node list
       data$module.key <- as.factor(data$module.key)
-      #removes module.child.ref field
+      #Removes module.child.ref field
       data <- data[,-ncol(data)]
+      
       #Extracts the module type and module unique identifiers from the verbose moduleID
-      data$mod_hex_id <- do.call(rbind,strsplit(as.character(data$module.key ),'\\@'))[,3]
-      data$module_type <- do.call(rbind,strsplit(as.character(data$module.key ),'\\@'))[,2]    
+      if(length(data[!is.na(data$module.key),]$module.key)>0){
+        data$mod_hex_id <- do.call(rbind,strsplit(as.character(data$module.key),'\\@'))[,3]
+        data$module_type <- do.call(rbind,strsplit(as.character(data$module.key ),'\\@'))[,2]
+      } else {
+        data$mod_hex_id <- courseID
+        data$module_type  <- "course"
+      }
+      
       #Adds module order in course sequence logs and sequence page 
       data <- join(data,courseStr[,c(2,7,13)],by="mod_hex_id")
+     
+      #Second period calculation measures period between only the maintained events
+      #This calculation is used to make a temporal session calculation 
+      #Calc made in minutes
+      rbind(as.data.frame(as.numeric(difftime(data[2:nrow(data),]$time,data[1:nrow(data)-1,]$time,units="mins"))),NA) -> period
+      c("period") -> names(period)
+      
+      #Updates all records where period is greater than or equal to the time break set by user (or automatically of 60 minutes) 
+      #This needs to be updated to change the value from a rounded 60 to another more meaningful value
+      #For example, the value equals the mean time period measured for the module or event type.
+      period[period >= timeB_val & !is.na(period), ] <- as.numeric(timeB_val)
+      data$period <- period$period
+      data[nrow(data),]$period <- mean(data$period,na.rm = T)
       
       #Removes events where the order cannot be found in the course structure.
       #The modules may have been removed for a variety of reasons, although students 
       # may have had access to the content during the course run. 
-      if(nrow(data[is.na(data$order),])>0){
-        data <- data[!is.na(data$order),]
-      }
-      
-      ##Updates event_type field for non-typed event module visits.
-      #converts records where events_types have a module URL to a generic access event "mod_access"
-      levels <- levels(data$event_type)
-      levels[length(levels)+1] <- "mod_access"
-      data$event_type <- factor(data$event_type, level=levels)
-      if(nrow(data[grepl("course-v1",as.character(data$event_type))==T, ])>0){
-        data[grepl("course-v1",as.character(data$event_type))==T, ]$event_type <- c("mod_access")
-      }
-      
-      ##### Revised period time estimate based on values of events with similar event_type ####
-      #Update time estimate for events where gap is greater than or less than 60 minutes
-      if(timeBEst==TRUE){
-        if(nrow(data[data$period==timeB_val,])>0){
-          if(is.null(length(!is.nan(data$period)==T))==F){
-            #Sets up event_type variables found in a students log
-            event_type_tmp <- unique(as.character(data$event_type))
-            #Loops through each event_type present to check if there is an event equal to temporal session (tsess) cut off time (timeB_val).
-            #If there are rows that are equal to the tsess cut off, it replaces the period with a more accurate estimate of 
-            #the amount of time a student took on the action, to provide a better estimate.
-            for(i in 1:length(event_type_tmp)){
-              if(nrow(data[data$period==timeB_val & data$event_type==event_type_tmp[i],])>0){
-                median(data[data$period<timeB_val & data$event_type==event_type_tmp[i],]$period) -> median_temp 
-                if(!is.na(median_temp)==T){
-                  median_temp -> data[data$period==timeB_val & data$event_type==event_type_tmp[i],]$period
-                } else {
-                  median(data[data$period<timeB_val,]$period) -> data[data$period==timeB_val & data$event_type==event_type_tmp[i],]$period
+      if(nrow(data[!is.na(data$order),])==0){
+        data <- data[,c(1:3,10,22,24,25,23,5,19,6,20,4,7,9,8,11:18)]
+        names(data)[c(1:3,7)] <- c("org_id","course_id","user_id","parent_id")
+        fileName <- as.data.frame(strsplit(fileList[i], split="\\/"))
+        #Writes processed logfile user ID for file saving 
+        write.csv(x = data, file = paste0(path,"/studentevents_processed/",subDir[1],"/",uid,".csv"),
+                  row.names = F)
+        data <- NULL
+      } else {
+        if(nrow(data[is.na(data$order),])>0){
+          data <- data[!is.na(data$order),]
+        }
+        ##Updates event_type field for non-typed event module visits.
+        #converts records where events_types have a module URL to a generic access event "mod_access"
+        levels <- levels(data$event_type)
+        levels[length(levels)+1] <- "mod_access"
+        data$event_type <- factor(data$event_type, level=levels)
+        if(nrow(data[grepl("course-v1",as.character(data$event_type))==T, ])>0){
+          data[grepl("course-v1",as.character(data$event_type))==T, ]$event_type <- c("mod_access")
+        }
+        
+        ##### Revised period time estimate based on values of events with similar event_type ####
+        #Update time estimate for events where gap is greater than or less than 60 minutes
+        if(timeBEst==TRUE){
+          if(nrow(data[data$period==timeB_val,])>0){
+            if(is.null(length(!is.nan(data$period)==T))==F){
+              #Sets up event_type variables found in a students log
+              event_type_tmp <- unique(as.character(data$event_type))
+              #Loops through each event_type present to check if there is an event equal to temporal session (tsess) cut off time (timeB_val).
+              #If there are rows that are equal to the tsess cut off, it replaces the period with a more accurate estimate of 
+              #the amount of time a student took on the action, to provide a better estimate.
+              for(i in 1:length(event_type_tmp)){
+                if(nrow(data[data$period==timeB_val & data$event_type==event_type_tmp[i],])>0){
+                  median(data[data$period<timeB_val & data$event_type==event_type_tmp[i],]$period) -> median_temp 
+                  if(!is.na(median_temp)==T){
+                    median_temp -> data[data$period==timeB_val & data$event_type==event_type_tmp[i],]$period
+                  } else {
+                    median(data[data$period<timeB_val,]$period) -> data[data$period==timeB_val & data$event_type==event_type_tmp[i],]$period
+                  }
                 }
               }
             }
           }
         }
+        
+        #Updates module_id field
+        data$module_id <- data$module.key
+        
+        #Reorders columns
+        data <- data[,c(1:3,10,22,24,25,23,5,19,6,20,4,7,9,8,11:18)]
+        names(data)[c(1:3,7)] <- c("org_id","course_id","user_id","parent_id")
+        
+        #Writes processed logfile user ID for file saving 
+        write.csv(x = data, file = paste0(path,"/studentevents_processed/",uid,".csv"),
+                  row.names = F)
       }
-      
-      # data <- data[,c(1,12,28,30,31,29,6,25,7,26,11,8,10,14:17,19,20,18,3,4)]
-      # names(data)[c(1,5,21,22)] <- c("user_id","parent_id","course_id","org_id")
-      
-      #Writes processed logfile user ID for file saving 
-      write.csv(x = data, file = paste0(path,"/studentevents_processed/",uid,".csv"),
-                row.names = F)
     }
   }
-  k = NULL
   data <- NULL
 } 
 
-
-
-
-
 ## Saves out list of user IDs for students with usable logs and unusable logs
+courseID <- gsub("\\+","-",courseID)
+
 users <- list.files(path=paste0(path_output,"/studentevents_processed/"),pattern=".csv")
 users <- data.frame(do.call('rbind',strsplit(users,"\\.")))
 names(users) <- c("userID","v")
@@ -597,11 +615,6 @@ users <- list.files(path=paste0(path_output,"/studentevents_processed/",subDir[1
 users <- data.frame(do.call('rbind',strsplit(users,"\\.")))
 names(users) <- c("userID","v")
 write.csv(x=users[,1], file=paste0(path_output,"/userlists/",courseID,"-auth_user-students-inactive.csv"),row.names = F)
-
-users<- list.files(path=paste0(path_output,"/studentevents_processed/",subDir[2]),pattern=".csv")
-users <- data.frame(do.call('rbind',strsplit(users,"\\.")))
-names(users) <- c("userID","v")
-write.csv(x=users[,1], file=paste0(path_output,"/userlists/",courseID,"-auth_user-students-unusableActivity.csv"),row.names = F)
 
 #### Finishing details ####
 #Indicate completion
@@ -613,4 +626,6 @@ cat("\n\n\nComplete script processing time details (in sec):\n")
 print((proc.time()[3] - start[3])/60)
 
 ## Clear environment variables
-rm(list=ls())
+#rm(list=ls())
+rm(data,courseStr,start,path,subDir,subZ,subN,courseID,fileList,users,timeB_val,timeBEst,wl_min,oas,
+   pse,vid,trans,nc,drag,numLogs,uid,median_temp,k,i,fs,event_type_tmp,levels,fileName,period)
