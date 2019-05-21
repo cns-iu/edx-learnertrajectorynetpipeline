@@ -88,11 +88,15 @@
 # Package dependencies: magrittr, stringr, plyr, tcltk, zoo
 #
 # Change log:
+<<<<<<< HEAD
 #   2019.05.22 Updated script to update processed log exports based on log import and
 #              processing results; improve temporal duration calculations; added process
 #              for drag-and-drop modules; updated processing for progress and account
 #              setting events; improved processing of content navigation events (jumpTo
 #              and link_clicked events).
+=======
+#   2019.05.20 
+>>>>>>> f52cacf56261c2a402452c594457d446a9c10cb2
 #
 ## ====================================================================================== ##
 #### Environmental Setup ####
@@ -189,17 +193,26 @@ oas=FALSE
 
 #Indicates number of log files to be processed by the loop.
 numLogs <- length(fileList)
+<<<<<<< HEAD
 for(i in 1:numLogs){ 
   message("Processing log file ", i, " of ", numLogs)
   print(proc.time() - start)
   #Load data set
   data <- read.csv(paste0(path_output,"/studentevents/",fileList[203]))
+=======
+for(i in 89:numLogs){ 
+  message("Processing log file ", i, " of ", numLogs)
+  print(proc.time() - start)
+  #Load data set
+  data <- read.csv(paste0(path_output,"/studentevents/",fileList[i]))
+>>>>>>> f52cacf56261c2a402452c594457d446a9c10cb2
   #Students without Data
   if(nrow(data)==0){
     data <- as.data.frame(matrix(data=NA,nrow=1,ncol=24))
     names(data) <- c("org_id","course_id","user_id","module_id","mod_hex_id","order","parent_id",
                      "module_type","time","period","session","tsess","context.path","event","event_type","event_source",
                      "problem_id","attempts","grade","max_grade","state.done","student_answer","submission","success")
+<<<<<<< HEAD
     fileName <- as.data.frame(strsplit(fileList[i], split="\\/"))
     write.csv(x=data, file=paste0(path,"/studentevents_processed/",subDir[1],"/",fileName[nrow(fileName),]), row.names = F)
     data <- NULL
@@ -212,6 +225,20 @@ for(i in 1:numLogs){
                      "problem_id","attempts","grade","max_grade","state.done","student_answer","submission","success")
     fileName <- as.data.frame(strsplit(fileList[i], split="\\/"))
     write.csv(x=data, file=paste0(path,"/studentevents_processed/",subDir[1],"/",fileName[nrow(fileName),]), row.names = F)
+=======
+    fileName <- as.data.frame(strsplit(fileList[i], split="\\/"))
+    write.csv(x=data, file=paste0(path,"/studentevents_processed/",subDir[1],"/",fileName[nrow(fileName),]), row.names = F)
+    data <- NULL
+  #Students with too few rows
+  } else if(nrow(data)<=wl_min){
+    data <- cbind(data, as.data.frame(matrix(data=NA,nrow=nrow(data),ncol=6)))
+    data <- data[,c(1,2,3,10,19:22,5,23,6,24,4,7,9,8,11:18)]
+        names(data) <- c("org_id","course_id","user_id","module_id","mod_hex_id","order","parent_id",
+                     "module_type","time","period","session","tsess","context.path","event","event_type","event_source",
+                     "problem_id","attempts","grade","max_grade","state.done","student_answer","submission","success")
+    fileName <- as.data.frame(strsplit(fileList[i], split="\\/"))
+    write.csv(x=data, file=paste0(path,"/studentevents_processed/",subDir[1],"/",fileName[nrow(fileName),]), row.names = F)
+>>>>>>> f52cacf56261c2a402452c594457d446a9c10cb2
     data <- NULL
   } else {
     #Creates a course ID by removing "course-v1:" text, which is not used in the module ID.
@@ -391,6 +418,14 @@ for(i in 1:numLogs){
         data[grepl('publish\\_completion',data$event_type)==T,]$kp <- 0
       }
     }
+<<<<<<< HEAD
+=======
+    
+    #Removes server navigation events indicating a user moved to a new page
+    if(nrow(data[grepl('xmodule_handler',data$event_type) | grepl('jump_to',data$event_type),])>0){
+      data[grepl('xmodule_handler',data$event_type) | grepl('jump_to',data$event_type),]$kp <- 0
+    }
+>>>>>>> f52cacf56261c2a402452c594457d446a9c10cb2
     
     #Removes server navigation events indicating a user moved to a new page
     if(nrow(data[grepl('xmodule_handler',data$event_type) | grepl('jump_to',data$event_type),])>0){
@@ -468,6 +503,7 @@ for(i in 1:numLogs){
       #appropriate children of verticle and sequential modules. To the child referenced in the navigation 
       #event or inferred to the first child, when a child reference was unavailable.
       #Create bridge lookup for events from sequential blocks (level 2 of course hierarchy)
+<<<<<<< HEAD
       look <- data[grepl("chapter",data$module.key)==T |grepl("sequential",data$module.key)==T | grepl("vertical",data$module.key)==T,c("module.key","mod.child.ref")]
       if(nrow(look)>0){
         #Gives those look-up references child references if they are missing
@@ -482,6 +518,14 @@ for(i in 1:numLogs){
         Unlike
         
         
+=======
+      look <- data[grepl("sequential",data$module.key)==T,c("module.key","mod.child.ref")]
+      if(nrow(look)>0){
+          look$parentid <- str_extract(look$module.key,"[:alnum:]{32}")
+          look$childref <- paste(look$parentid,look$mod.child.ref,sep="/")
+          look[,"replace"]<-NA
+          look[,"level"]<-NA
+>>>>>>> f52cacf56261c2a402452c594457d446a9c10cb2
           #Looks up each sequential block module ID and finds module ID of first child or known child leaf
           #Known child leaf numbers are taken from the seq_[goto,prev,next] events (1:N), other courseware events given child leaf 1
           for(i in 1:nrow(look)){
@@ -501,6 +545,7 @@ for(i in 1:numLogs){
           look$childref <- paste(look$parentid,1,sep="/")
           levels(look$childref) <- levels(courseStr$modparent_childlevel) 
           
+<<<<<<< HEAD
           #Checks log data for additional vertical module links to look-up
           if(nrow(data[grepl("vertical",data$module.key)==T,c("module.key","mod.child.ref")])>0){
             temp <- rep(NA,nrow(data[grepl("vertical",data$module.key)==T,c("module.key","mod.child.ref")]))
@@ -514,6 +559,8 @@ for(i in 1:numLogs){
             rm(temp)
           }   
           
+=======
+>>>>>>> f52cacf56261c2a402452c594457d446a9c10cb2
           #Performs the final module ID look-up
           for(i in 1:nrow(look)){
             if(length(courseStr[courseStr$modparent_childlevel==look[i,]$childref,]$id)>0){
@@ -525,7 +572,11 @@ for(i in 1:numLogs){
             }
           }
           #Copies over replacement children module IDs for the original sequential block modules ID
+<<<<<<< HEAD
           data[grepl("chapter",data$module.key)==T |grepl("sequential",data$module.key)==T | grepl("vertical",data$module.key)==T, ]$module.key  <- look$replace
+=======
+          data[grepl("sequential",data$module.key)==T, ]$module.key  <- look$replace
+>>>>>>> f52cacf56261c2a402452c594457d446a9c10cb2
       }
       rm(look)
       #Resets module.key as a factor and resets it to course structure levels
@@ -647,5 +698,9 @@ print((proc.time()[3] - start[3])/60)
 
 ## Clear environment variables
 #rm(list=ls())
+<<<<<<< HEAD
 rm(data,courseStr,start,path,subDir,courseID,fileList,users,timeB_val,timeBEst,wl_min,oas,
+=======
+rm(data,courseStr,start,path,subDir,subZ,subN,courseID,fileList,users,timeB_val,timeBEst,wl_min,oas,
+>>>>>>> f52cacf56261c2a402452c594457d446a9c10cb2
    pse,vid,trans,nc,drag,numLogs,uid,median_temp,k,i,fs,event_type_tmp,levels,fileName,period)
