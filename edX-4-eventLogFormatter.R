@@ -109,10 +109,7 @@ require("plyr")       #DPLYR
 #### Paths #### 
 #Generic Set up
 #Assigns a path to open prior script outputs and to save new processing output files.
-#path_output = tclvalue(tkchooseDirectory())
-
-#path_data = p4
-path_output = o4
+path_output = tclvalue(tkchooseDirectory())
 
 ## Create data processing output sub-directories for student without events
 #students with zero events on load and those with zero events after post-data processing 
@@ -193,7 +190,7 @@ for(i in 1:numLogs){
   message("Processing log file ", i, " of ", numLogs)
   print(proc.time() - start)
   #Load data set
-  data <- read.csv(paste0(path_output,"/studentevents/",fileList[203]))
+  data <- read.csv(paste0(path_output,"/studentevents/",fileList[i]))
   #Students without Data
   if(nrow(data)==0){
     data <- as.data.frame(matrix(data=NA,nrow=1,ncol=24))
@@ -476,53 +473,74 @@ for(i in 1:numLogs){
         look$childref <- paste(look$parentid,look$mod.child.ref,sep="/")
         look[,"replace"]<-NA
         look[,"level"]<-NA
-        
-        #if(d){f}
-        
-        #Unlike
-        
-        
-        #Looks up each sequential block module ID and finds module ID of first child or known child leaf
-        #Known child leaf numbers are taken from the seq_[goto,prev,next] events (1:N), other courseware events given child leaf 1
-        for(i in 1:nrow(look)){
-          if(length(courseStr[courseStr$modparent_childlevel==look[i,]$childref,]$id)>0){
-            look[i,]$replace <- as.character(courseStr[courseStr$modparent_childlevel==look[i,]$childref,]$id)
-            look[i,]$level <- courseStr[courseStr$modparent_childlevel==look[i,]$childref,]$treelevel
-          } 
-          else {
-            look[i,]$replace <- NA
-            look[i,]$level <- NA
+        #Sequential modules Replacements for chapter modules
+        if(nrow(look[grepl("chapter",look$module.key)==T,])>0){
+          #Looks up each block module ID and finds module ID of first child or known child leaf
+          #Known child leaf numbers are taken from the seq_[goto,prev,next] events (1:N), other courseware events given child leaf 1
+          temp <- look[grepl("chapter",look$module.key)==T,]
+          for(i in 1:nrow(temp)){
+            if(length(courseStr[courseStr$modparent_childlevel==temp[i,]$childref,]$id)>0){
+              temp[i,]$replace <- as.character(courseStr[courseStr$modparent_childlevel==temp[i,]$childref,]$id)
+              temp[i,]$level <- courseStr[courseStr$modparent_childlevel==temp[i,]$childref,]$treelevel
+            } 
+            else {
+              temp[i,]$replace <- NA
+              temp[i,]$level <- NA
+            }
           }
-        }
-        
-        #All module ID for events that reference activity at the 3rd level of the course hiearchy are 
-        #processed to identify the appropriate 4th level content module that a user navigated too in the course.
-        look$parentid <- str_extract(look$replace,"[:alnum:]{32}")
-        look$childref <- paste(look$parentid,1,sep="/")
-        levels(look$childref) <- levels(courseStr$modparent_childlevel) 
-        
-        #Checks log data for additional vertical module links to look-up
-        if(nrow(data[grepl("vertical",data$module.key)==T,c("module.key","mod.child.ref")])>0){
-          temp <- rep(NA,nrow(data[grepl("vertical",data$module.key)==T,c("module.key","mod.child.ref")]))
-          temp <- cbind(data[grepl("vertical",data$module.key)==T,c("module.key","mod.child.ref")],
-                        data.frame(parentid=as.character(temp),childref=as.character(temp),
-                                   replace=as.character(temp),level=as.numeric(temp),stringsAsFactors=F))
-          temp$parentid <- str_extract(temp$module.key,"[:alnum:]{32}")
+          #All module ID for events that reference activity at the 3rd level of the course hiearchy are 
+          #processed to identify the appropriate 4th level content module that a user navigated too in the course.
+          temp$parentid <- str_extract(temp$replace,"[:alnum:]{32}")
           temp$childref <- paste(temp$parentid,1,sep="/")
-          levels(temp$childref) <- levels(courseStr$modparent_childlevel)
-          look <- rbind(look,temp)
+          levels(temp$childref) <- levels(courseStr$modparent_childlevel) 
+          look[grepl("chapter",look$module.key)==T,] <- temp
           rm(temp)
-        }   
-        
-        #Performs the final module ID look-up
-        for(i in 1:nrow(look)){
-          if(length(courseStr[courseStr$modparent_childlevel==look[i,]$childref,]$id)>0){
-            look[i,]$replace <- as.character(courseStr[courseStr$modparent_childlevel==look[i,]$childref,]$id) 
-            look[i,]$level <- courseStr[courseStr$modparent_childlevel==look[i,]$childref,]$treelevel
-          } else {
-            look[i,]$replace <- NA
-            look[i,]$level <- NA
+        }
+        #Vertical modules replacements for sequential modules
+        if(nrow(look[grepl("sequential",look$module.key)==T | grepl("sequential",look$replace)==T,])>0){
+          #Looks up each block module ID and finds module ID of first child or known child leaf
+          #Known child leaf numbers are taken from the seq_[goto,prev,next] events (1:N), other courseware events given child leaf 1
+          temp <- look[grepl("sequential",look$module.key)==T | grepl("sequential",look$replace)==T,]
+          for(i in 1:nrow(temp)){
+            if(length(courseStr[courseStr$modparent_childlevel==temp[i,]$childref,]$id)>0){
+              temp[i,]$replace <- as.character(courseStr[courseStr$modparent_childlevel==temp[i,]$childref,]$id)
+              temp[i,]$level <- courseStr[courseStr$modparent_childlevel==temp[i,]$childref,]$treelevel
+            } 
+            else {
+              temp[i,]$replace <- NA
+              temp[i,]$level <- NA
+            }
           }
+          #All module ID for events that reference activity at the 3rd level of the course hiearchy are 
+          #processed to identify the appropriate 4th level content module that a user navigated too in the course.
+          temp$parentid <- str_extract(temp$replace,"[:alnum:]{32}")
+          temp$childref <- paste(temp$parentid,1,sep="/")
+          levels(temp$childref) <- levels(courseStr$modparent_childlevel) 
+          look[grepl("sequential",look$module.key)==T | grepl("sequential",look$replace)==T,] <- temp
+          rm(temp)
+        }
+        #Content and assessment modules replacements for vertical modules
+        if(nrow(look[grepl("vertical",look$module.key)==T | grepl("vertical",look$replace)==T,])>0){
+          #Looks up each block module ID and finds module ID of first child or known child leaf
+          #Known child leaf numbers are taken from the seq_[goto,prev,next] events (1:N), other courseware events given child leaf 1
+          temp <- look[grepl("vertical",look$module.key)==T | grepl("vertical",look$replace)==T,]
+          for(i in 1:nrow(temp)){
+            if(length(courseStr[courseStr$modparent_childlevel==temp[i,]$childref,]$id)>0){
+              temp[i,]$replace <- as.character(courseStr[courseStr$modparent_childlevel==temp[i,]$childref,]$id)
+              temp[i,]$level <- courseStr[courseStr$modparent_childlevel==temp[i,]$childref,]$treelevel
+            } 
+            else {
+              temp[i,]$replace <- NA
+              temp[i,]$level <- NA
+            }
+          }
+          #All module ID for events that reference activity at the 3rd level of the course hiearchy are 
+          #processed to identify the appropriate 4th level content module that a user navigated too in the course.
+          temp$parentid <- str_extract(temp$replace,"[:alnum:]{32}")
+          temp$childref <- paste(temp$parentid,1,sep="/")
+          levels(temp$childref) <- levels(courseStr$modparent_childlevel) 
+          look[grepl("vertical",look$module.key)==T | grepl("vertical",look$replace)==T,] <- temp
+          rm(temp)
         }
         #Copies over replacement children module IDs for the original sequential block modules ID
         data[grepl("chapter",data$module.key)==T |grepl("sequential",data$module.key)==T | grepl("vertical",data$module.key)==T, ]$module.key  <- look$replace
@@ -642,7 +660,7 @@ message("\n**** Complete! ****\n")
 
 ## Script processing time feedback
 #print the amount of time the script required
-cat("\n\n\nComplete script processing time details (in sec):\n")
+cat("\n\n\nComplete script processing time details (in minutes):\n")
 print((proc.time()[3] - start[3])/60)
 
 ## Clear environment variables
