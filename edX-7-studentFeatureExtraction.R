@@ -77,7 +77,6 @@ require("tcltk2")     #for OS independant GUI file and folder selection
 #Assign path for project processing and analysis results (Directory of a course level analysis)
 path_output = tclvalue(tkchooseDirectory())
 
-path_output = o3
 #### Creates SudDirectory for Visualizations ####
 subDir = c("studentActivity")
 for(i in 1:length(subDir)){
@@ -478,7 +477,7 @@ oaData <- oaData[,c(1:8,20,9:13,19,21,14:18)]
 
 #### Saving output results ####
 #Overall activity
-write.csv(join(students,stdData, by="user_id"),
+write.csv(students,
           file=paste0(path_output,"/analysis/",subDir[1],"/",courseID,"-",numLogs,"_std-overallActivity.csv"),
           row.names=FALSE, na="")
 #Video Data

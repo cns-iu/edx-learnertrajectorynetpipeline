@@ -213,6 +213,6 @@ if(grepl("\\.sql",userFilename)==T){
 message("\n**** Complete! ****\n")
 ## Script processing time feedback
 #print the amount of time the script required
-cat("\n\n\nComplete script processing time details (in sec):\n")
+cat("\n\n\nComplete script processing time details (in minutes):\n")
 print((proc.time()[3] - start[3])/60)
 rm(forumMap,start)
