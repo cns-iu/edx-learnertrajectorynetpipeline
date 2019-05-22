@@ -97,7 +97,6 @@
 ## ====================================================================================== ##
 #### Environmental Setup ####
 rm(list=ls()) 
-#rm(courseStr,courseID,curUserIDS,eventLog,fileList,start,studentLogs,subDir,logExtractor,i)
 
 #Load required packages 
 require("tcltk2")     #for OS independent GUI file and folder selection
@@ -184,10 +183,9 @@ drag=FALSE
 #OAS indicates that how openassessment event_types are handle to remove redundancy in logs
 oas=FALSE
 
-#Indicates number of log files to be processed by the loop.
-numLogs <- length(fileList)
-for(i in 1:numLogs){ 
-  message("Processing log file ", i, " of ", numLogs)
+#Loops through a set student events logs extracted from an edX course event log data set.
+for(i in 1:length(fileList)){ 
+  message("Processing log file ", i, " of ", length(fileList))
   print(proc.time() - start)
   #Load data set
   data <- read.csv(paste0(path_output,"/studentevents/",fileList[i]))
@@ -459,12 +457,11 @@ for(i in 1:numLogs){
       data$module.key <- as.character(data$module.key)
       
       ##Course branch module identifier clean up
-      #All module ID for events that reference activity at the 2nd level of the course hiearchy are 
-      #processed to identify the appropriate 3rd level branch module and then 4th level content module 
-      #that a user navigated too in the course. The process uses a look-up table to identify the 
-      #appropriate children of verticle and sequential modules. To the child referenced in the navigation 
-      #event or inferred to the first child, when a child reference was unavailable.
-      #Create bridge lookup for events from sequential blocks (level 2 of course hierarchy)
+      #Loops through events linked to chapters, sequential and vertical pages to identify
+      #the content module in the course structure that a user would navigated too.
+      #The process uses a look-up table compared to the course structure to identify a replacement 
+      #child module referenced in the navigation event. The loop processes these events until
+      #an appropriate content or assessment module is identified, and used as the module_id for an event,
       look <- data[grepl("chapter",data$module.key)==T |grepl("sequential",data$module.key)==T | grepl("vertical",data$module.key)==T,c("module.key","mod.child.ref")]
       if(nrow(look)>0){
         #Gives those look-up references child references if they are missing
@@ -666,4 +663,4 @@ print((proc.time()[3] - start[3])/60)
 ## Clear environment variables
 #rm(list=ls())
 rm(data,courseStr,start,path,subDir,courseID,fileList,users,timeB_val,timeBEst,wl_min,oas,
-   pse,vid,trans,nc,drag,numLogs,uid,median_temp,i,fs,event_type_tmp,levels,fileName,period)
+   pse,vid,trans,nc,drag,uid,median_temp,i,fs,event_type_tmp,levels,fileName,period)
