@@ -520,7 +520,7 @@ message("\n**** Complete! ****\n")
 
 ## Script processing time feedback
 #print the amount of time the script required
-cat("\n\n\nComplete script processing time details (in sec):\n")
+cat("\n\n\nComplete script processing time details (in min):\n")
 print((proc.time()[3] - start[3])/60)
 
 ## Clear environment variables
