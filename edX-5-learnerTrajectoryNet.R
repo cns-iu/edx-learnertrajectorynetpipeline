@@ -266,8 +266,9 @@ courseStrNodes <- function(courseStr,nc=FALSE){
 
 #### Paths ####
 ## Sets path to processed data
-path_output = tclvalue(tkchooseDirectory())
-
+#path_output = tclvalue(tkchooseDirectory())
+path_output = o3
+path_data = p3
 ##Creates a network directory if none exists in the project space
 if(!file_test("-d", file.path(paste0(path_output,"/networks/")))){
   if(file_test("-f", file.path(paste0(path_output,"/networks/")))){
