@@ -194,7 +194,7 @@ if(grepl("\\.sql",userFilename)==T){
   } else {rm(personCourseFile)} 
   if(length(certificateFile)>0){
     #Cleans out names in certificate data
-    certs <- read.csv(userProfileFile[1],header=T)
+    certs <- read.csv(certificateFile[1],header=T)
     certs$name <- ""
     write.csv(certs,file=certificateFile[1], row.names = F)
     rm(certs,certificateFile)  

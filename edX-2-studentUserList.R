@@ -97,11 +97,10 @@ require("Hmisc")      # %nin% function
 
 #### Paths #### 
 #Assigns path to directory where R may read in a course' state data from the edX data package 
-#path_data = tclvalue(tkchooseDirectory())
-path_data <- p2
+path_data = tclvalue(tkchooseDirectory())
+
 #Assigns path where R saves processing outputs for user logs
-#path_output = tclvalue(tkchooseDirectory())
-path_output <- p_o2
+path_output = tclvalue(tkchooseDirectory())
 
 ## Start timer to track how long the script takes to execute
 start <-  proc.time() #save the time (to compute elapsed time of script)
@@ -182,6 +181,8 @@ if(grepl("\\.sql",userFilename)==T){
 names(userProf)[1] <- names(enroll)[1] <- names(certs)[1] <- 'id'
 names(enroll)[2] <-c("enroll_created_date")
 
+c <- read.csv(certs[1],header=T)
+str(certs)
 #These fields are tested because not all edX data packages incorporate these files
 #Loads in grade data OR creates the grade data frame based on certificate data set
 if(length(grade)>0){
