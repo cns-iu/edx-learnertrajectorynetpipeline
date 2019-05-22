@@ -16,6 +16,7 @@
 
 # RStudio files
 .Rproj.user/
+/*.Rproj
 
 # produced vignettes
 vignettes/*.html
@@ -37,6 +38,3 @@ packrat/src/
 
 #lab notes
 resources
-
-#Rproj working file
-edx-learnertrajectorynetpipeline.Rproj
