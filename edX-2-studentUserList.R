@@ -87,8 +87,8 @@
 ## ====================================================================================== ##
 #### Environment setup ####
 ## Clean the R environment
-#rm(list=ls()) 
-rm(course,coursemeta,mod,modList,temp,cols,fileList,i,id,moduleID,start)
+rm(list=ls()) 
+
 ## Load required packages 
 require("tcltk2")     #for OS independent GUI file and folder selection
 require("stringr")    #for string manipulation
