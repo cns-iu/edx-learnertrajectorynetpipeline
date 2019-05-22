@@ -81,8 +81,7 @@ sub_grp = "active"
   
 ## grade
 #The parameter grade indicates the grade required to obtain a certificate in the course.
-grade = .6
-
+grade = .65
 
 #### Functions ####
 ## Node Module Statistical RowSum Tabulation Functions
@@ -111,7 +110,6 @@ tab.vars <- function(files,mods,varCols,modVars){
 #### Paths ####
 #Sets path to processed edX Course Data
 path_output = tclvalue(tkchooseDirectory())
-
 path_analysis = paste0(path_output,"/analysis/")
 #Creates sub-directories in course directory structure
 subDir = c("modules","studentActivity","visualizations","learningObjectives")
@@ -156,7 +154,6 @@ if(cohort_sub==T){
   }
 rm(users)
 
-
 #### Create an initial node list for aggregate module use analysis ####
 ## Initial node list is used to combine fields across remaining data
 mods <- read.csv(nodeFileList[1])[,1:9]
@@ -179,7 +176,6 @@ mod_vars = names(read.csv(nodeFileList[1]))[10:ncol(read.csv(nodeFileList[1]))]
 #Initial aggregate node row sum tabulations for node variable, for each lower level
 #module in an edX course structure.
 mods <- tab.vars(files=nodeFileList,mods=mods,varCols=var_cols,modVars=mod_vars)
-
 
 #### Secondary module use calculations ####
 #Proportion of student set that vistit a given module
@@ -240,13 +236,12 @@ mods[mods$unq_stu!=0,]$avgSeekEvents <- mods[mods$unq_stu!=0,]$seeks/mods[mods$u
 mods$avgSeekTime <- NA
 mods[mods$unq_stu!=0,]$avgSeekTime <- mods[mods$unq_stu!=0,]$seek_time/mods[mods$unq_stu!=0,]$unq_stu
 
-
 #### Reorganizes aggregate module analysis ####
 mods <- mods[,c(1:10,30,11:13,31,14,32:33,15:20,34,21,35:36,22,37,23,38,24,39,25,40,26,41,27,42,28,43,29,44)]
 
 #### Exports a CSV file of aggregate module analysis for cohort of students ####
 write.csv(mods,file=paste0(path_output,"/analysis/modules/",courseID,groupID,"+ModuleUseStats.csv"), row.names = F)
-rm(nodeFileList,rec)
+rm(nodeFileList)
 
 #### Finishing details ####
 #Indicate completion
