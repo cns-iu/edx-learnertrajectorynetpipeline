@@ -666,4 +666,4 @@ print((proc.time()[3] - start[3])/60)
 ## Clear environment variables
 #rm(list=ls())
 rm(data,courseStr,start,path,subDir,courseID,fileList,users,timeB_val,timeBEst,wl_min,oas,
-   pse,vid,trans,nc,drag,numLogs,uid,median_temp,k,i,fs,event_type_tmp,levels,fileName,period)
+   pse,vid,trans,nc,drag,numLogs,uid,median_temp,i,fs,event_type_tmp,levels,fileName,period)
