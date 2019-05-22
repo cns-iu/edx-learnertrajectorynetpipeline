@@ -3,7 +3,7 @@
 #               Single Period Networks
 # Project:      edX user trajectory analysis
 #
-#     Copyright 2017-2018 Michael Ginda
+#     Copyright 2017-2019 Michael Ginda
 #     Licensed under the Apache License, Version 2.0 (the "License");
 #     you may not use this file except in compliance with the License.
 #     You may obtain a copy of the License at
@@ -72,42 +72,7 @@
 #                       and a fork of graph-importer-R functions
 #
 # Change log:
-#   2017.11.02. Version 1: Initial Code - environment, look up table
-#   2017.11.03. Fix look-up table; create edge and node list - initial network created
-#   2017.11.06. Update JSON export function; update network statistics; load package 
-#               reqs; export files as CSV and JSON
-#   2017.11.09. Updated node list creation to add indicators of course hierarchy: third 
-#               level module sequence groups and first level course chapters/week groups; 
-#               adjusted the maximum time for event from 150 minutes to 60; remove edge 
-#               type from export, as type of transition is not captured by this field; 
-#               convert node and edge factor and time variables to characters and numeric 
-#               variable types to remove warnings given by igraph creation function.
-#   2017.11.14  Clean up script introduction text.
-#   2017.11.22  Update lookup loops to skip over sequential modules that are not in 
-#               currently in course structure. Update edge list loop to identify and  
-#               remove low level modules that are not in course structure.
-#   2017.12.15  Creates courseStrNodes function, that updates script that took a course 
-#               structure and converted it into a node list; the function now allows for 
-#               user to specify if they want to include the non-content modules in the 
-#               structure or not.
-#   2018.01.18  Version 2: Major revision of script to align with revisions made to the 
-#               "edX-2-studentLogFormatter.R" script, e.g. moved module identifier 
-#               look-up routine, calculation of duration of time at event, and removal 
-#               of modules from event log that are not in final course structure. 
-#               Updated function courseStrNodes to include mod_hex_id field instead 
-#               of full module.key identifier, added courseID field to generic node list.
-#               Updated individual's edge and node list creation to handle new fields 
-#               created using the log formatter script.
-#               Added directory structure elements to create node and edge directories for 
-#               to save results, and edge cases (one event and logs with only self loops).
-#               Added control features to sort out edge case of one event and only have 
-#               an edge list with self-loop events.
-#   2018.05.21  Script format alignment. Update file loads course structure and user list.
-#   2018.05.22  Updated network creation loop: file exports, and added self-loops field, 
-#               to networks; updated script add networks directory if none found.
-#   2018.07.02  File out/input stack updates.
-#   2018.09.07  Forked script for revised data format. Updated Problem module calculation
-#               for accurate results and speeding up processing.
+#   2019.05.22  Fixed bug in edge list to using column names rather than column numbers.
 #
 ## ====================================================================================== ##
 #### Environment setup ####
@@ -296,34 +261,32 @@ for(i in 1:length(subDir)){
 start <-  proc.time() #save the time (to compute elapsed time of script)
 
 ## Loads in course structure course structure
-struct <- read.csv(list.files(full.names = TRUE, recursive = FALSE, 
+courseStr <- read.csv(list.files(full.names = TRUE, recursive = FALSE, 
                                  path = paste0(path_output,"/course/"),
                                  pattern = "module-lookup.csv"),header=T)
-courseID <- gsub("\\+","\\-",struct$courseID)[1]
+courseID <- gsub("\\+","\\-",courseStr$courseID)[1]
 
 ## Modification of course structure for accurate node representation for courses
-nodes <- courseStrNodes(courseStr=struct, nc=F)
+nodes <- courseStrNodes(courseStr=courseStr, nc=F)
+rm(courseStr)
 
 ## Load list of users to create list of log file paths
-logFilePaths <- read.csv(list.files(full.names = TRUE, recursive = FALSE, 
+filePaths <- read.csv(list.files(full.names = TRUE, recursive = FALSE, 
                                     path = paste0(path_output,"/userlists/"),
                                     pattern = "-auth_user-students-active.csv$"),header=T)
-names(logFilePaths) <- "id"
-logFilePaths <- paste0(path_output,"/studentevents_processed/",logFilePaths$id,".csv")
-rm(struct)
+names(filePaths) <- "id"
+filePaths <- paste0(path_output,"/studentevents_processed/",filePaths$id,".csv")
 
 #### Process student event log to create network graph files ####
-numLogs <- length(logFilePaths) 
-
 #For loop processes each student event log to create a transition network
 selfLoopKeep <- TRUE
 
 ## Loop to create networks
-for(i in 1:numLogs){
-    message("Processing log file ", i, " of ", numLogs)
+for(i in 1:length(filePaths)){
+    message("Processing log file ", i, " of ", length(filePaths))
     print(proc.time() - start)
     ## Load data set
-    data <- read.csv(logFilePaths[i])
+    data <- read.csv(filePaths[i])
     ## Set filename IDs
     sid <- data$user_id[1]
     if(nrow(data)>1){
@@ -331,8 +294,8 @@ for(i in 1:numLogs){
       data$time <- as.POSIXct(data$time, tz="EST",format='%Y-%m-%d %H:%M:%S')
       
       ## Edge List Created
-      #Takes user_id, mod_hex_id, order, time, sessions, and t-session fields
-      edges <- data[,c(1:3,7,9:10)]
+      edges <- data[,c("user_id","mod_hex_id","order","time","session","tsess")]
+      
       #Renames order field to sequence position
       names(edges)[3] <- c("seqpos")
       
