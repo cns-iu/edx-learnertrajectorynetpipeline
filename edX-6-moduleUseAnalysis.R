@@ -51,7 +51,8 @@
 #               on learner trajectory networks; set up parameters for cohort analysis;
 #               removed aggregate LTN elements from script; revise title and script 
 #               description; directory structures for analysis results.
-#               
+#   2019.05.30
+#             
 ## ====================================================================================== ##
 #### Environment setup ####
 ## Clean the R environment

@@ -48,7 +48,9 @@
 # Package dependencies: jsonlite, ndjson, dplyr, tcltk
 #
 # Change log:
-#   2019.05.16  Bug fixed for log extractor function updates from 2019.05.15. 
+#   2019.05.16  Bug fixed for log extractor function updates from 2019.05.15.
+#   2019.05.30
+#
 ## ====================================================================================== ##
 #### Environment Setup #####
 ## _Clean the environment 

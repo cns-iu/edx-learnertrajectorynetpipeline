@@ -67,6 +67,7 @@
 #   2019.05.22. Updated code to correct field list export for the output file 
 #               {org}-{course Identifier}-{N#}_std-overallActivity.csv; updated
 #               Script description of outputfiles.
+#   2019.05.30
 #
 ## ====================================================================================== ##
 #### Environment Setup ####

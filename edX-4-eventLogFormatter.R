@@ -93,6 +93,7 @@
 #              for drag-and-drop modules; updated processing for progress and account
 #              setting events; improved processing of content navigation events (jumpTo
 #              and link_clicked events).
+#   2019.05.30
 #
 ## ====================================================================================== ##
 #### Environmental Setup ####

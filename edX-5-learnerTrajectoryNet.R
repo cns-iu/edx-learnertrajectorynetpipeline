@@ -73,6 +73,7 @@
 #
 # Change log:
 #   2019.05.22  Fixed bug in edge list to using column names rather than column numbers.
+#   2019.05.30
 #
 ## ====================================================================================== ##
 #### Environment setup ####

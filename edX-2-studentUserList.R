@@ -65,24 +65,9 @@
 # Package dependencies: tcltk, plyr, stringr, Hmisc
 #
 # Change log:
-#   2017.04.04. Initial Code
-#   2018.04.05. Description, title, and file input stack 
-#               updated function parameter definitions; creates lists of users for 
-#               extraction for course
-#   2018.05.21  Script format alignment.
-#   2018.07.02  File output stack updates.
-#   2018.07.03  Update script for new course data naming conventions; user table now
-#               includes grades, certificates, and enrollment data. User list is subset
-#               for active student users.
-#   2018.07.22  Updated script to remove users from list who are on the rolecourse.csv 
-#               data set. These are instructors who are presented as non-staff to 
-#               students in the course. Update to remove research staff in student pool.
-#   2018.09.12  Updated to accommidate courses that may or may not have a data set of
-#               user roles or grades provided directly in edX data package; limit fields
-#               returned in final user data.
-#   2018.09.20  Update to reorder script lines that update "letter_grade" field.
 #   2019.05.13  Update data loading, preserved fields and their order 
 #               in output file "...auth_user-students.csv"; updated file input stack.
+#   2019.05.30
 #
 ## ====================================================================================== ##
 #### Environment setup ####

@@ -50,21 +50,9 @@
 # Package dependencies: jsonlite, reshape2, plyr, and tcltk
 #
 # Changelog:
-#   2017.11.13. Initial Code
-#   2018.02.06. Course structure extracted and formatting 
-#   2018.02.07. Working version of code created
-#   2018.02.08. Fixed sorting for vertical modules, removed numeric sort columns, 
-#               added courseID field to align with the student event log formatter script.
-#   2018.04.04  Clean-up of project description, title, alignment across edX course 
-#               data processing pipeline.
-#   2018.04.05  Update description to indicate where outputs are used later in pipeline; 
-#               added directory structure creation for data processing.#               
-#   2018.05.21  Script format alignment.
-#   2018.06.14  Tested script on new course structure; updated script to look select the
-#               correct columns in the modlist when updated with the temp object; added
-#               a control statement to level 4 parent ModuleID look-up.
-#   2018.07.02  File input stack updates.
 #   2019.05.13  Changes to course metadata extracted.
+#   2019.05.30
+#
 ## ====================================================================================== ##
 #### Environment Setup ####
 ## Clean the environment
