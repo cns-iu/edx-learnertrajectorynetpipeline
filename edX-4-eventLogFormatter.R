@@ -102,9 +102,9 @@ rm(list=ls())
 #Load required packages 
 require("tcltk2")     #for OS independent GUI file and folder selection
 require("zoo")        #temporal and na.locf function
-require("magrittr")   #Pipe tool
+require("magrittr")   #pipe tool
 require("stringr")    #string parsing
-require("plyr")       #DPLYR
+require("plyr")       #join function
 
 #### Paths #### 
 #Generic Set up
