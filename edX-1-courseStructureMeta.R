@@ -50,40 +50,33 @@
 # Package dependencies: jsonlite, reshape2, plyr, and tcltk
 #
 # Changelog:
-#   2017.11.13. Initial Code
-#   2018.02.06. Course structure extracted and formatting 
-#   2018.02.07. Working version of code created
-#   2018.02.08. Fixed sorting for vertical modules, removed numeric sort columns, 
-#               added courseID field to align with the student event log formatter script.
-#   2018.04.04  Clean-up of project description, title, alignment across edX course 
-#               data processing pipeline.
-#   2018.04.05  Update description to indicate where outputs are used later in pipeline; 
-#               added directory structure creation for data processing.#               
-#   2018.05.21  Script format alignment.
-#   2018.06.14  Tested script on new course structure; updated script to look select the
-#               correct columns in the modlist when updated with the temp object; added
-#               a control statement to level 4 parent ModuleID look-up.
-#   2018.07.02  File input stack updates.
 #   2019.05.13  Changes to course metadata extracted.
+#   2019.05.30  Updated script to keep paths to data if user set 
+#               them with a previous pipeline script pipeline.
+#
 ## ====================================================================================== ##
 #### Environment Setup ####
-## Clean the environment
-rm(list=ls()) 
-
-## Start timer to track how long the script takes to execute
-start <-  proc.time() #save the time (to compute elapsed time of script)
-
 ## Load required packages
 require("jsonlite")   #for working with JSON files (esp. read and write)
 require("reshape2")   #for melting data
 require("plyr")       #for Join
 require("tcltk2")     #for OS independant GUI file and folder selection
+## Start timer to track how long the script takes to execute
+start <-  proc.time() #save the time (to compute elapsed time of script)
 
-#Assigns path to directory where R may read in a course' data from the edX data package
-path_data = tclvalue(tkchooseDirectory())
+#Checks if a user has previously assign a path with a prior script 
+#If false, lets user assign path to directory to read in a course'
+#data from the edX data package
+if(exists("path_data")==FALSE){
+  path_data = tclvalue(tkchooseDirectory())
+}
 
-#Assigns path where R may save processing outputs
-path_output = setwd(tclvalue(tkchooseDirectory()))
+#Checks if a user has previously assign a path with a prior script 
+#If false, lets user assign path to previous processing output files of an
+#edX course using the a previous processing scripts from this pipeline.
+if(exists("path_output")==FALSE){
+  path_output = tclvalue(tkchooseDirectory())
+}
 
 ## Create data processing output sub-directories for learner trajectory analysis pipeline
 #user lists are where lists of user IDs are maintained for a project; studentevents and 
@@ -288,4 +281,4 @@ cat("\n\n\nComplete script processing time details (in minutes):\n")
 print((proc.time()[3] - start[3])/60)
 
 ## Clear environment variables
-rm(list=ls())
+rm(i,start,subDir,courseStrMeta)

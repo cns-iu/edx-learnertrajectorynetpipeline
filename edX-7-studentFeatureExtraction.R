@@ -67,10 +67,11 @@
 #   2019.05.22. Updated code to correct field list export for the output file 
 #               {org}-{course Identifier}-{N#}_std-overallActivity.csv; updated
 #               Script description of outputfiles.
+#   2019.05.30  Updated script to keep paths to data if user set 
+#               them with a previous pipeline script pipeline.
 #
 ## ====================================================================================== ##
 #### Environment Setup ####
-rm(list=ls()) 
 options(scipen=90)
 
 ## Load required packages 
@@ -78,8 +79,12 @@ require("plyr")       #Joins
 require("tcltk2")     #for OS independant GUI file and folder selection
 
 #### Paths ####
-#Assign path for project processing and analysis results (Directory of a course level analysis)
-path_output = tclvalue(tkchooseDirectory())
+#Checks if a user has previously assign a path with a prior script 
+#If false, lets user assign path to previous processing output files of an
+#edX course using the a previous processing scripts from this pipeline.
+if(exists("path_output")==FALSE){
+  path_output = tclvalue(tkchooseDirectory())
+}
 
 #### Creates SudDirectory for Visualizations ####
 subDir = c("studentActivity")
@@ -104,7 +109,6 @@ courseMeta <- read.csv(file=list.files(full.names = TRUE, recursive = FALSE,
                                        pattern = "meta.csv$"), header=T)
 #Extracts course identifier
 courseID <- as.character(courseMeta$id)
-rm(courseMeta)
 
 #### Read in list of students with learner trajectory networks ####
 #Students have network files that can be processed
@@ -128,7 +132,6 @@ users <- read.csv(file=list.files(full.names = TRUE, recursive = FALSE,
 
 #Joins of student list to grade and certificate
 students <- subset(users, id %in% students$id)
-rm(users)
 names(students)[1] <- "user_id"
 
 #### Creates list paths to laod individual student event logs ####
@@ -413,7 +416,6 @@ for(i in 1:numLogs){
   navData <- rbind(navData,nav)
 
 }
-rm(nav,oa,prb,std,temp,vid)
 
 #### Clean-Up of Results ####
 #Overall open assessment time variable
@@ -436,7 +438,7 @@ mods <- read.csv(file=list.files(full.names = TRUE, recursive = FALSE,
                                  pattern = "ModuleUseStats.csv$"), header=T)
 #Total problem points in a course
 maxPoints <- sum(mods[grepl("problem",mods$module.type)==T,]$maxPointsPrb,na.rm = T)
-rm(mods)
+
 #Total problem modules in a course
 maxProbMods <- max(prbData$prb_mod)
 
@@ -520,10 +522,6 @@ if(navEvents==T){
 }
 str(students)
 
-#Clean up environment
-rm(navData,oaData,vidData,prbData,stdData)
-rm(navEvents,oaEvents,prbEvents,vidEvents)
-
 ## Student General Activity
 write.csv(students,
           file=paste0(path_output,"/analysis/",subDir[1],"/",courseID,"-",numLogs,"_std-selectedActivity.csv"),
@@ -539,4 +537,6 @@ cat("\n\n\nComplete script processing time details (in minutes):\n")
 print((proc.time()[3] - start[3])/60)
 
 ## Clear environment variables
-rm(list=ls())
+rm(courseMeta,users,nav,oa,prb,std,temp,vid,mods,navData,oaData,
+   vidData,prbData,stdData,navEvents,oaEvents,prbEvents,vidEvents,
+   courseID,students,i,logFiles,maxPoints,maxProbMods,numLogs,start,subDir)

@@ -65,30 +65,13 @@
 # Package dependencies: tcltk, plyr, stringr, Hmisc
 #
 # Change log:
-#   2017.04.04. Initial Code
-#   2018.04.05. Description, title, and file input stack 
-#               updated function parameter definitions; creates lists of users for 
-#               extraction for course
-#   2018.05.21  Script format alignment.
-#   2018.07.02  File output stack updates.
-#   2018.07.03  Update script for new course data naming conventions; user table now
-#               includes grades, certificates, and enrollment data. User list is subset
-#               for active student users.
-#   2018.07.22  Updated script to remove users from list who are on the rolecourse.csv 
-#               data set. These are instructors who are presented as non-staff to 
-#               students in the course. Update to remove research staff in student pool.
-#   2018.09.12  Updated to accommidate courses that may or may not have a data set of
-#               user roles or grades provided directly in edX data package; limit fields
-#               returned in final user data.
-#   2018.09.20  Update to reorder script lines that update "letter_grade" field.
 #   2019.05.13  Update data loading, preserved fields and their order 
 #               in output file "...auth_user-students.csv"; updated file input stack.
+#   2019.05.30  Updated script to keep paths to data if user set 
+#               them with a previous pipeline script pipeline.
 #
 ## ====================================================================================== ##
 #### Environment setup ####
-## Clean the R environment
-rm(list=ls()) 
-
 ## Load required packages 
 require("tcltk2")     #for OS independent GUI file and folder selection
 require("stringr")    #for string manipulation
@@ -96,11 +79,19 @@ require("plyr")       #for table joins
 require("Hmisc")      # %nin% function
 
 #### Paths #### 
-#Assigns path to directory where R may read in a course' state data from the edX data package 
-path_data = tclvalue(tkchooseDirectory())
+#Checks if a user has previously assign a path with a prior script 
+#If false, lets user assign path to directory to read in a course'
+#data from the edX data package
+if(exists("path_data")==FALSE){
+  path_data = tclvalue(tkchooseDirectory())
+}
 
-#Assigns path where R saves processing outputs for user logs
-path_output = tclvalue(tkchooseDirectory())
+#Checks if a user has previously assign a path with a prior script 
+#If false, lets user assign path to previous processing output files of an
+#edX course using the a previous processing scripts from this pipeline.
+if(exists("path_output")==FALSE){
+  path_output = tclvalue(tkchooseDirectory())
+}
 
 ## Start timer to track how long the script takes to execute
 start <-  proc.time() #save the time (to compute elapsed time of script)
@@ -212,7 +203,6 @@ users <- join(users,userProf,by="id")
 users <- join(users,enroll,by="id")
 users <- join(users,grade,by="id")
 users <- join(users,certs,by="id")
-rm(userProf,certs,enroll,grade)
 
 #Rearrange columns
 users <- users[c(1:3,5:8,10,11,4,9,12:15)]
@@ -232,7 +222,6 @@ if(researchers==T){
   role <- read.csv(role[1],header=T)[1:2]
   users <- users[which(users$id %nin% role$user_id),]
 }
-rm(role)
 
 #### Final clean-up of user data set####
 ## Grades & Certification fields
@@ -250,7 +239,6 @@ users$percentile <- ecdf(users$percent_grade)(users$percent_grade)
 users$certGrp <- NA
 users$certGrp <- ifelse(users$percent_grade>pass_grade,paste0("Certified (< ",pass_grade*100,"% Grade)"),paste0("Not certified (> ",pass_grade*100,"% Grade)"))
 users$certGrp <- as.factor(users$certGrp)
-rm(pass_grade)
 
 ## Clean-up Gender field
 users$gender <- as.character(users$gender)
@@ -276,7 +264,6 @@ if(nrow(users[users$year_of_birth >= (as.numeric(format(Sys.Date(), "%Y"))-minAg
   users[users$year_of_birth >= (as.numeric(format(Sys.Date(), "%Y"))-minAge) & !is.na(users$year_of_birth),]$year_of_birth <- NA  
 }
 users$year_of_birth <- as.numeric(users$year_of_birth)
-rm(maxAge,minAge)
 
 ## Clean-up Level of Education field
 users$level_of_education <- as.character(users$level_of_education)
@@ -289,7 +276,6 @@ if(nrow(users[users$level_of_education=="p_oth" & !is.na(users$level_of_educatio
   users[users$level_of_education=="p_oth" & !is.na(users$level_of_education),]$level_of_education <- "p"  
 }
 users$level_of_education <- factor(users$level_of_education,levels=c("hs","a","b","m","p"),labels=c("High School","Associates","Bachelors","Masters","Doctoral"))
-rm(clean,i)
 
 #Updates names of student demographi and performance data
 names(users)[c(5,6,12)] <- c("yob","loe","cert_status")
@@ -325,4 +311,5 @@ message("\n**** Complete! ****\n")
 cat("\n\n\nComplete script processing time details (in min):\n")
 print((proc.time()[3] - start[3])/60)
 ## Clear environment variables
-rm(researchers,meta,users,start,userFilename)
+rm(researchers,meta,users,start,userFilename,clean,i,
+   maxAge,minAge,userProf,certs,enroll,grade,role,pass_grade)

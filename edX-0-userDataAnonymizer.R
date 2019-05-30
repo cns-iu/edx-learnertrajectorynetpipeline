@@ -59,7 +59,9 @@
 # Package dependencies: tcltk, magrittr
 #
 # Change log:
-#   20198.05.13  Initial script created 
+#   2019.05.13  Initial script created 
+#   2019.05.30  Updated script to keep paths to data if user set 
+#               them with a previous pipeline script pipeline.
 #
 ## ====================================================================================== ##
 #### Environment Set-up ####
@@ -68,9 +70,13 @@ require("tcltk2")     #for OS independent GUI file and folder selection
 require("magrittr")   #for %>% pipe
 
 #### Paths #### 
-#Assigns path to directory where R may read in a course' state data from the edX data package 
-path_data = tclvalue(tkchooseDirectory())
-path_data = p1
+#Checks if a user has previously assign a path with a prior script 
+#If false, lets user assign path to directory to read in a course'
+#data from the edX data package
+if(exists("path_data")==FALSE){
+  path_data = tclvalue(tkchooseDirectory())
+}
+
 ## Start timer to track how long the script takes to execute
 start <-  proc.time() #save the time (to compute elapsed time of script)
 
