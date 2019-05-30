@@ -93,7 +93,7 @@
 #              for drag-and-drop modules; updated processing for progress and account
 #              setting events; improved processing of content navigation events (jumpTo
 #              and link_clicked events).
-#   2019.05.30
+#   2019.05.29 Adds if check in navigation event module look-up loop.
 #
 ## ====================================================================================== ##
 #### Environmental Setup ####
@@ -431,18 +431,25 @@ for(i in 1:length(fileList)){
       if(nrow(data[grepl('/courseware',data$event_type)==T,])>0){
         #Extracts module ID number and creates ids for courseware events (high level modules)
         data[grepl('/courseware',data$event_type)==T,]$module.key <- 
-          paste0("block-v1:",courseID,"+type@sequential+block@",vapply(strsplit(as.character(data[grepl('/courseware',data$event_type)==T,]$event_type), '\\/'),'[',6,FUN.VALUE=character(1)))
+          paste0("block-v1:",courseID,"+type@sequential+block@",
+                 vapply(strsplit(as.character(data[grepl('/courseware',data$event_type)==T,]$event_type), '\\/'),'[',6,FUN.VALUE=character(1)))
+        #Removes module.key if they value ends with an @NA
+        if(nrow(data[grepl('/courseware',data$event_type)==T & grepl("\\@NA",data$module.key)==T,])>0){
+          data[grepl('/courseware',data$event_type)==T & grepl("\\@NA",data$module.key)==T,]$module.key <- NA
+        }
+
+        
         #generates child reference for module (all of these modules should be level 2 or 3 of course hierarchy)
         #event to go with first child of lowest left decendants
-        data[grepl('/courseware',data$event_type)==T,]$mod.child.ref <- 1
+        data[grepl('/courseware',data$event_type)==T & !is.na(data$module.key),]$mod.child.ref <- 1
       }
-      #Seq navigation - Goto
+      #Seq navigation - (seq_goto)
       if(nrow(data[grepl('\\,\\s\\"widget_placement\\"',data$event)==T,]) > 0 ){
         #Extracts child leaf for sequential Goto events at lower level of hiearchy (current state)
         data[grepl('\\,\\s\\"widget_placement\\"',data$event)==T,]$mod.child.ref <-
           paste0(vapply(strsplit(as.character(data[grepl('\\,\\s\\"widget_placement\\"',data$event)==T,]$event),'\\"'),'[',9,FUN.VALUE=character(1)))
       }
-      #Seq navigation - Prev Next
+      #Seq navigation - (edx.ui.lms.sequence.next_selected, edx.ui.lms.sequence.previous_selected, seq_next, seq_prev)
       if(nrow(data[grepl('\\{\\"widget_placement',data$event)==T,]) > 0 ){
         #Extracts child leaf for sequential Prev & Next events at lower level of hiearchy (current state)
         data[grepl('\\{\\"widget_placement',data$event)==T,]$mod.child.ref <-
@@ -466,7 +473,9 @@ for(i in 1:length(fileList)){
       look <- data[grepl("chapter",data$module.key)==T |grepl("sequential",data$module.key)==T | grepl("vertical",data$module.key)==T,c("module.key","mod.child.ref")]
       if(nrow(look)>0){
         #Gives those look-up references child references if they are missing
-        look[is.na(look$mod.child.ref) | grepl("[[:digit:]]",as.numeric(look$mod.child.ref))==F,]$mod.child.ref <- 1
+        if(nrow(look[is.na(look$mod.child.ref) | grepl("[[:digit:]]",as.numeric(look$mod.child.ref))==F,])>0){
+          look[is.na(look$mod.child.ref) | grepl("[[:digit:]]",as.numeric(look$mod.child.ref))==F,]$mod.child.ref <- 1
+        }
         look$parentid <- str_extract(look$module.key,"[:alnum:]{32}")
         look$childref <- paste(look$parentid,look$mod.child.ref,sep="/")
         look[,"replace"]<-NA
@@ -661,7 +670,6 @@ message("\n**** Complete! ****\n")
 cat("\n\n\nComplete script processing time details (in minutes):\n")
 print((proc.time()[3] - start[3])/60)
 
-## Clear environment variables
-#rm(list=ls())
-rm(data,courseStr,start,path,subDir,courseID,fileList,users,timeB_val,timeBEst,wl_min,oas,
-   pse,vid,trans,nc,drag,uid,median_temp,i,fs,event_type_tmp,levels,fileName,period)
+## Clear environment variables keeps user set paths for data and exports.
+rm(start,subDir,courseStr,courseID,users,fileList,start,fileName,nc,drag,oas,pse,vid,trans,wl_min,
+   timeB_val,timeBEst,data,uid,event_type_tmp,fs,i,levels,median_temp,period)
