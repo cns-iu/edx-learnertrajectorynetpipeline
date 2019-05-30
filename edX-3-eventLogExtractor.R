@@ -49,14 +49,12 @@
 #
 # Change log:
 #   2019.05.16  Bug fixed for log extractor function updates from 2019.05.15.
-#   2019.05.30
+#   2019.05.30  Updated script to keep paths to data if user set 
+#               them with a previous pipeline script pipeline.
 #
 ## ====================================================================================== ##
 #### Environment Setup #####
-## _Clean the environment 
-rm(list=ls()) 
-
-## Load required packages 
+# Load required packages 
 require("jsonlite")   #for working with JSON files (esp. read and write)
 require("ndjson")     #needed to read the non-standard JSON log files (NDJSON format)
 require("tcltk2")     #for OS independent GUI file and folder selection
@@ -133,11 +131,20 @@ logExtractor <- function(users,fileList,varNames,path_output){
 }
 
 #### Paths ####
-#Assigns path where R may read in events logs from the edX data package 
-path_data = tclvalue(tkchooseDirectory())
+#Working path directory setting by user selection. Vs using a prior assignment.
+#Checks if a user has previously assign a path with a prior script 
+#If false, lets user assign path to directory to read in a course'
+#data from the edX data package
+if(exists("path_data")==FALSE){
+  path_data = tclvalue(tkchooseDirectory())
+}
 
-#Assigns path where R saves processing outputs for user logs
-path_output = paste0(tclvalue(tkchooseDirectory()))
+#Checks if a user has previously assign a path with a prior script 
+#If false, lets user assign path to previous processing output files of an
+#edX course using the a previous processing scripts from this pipeline.
+if(exists("path_output")==FALSE){
+  path_output = tclvalue(tkchooseDirectory())
+}
 
 #### Build list of all event files for course ####
 #Store all the filenames of JSON formatted edX event logs within a user selected directory 
@@ -179,5 +186,4 @@ cat("\n\n\nComplete script processing time details (in min):\n")
 print((proc.time()[3] - start[3])/60)
 
 ## Clear environment variables
-#rm(list=ls())
 rm(logExtractor,start,users,varNames,fileList)

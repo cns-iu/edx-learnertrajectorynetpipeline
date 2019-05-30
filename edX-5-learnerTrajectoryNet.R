@@ -73,15 +73,14 @@
 #
 # Change log:
 #   2019.05.22  Fixed bug in edge list to using column names rather than column numbers.
-#   2019.05.30
+#   2019.05.30  Updated script to keep paths to data if user set 
+#               them with a previous pipeline script pipeline.
 #
 ## ====================================================================================== ##
 #### Environment setup ####
-## Clean the  ####
-rm(list=ls()) 
 options(scipen=90)
 
-## Load required packages
+# Load required packages
 require("stringr")    #Stringr 
 require("plyr")       #joins
 require("igraph")     #network formatting
@@ -231,8 +230,12 @@ courseStrNodes <- function(courseStr,nc=FALSE){
 }
 
 #### Paths ####
-## Sets path to processed data
-path_output = tclvalue(tkchooseDirectory())
+#Checks if a user has previously assign a path with a prior script 
+#If false, lets user assign path to previous processing output files of an
+#edX course using the a previous processing scripts from this pipeline.
+if(exists("path_output")==FALSE){
+  path_output = tclvalue(tkchooseDirectory())
+}
 
 ##Creates a network directory if none exists in the project space
 if(!file_test("-d", file.path(paste0(path_output,"/networks/")))){
@@ -269,7 +272,6 @@ courseID <- gsub("\\+","\\-",courseStr$courseID)[1]
 
 ## Modification of course structure for accurate node representation for courses
 nodes <- courseStrNodes(courseStr=courseStr, nc=F)
-rm(courseStr)
 
 ## Load list of users to create list of log file paths
 filePaths <- read.csv(list.files(full.names = TRUE, recursive = FALSE, 
@@ -525,4 +527,5 @@ cat("\n\n\nComplete script processing time details (in min):\n")
 print((proc.time()[3] - start[3])/60)
 
 ## Clear environment variables
-rm(list=ls())
+rm(start,subDir,courseStrNodes,exportGraph,filePaths,selfLoopKeep,
+   courseStr,courseID,users,i,sid,data,edges,nodes,nodes_t,g)

@@ -2,7 +2,7 @@
 # Title:        Course Module Use Analysis
 # Project:      edX user trajectory analysis
 #
-#     Copyright 2017-2018 Michael Ginda
+#     Copyright 2017-2019 Michael Ginda
 #     Licensed under the Apache License, Version 2.0 (the "License");
 #     you may not use this file except in compliance with the License.
 #     You may obtain a copy of the License at
@@ -51,12 +51,11 @@
 #               on learner trajectory networks; set up parameters for cohort analysis;
 #               removed aggregate LTN elements from script; revise title and script 
 #               description; directory structures for analysis results.
-#   2019.05.30
-#             
+#   2019.05.30  Updated script to keep paths to data if user set 
+#               them with a previous pipeline script pipeline.
+#            
 ## ====================================================================================== ##
 #### Environment setup ####
-## Clean the R environment
-rm(list=ls()) 
 options(scipen=90)
 
 ## Load required packages
@@ -109,8 +108,13 @@ tab.vars <- function(files,mods,varCols,modVars){
 
 
 #### Paths ####
-#Sets path to processed edX Course Data
-path_output = tclvalue(tkchooseDirectory())
+#Checks if a user has previously assign a path with a prior script 
+#If false, lets user assign path to previous processing output files of an
+#edX course using the a previous processing scripts from this pipeline.
+if(exists("path_output")==FALSE){
+  path_output = tclvalue(tkchooseDirectory())
+}
+#Sets path to analysis outputs
 path_analysis = paste0(path_output,"/analysis/")
 #Creates sub-directories in course directory structure
 subDir = c("modules","studentActivity","visualizations","learningObjectives")
@@ -153,7 +157,6 @@ if(cohort_sub==T){
     #edgeFileList <- paste0(path_output,"/networks/edges/",users$id,"-edges.csv")
     cohort <- "ActiveEnrolls"
   }
-rm(users)
 
 #### Create an initial node list for aggregate module use analysis ####
 ## Initial node list is used to combine fields across remaining data
@@ -165,7 +168,6 @@ courseID <- mods$courseID[1]
 
 #Replace with cohort manual entry window OR from filename of data sets of IDs loaded
 groupID <- paste0("+GRP-",cohort,"+",length(nodeFileList),"-stds")
-
 
 #### Tabulate node variables via rowsums ####
 #Identifies the variable column to be read in from a set of learner trajectory node list
@@ -242,7 +244,6 @@ mods <- mods[,c(1:10,30,11:13,31,14,32:33,15:20,34,21,35:36,22,37,23,38,24,39,25
 
 #### Exports a CSV file of aggregate module analysis for cohort of students ####
 write.csv(mods,file=paste0(path_output,"/analysis/modules/",courseID,groupID,"+ModuleUseStats.csv"), row.names = F)
-rm(nodeFileList)
 
 #### Finishing details ####
 #Indicate completion
@@ -254,4 +255,5 @@ cat("\n\n\nComplete script processing time details (in minutes):\n")
 print((proc.time()[3] - start[3])/60)
 
 ## Clear environment variables
-rm(list=ls())
+rm(mods,mod_vars,users,cohort,cohort_sub,courseID,grade,groupID,i,
+   nodeFileList,path_analysis,start,sub_grp,subDir,var_cols,tab.vars)

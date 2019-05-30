@@ -94,11 +94,11 @@
 #              setting events; improved processing of content navigation events (jumpTo
 #              and link_clicked events).
 #   2019.05.29 Adds if check in navigation event module look-up loop.
+#   2019.05.30  Updated script to keep paths to data if user set 
+#               them with a previous pipeline script pipeline.
 #
 ## ====================================================================================== ##
 #### Environmental Setup ####
-rm(list=ls()) 
-
 #Load required packages 
 require("tcltk2")     #for OS independent GUI file and folder selection
 require("zoo")        #temporal and na.locf function
@@ -107,9 +107,12 @@ require("stringr")    #string parsing
 require("plyr")       #join function
 
 #### Paths #### 
-#Generic Set up
-#Assigns a path to open prior script outputs and to save new processing output files.
-path_output = tclvalue(tkchooseDirectory())
+#Checks if a user has previously assign a path with a prior script 
+#If false, lets user assign path to previous processing output files of an
+#edX course using the a previous processing scripts from this pipeline.
+if(exists("path_output")==FALSE){
+  path_output = tclvalue(tkchooseDirectory())
+}
 
 ## Create data processing output sub-directories for student without events
 #students with zero events on load and those with zero events after post-data processing 
@@ -671,5 +674,5 @@ cat("\n\n\nComplete script processing time details (in minutes):\n")
 print((proc.time()[3] - start[3])/60)
 
 ## Clear environment variables keeps user set paths for data and exports.
-rm(start,subDir,courseStr,courseID,users,fileList,start,fileName,nc,drag,oas,pse,vid,trans,wl_min,
+rm(subDir,courseStr,courseID,users,fileList,start,fileName,nc,path,drag,oas,pse,vid,trans,wl_min,
    timeB_val,timeBEst,data,uid,event_type_tmp,fs,i,levels,median_temp,period)

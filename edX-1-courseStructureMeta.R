@@ -51,27 +51,32 @@
 #
 # Changelog:
 #   2019.05.13  Changes to course metadata extracted.
-#   2019.05.30
+#   2019.05.30  Updated script to keep paths to data if user set 
+#               them with a previous pipeline script pipeline.
 #
 ## ====================================================================================== ##
 #### Environment Setup ####
-## Clean the environment
-rm(list=ls()) 
-
-## Start timer to track how long the script takes to execute
-start <-  proc.time() #save the time (to compute elapsed time of script)
-
 ## Load required packages
 require("jsonlite")   #for working with JSON files (esp. read and write)
 require("reshape2")   #for melting data
 require("plyr")       #for Join
 require("tcltk2")     #for OS independant GUI file and folder selection
+## Start timer to track how long the script takes to execute
+start <-  proc.time() #save the time (to compute elapsed time of script)
 
-#Assigns path to directory where R may read in a course' data from the edX data package
-path_data = tclvalue(tkchooseDirectory())
+#Checks if a user has previously assign a path with a prior script 
+#If false, lets user assign path to directory to read in a course'
+#data from the edX data package
+if(exists("path_data")==FALSE){
+  path_data = tclvalue(tkchooseDirectory())
+}
 
-#Assigns path where R may save processing outputs
-path_output = setwd(tclvalue(tkchooseDirectory()))
+#Checks if a user has previously assign a path with a prior script 
+#If false, lets user assign path to previous processing output files of an
+#edX course using the a previous processing scripts from this pipeline.
+if(exists("path_output")==FALSE){
+  path_output = tclvalue(tkchooseDirectory())
+}
 
 ## Create data processing output sub-directories for learner trajectory analysis pipeline
 #user lists are where lists of user IDs are maintained for a project; studentevents and 
@@ -276,4 +281,4 @@ cat("\n\n\nComplete script processing time details (in minutes):\n")
 print((proc.time()[3] - start[3])/60)
 
 ## Clear environment variables
-rm(list=ls())
+rm(i,start,subDir,courseStrMeta)
