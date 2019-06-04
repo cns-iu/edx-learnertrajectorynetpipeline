@@ -51,27 +51,37 @@ label<- sapply(chapterEst$parentLabel, function(x) str_split(x,"\\(")[[1]][2])
 chapterEst$parentLabel <- sapply(chapterEst$parentLabel, function(x) str_split(x,"\\(")[[1]][1]) %>% str_trim()
 
 #Extracting Estimates
-est <- as.data.frame(regmatches(label,gregexpr("[[:digit:]]+\\.*[[:digit:]]*",label)),
-                     row.names = c("chpEstTime_min","chpEstTime_max")) %>% t() 
+if(nrow(as.data.frame(regmatches(label[!is.na(label)],gregexpr("[[:digit:]]+\\.*[[:digit:]]*",label[!is.na(label)]))))==2){
+  est <- regmatches(label[!is.na(label)],gregexpr("[[:digit:]]+\\.*[[:digit:]]*",label[!is.na(label)])) %>%
+         as.data.frame(row.names = c("chpEstTime_min","chpEstTime_max")) %>% 
+         t() %>% 
+         as.data.frame(stringsAsFactors=F)
+} else if(nrow(as.data.frame(regmatches(label[!is.na(label)],gregexpr("[[:digit:]]+\\.*[[:digit:]]*",label[!is.na(label)]))))==1){
+  est <- regmatches(label[!is.na(label)],gregexpr("[[:digit:]]+\\.*[[:digit:]]*",label[!is.na(label)])) %>% 
+         as.data.frame(row.names = c("chpEstTime_min")) %>% 
+         t() %>%
+         as.data.frame(stringsAsFactors=F)
+  est$chpEstTime_max <- est$chpEstTime_min
+}
 rownames(est) <- 1:nrow(est)
-est <- as.data.frame(est,stringsAsFactors=F)
 est$chpEstTime_max <- as.numeric(est$chpEstTime_max)
 est$chpEstTime_min <- as.numeric(est$chpEstTime_min)
 
 #Estimate Unit
-unit <- str_sub((lapply(label, function(x) str_split(x," ",n = 3)[[1]][2])),1,1)
+unit <- str_sub((lapply(label[!is.na(label)], function(x) str_split(x," ",n = 3)[[1]][2])),1,1)
 
 #Combines estimates with estimate units
 est <- cbind(est,unit)
 
 #Convert all estimates in hours to minutes
-est[est$unit=="h",]$chpEstTime_max <- est[est$unit=="h",]$chpEstTime_max*60
-est[est$unit=="h",]$chpEstTime_min <- est[est$unit=="h",]$chpEstTime_min*60
-#Updates units to correct measure for all fields
-est$unit <- "m"
+est[est$unit=="h",c("chpEstTime_min","chpEstTime_max")] <- est[est$unit=="h",c("chpEstTime_min","chpEstTime_max")]*60
 
-#Combine chapterEst and est dataframes
-chapterEst <- cbind(chapterEst,est)
+label<- as.data.frame(label,stringsAsFactors=F) %>% cbind(rep(as.data.frame(NA),3)) 
+names(label)[2:4] <- names(est)
+label[!is.na(label$label),2:4] <- est
+chapterEst <- cbind(chapterEst,label[2:4])
+chapterEst[is.na(chapterEst$chpEstTime_min),4:5] <- 0
+chapterEst$unit <- "m"
 str(chapterEst)
 ```
 
@@ -87,35 +97,56 @@ names(pageEst)[c(1:2,4)] <- c("id","parentID","label")
 pageEst$order <- 1:nrow(pageEst)
 #Processing chapter labels to extract time estimates and estimate units
 label <- sapply(pageEst$label, function(x) str_split(x,"\\(")[[1]][2])
+label <- cbind(as.character(pageEst$id),label) %>% data.frame(stringsAsFactors = F)
+names(label)[1] <- "id"
 #Updates the Chapter Labels
 pageEst$label<- sapply(pageEst$label, function(x) str_split(x,"\\(")[[1]][1]) %>% str_trim()
 
 #Extracting Estimates
-est <- regmatches(label,gregexpr("[[:digit:]]+\\.*[[:digit:]]*",label)) %>% 
-    lapply(function(x) if(identical(x, character(0))) NA_character_ else x) %>% 
-    as.data.frame(row.names = c("pageEstTime_min","pageEstTime_max"), stringsAsFactors = F)
-est <- as.data.frame(t(est), stringsAsFactors = F)
+if(nrow(as.data.frame(regmatches(label[!is.na(label$label),]$label, gregexpr("[[:digit:]]+\\.*[[:digit:]]*",
+                    label[!is.na(label$label),]$label))))==2){
+  est <- regmatches(label[!is.na(label$label),]$label,gregexpr("[[:digit:]]+\\.*[[:digit:]]*",
+                    label[!is.na(label$label),]$label)) %>%
+         lapply(function(x) if(identical(x, character(0))) NA_character_ else x) %>% 
+         as.data.frame(row.names = c("pageEstTime_min","pageEstTime_max"), stringsAsFactors = F) %>% 
+         t() %>%
+         as.data.frame(stringsAsFactors=F)
+  est <- cbind(as.character(label[!is.na(label$label),]$id),est)
+  names(est)[1] <- "id"
+} else if(nrow(as.data.frame(regmatches(label[!is.na(label$label),]$label, gregexpr("[[:digit:]]+\\.*[[:digit:]]*",
+                    label[!is.na(label$label),]$label))))==1){
+  est <- regmatches(label[!is.na(label$label),]$label, gregexpr("[[:digit:]]+\\.*[[:digit:]]*",
+                    label[!is.na(label$label),]$label)) %>%
+         lapply(function(x) if(identical(x, character(0))) NA_character_ else x) %>% 
+         as.data.frame(row.names = c("pageEstTime_min"), stringsAsFactors = F) %>% 
+         t() %>%
+         as.data.frame(stringsAsFactors=F)
+   est <- cbind(as.character(label[!is.na(label$label),]$id),est)
+   names(est)[1] <- "id"
+}
+if(length(est$pageEstTime_min)!=length(est$pageEstTime_max)){
+  est$pageEstTime_max <- est$pageEstTime_min
+}
 rownames(est) <- 1:nrow(est)
 est$pageEstTime_max <- as.numeric(est$pageEstTime_max)
 est$pageEstTime_min <- as.numeric(est$pageEstTime_min)
 
 #Extracts Unit of Time Estimate
-unit <- str_sub((lapply(label, function(x) str_split(x," ",n = 3)[[1]][2])),1,1)
-
-#Combines estimates with estimate units
-est <- cbind(est,unit)
+label <- cbind(label,str_sub((lapply(label$label, function(x) str_split(x," ",n = 3)[[1]][2])),1,1))
+names(label)[3] <- "unit"    
 
 #Convert all estimates in hours to minutes
-est[est$unit=="h" & is.na(est$unit)==F,]$pageEstTime_max <- 
-  est[est$unit=="h" & is.na(est$unit)==F,]$pageEstTime_max*60
-est[est$unit=="h" & is.na(est$unit)==F,]$pageEstTime_min <- 
-  est[est$unit=="h" & is.na(est$unit)==F,]$pageEstTime_min *60
-#Updates units to correct measure for all fields
-est$unit <- "m"
+label <- join(label[,c("id","unit")],est,by="id")
+label[label$unit=="h" & is.na(label$unit)==F,c("pageEstTime_min","pageEstTime_max")] <- 
+ label[label$unit=="h" & is.na(label$unit)==F,c("pageEstTime_min","pageEstTime_max")]*60
 
 #Combine pageEst and est dataframe
-pageEst <- cbind(pageEst,est)
-rm(est,unit,label)
+pageEst <- cbind(pageEst,label[2:4])
+if(nrow(pageEst[is.na(pageEst$pageEstTime_min),c("pageEstTime_min","pageEstTime_max")])>0){
+  pageEst[is.na(pageEst$pageEstTime_min),c("pageEstTime_min","pageEstTime_max")] <- 0
+}
+#Updates units to correct measure for all fields
+pageEst$unit <- "m"
 str(pageEst)
 ```
 
@@ -128,7 +159,7 @@ A review of the chapter level estimates for these surveys range between 15 and 3
 ```{r chapterData}
 #Left join of the pageEst and chapterEst dataframes. Combining Chapter Module Labels, and maximum time estimates
 #The chapter label
-pageEst <- join(pageEst[,c(1:4,6,7)], chapterEst[,c(1,3,5)], by="parentID", type="left")
+pageEst <- join(pageEst, chapterEst[,c(1,3,5)], by="parentID", type="left")
 
 #Statistical mode function
 getMode <- function(x, na.rm = FALSE) {
@@ -139,11 +170,12 @@ getMode <- function(x, na.rm = FALSE) {
   return(ux[which.max(tabulate(match(x, ux)))])
 }
 #Updating the records with NA for the pageEstTime_max and replacing them with chapter level mode for survey instruments
-pageEst[is.na(pageEst$pageEstTime_max),]$pageEstTime_max <-
-  getMode(pageEst[is.na(pageEst$pageEstTime_max),]$chpEstTime_max, na.rm=T)
-
+if(length(pageEst[is.na(pageEst$pageEstTime_max),]$pageEstTime_max)>0){
+  pageEst[is.na(pageEst$pageEstTime_max),]$pageEstTime_max <-
+    getMode(pageEst[is.na(pageEst$pageEstTime_max),]$chpEstTime_max, na.rm=T)
+}
 #Final pageEst dataframe
-pageEst <- pageEst[,c(1:4,7,5,6)]
+pageEst <- pageEst[,c(1:4,8,5:7,9)]
 str(pageEst)
 ```
 
@@ -180,10 +212,13 @@ Now that the estimates of time to complete a sequential page and the total avera
 The difference between the estimated times to completion and total average time taken by students with sequential pages is calculated. The value sign for each difference measurement (positive or negative) are created as factors used to assign color in the visualization.
 ```{r , echo=FALSE}
 #Combines pageEst and pageUse dataframes
-pageData <- join(pageEst[,1:6],pageUse,by="id")
+pageData <- join(pageEst,pageUse,by="id")
 
 #### Creating fields calculating temporal difference between estimated and average student use time
 #Temporal Difference Fields
+if(nrow(pageData[is.na(pageData$avgTime_total),])>0){
+  pageData[is.na(pageData$avgTime_total),]$avgTime_total <- 0
+}
 pageData$difTime <- pageData$avgTime_total - pageData$pageEstTime_max
 pageData$sign <- ifelse(pageData$difTime<0,"neg","pos")
 pageData$sign <- factor(pageData$sign,labels = list("pos"=c("Over Estimate"),"neg"=c("Under Estimate")))
