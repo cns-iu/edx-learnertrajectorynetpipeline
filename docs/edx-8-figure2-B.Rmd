@@ -5,7 +5,9 @@ title: "Figure 2B - Visualizing Difference Between Instructor Estimate and Stude
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-This R Markdown script reproduces *Figure 2B* from the paper, CITATION. The visualization documented here use analytic results for the MITxPro course, *Architecture of Complex Systems, Fall 2016*, (MITProfessionalX+SysEngxB1+3T2016) with the **edX Learner and Course Analytics Pipeline**. More information about the data used in this visualization is available at [Sample Data Index](https://cns-iu.github.io/edx-learnertrajectorynetpipeline/index.html).
+This R Markdown script reproduces *Figure 2B* from the paper, Ginda, M., Richey, M. C., Cousino, M., & Börner, K. (2019). [Visualizing learner engagement, performance, and trajectories to evaluate and optimize online course design](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0215964). *PloS one*, *14(5)*, e0215964.
+
+The visualization documented here use analytic results for the MITxPro course, **Architecture of Complex Systems (MITProfessionalX+SysEngxB1+3T2016)**, Fall 2016, with the *edX Learner and Course Analytics Pipeline*. More information about the data used in this visualization is available at [Sample Data Index](https://cns-iu.github.io/edx-learnertrajectorynetpipeline/index.html).
 
 # Environment Setup
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
