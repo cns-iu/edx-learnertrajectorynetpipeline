@@ -53,6 +53,8 @@
 #               description; directory structures for analysis results.
 #   2019.05.30  Updated script to keep paths to data if user set 
 #               them with a previous pipeline script pipeline.
+#   2019.06.07  Updated script to loop through list of student groups - certified, 
+#               non-certified, and all active students.
 #            
 ## ====================================================================================== ##
 #### Environment setup ####
@@ -67,18 +69,13 @@ require("magrittr")   #Pipe tool
 require("zoo")        #dataPrep
 
 #### Cohort Analysis Parameter Variables #### 
-## cohort_sub
-#The cohort_sub parameter indicates if a sub-cohort of a course's population is being 
-#selected; rather than the full set of active students in the course.
-cohort_sub = FALSE
-
-## sub_grp
-#The parameter sub_grp indicates the pre-defined sub-groups learner trajectory networks
+## grp
+#The parameter grp indicates the pre-defined groups learner trajectory networks
 #to aggregate in an analysis. Three options currently exist: "cert" & "uncert", which
 #each aggregate a subset of the student population based on the final grade in the course.
-#Bottom 10% of students... "active" indicates all students are processed.
-sub_grp = "active"
-  
+#Bottom 10% of students, and "active" indicates all students are processed.
+grps = c("active","cert","uncert")
+
 ## grade
 #The parameter grade indicates the grade required to obtain a certificate in the course.
 grade = .65
@@ -95,17 +92,16 @@ grade = .65
 # @return mods are saved back to the original module list
 tab.vars <- function(files,mods,varCols,modVars){
   for(i in 1:length(varCols)){
-      message("Processing variable ", i, " of ", length(varCols),", which is ",modVars[i])
-      print(proc.time() - start)
-      temp <- as.data.frame((lapply(files,function(x) read.csv(x)[varCols[i]])))
-      rowSums(temp, na.rm=T) %>% as.data.frame() -> temp
-      names(temp) <- modVars[i]
-      mods <- cbind(mods,temp)
-      str(mods[varCols[i]])
+    message("Processing variable ", i, " of ", length(varCols),", which is ",modVars[i])
+    print(proc.time() - start)
+    temp <- as.data.frame((lapply(files,function(x) read.csv(x)[varCols[i]])))
+    rowSums(temp, na.rm=T) %>% as.data.frame() -> temp
+    names(temp) <- modVars[i]
+    mods <- cbind(mods,temp)
+    str(mods[varCols[i]])
   }
   return(mods)
-  }
-
+}
 
 #### Paths ####
 #Checks if a user has previously assign a path with a prior script 
@@ -114,13 +110,12 @@ tab.vars <- function(files,mods,varCols,modVars){
 if(exists("path_output")==FALSE){
   path_output = tclvalue(tkchooseDirectory())
 }
-#Sets path to analysis outputs
-path_analysis = paste0(path_output,"/analysis/")
+
 #Creates sub-directories in course directory structure
 subDir = c("modules","studentActivity","visualizations","learningObjectives")
 for(i in 1:length(subDir)){
-  if(!file_test("-d", file.path(path_analysis, subDir[i]))){
-    if(file_test("-f", file.path(path_analysis, subDir[i]))){
+  if(!file_test("-d", file.path(paste0(path_output,"/analysis/"), subDir[i]))){
+    if(file_test("-f", file.path(paste0(path_output,"/analysis/"), subDir[i]))){
       stop("Path can't be created because a file with that name already exists.")
     } else {
       dir.create(file.path(path_analysis, subDir[i]))
@@ -132,118 +127,138 @@ for(i in 1:length(subDir)){
 ## start timer to track how long the script takes to execute
 start <-  proc.time() #save the time (to compute elapsed time of script)
 
+#### Create an initial node list for aggregate module use analysis ####
 ## Load User List
-users <-  read.csv(list.files(full.names = TRUE, recursive = FALSE, 
-                          path = paste0(path_output,"/userlists/"),
-                          pattern = "-hasNet.csv$"),header=T)
-names(users)[1] <- "id"
+users <-  read.csv(list.files(full.names = TRUE, recursive = FALSE,
+                              path = paste0(path_output,"/userlists/"),
+                              pattern = "-students.csv$"),header=T)
+net <- unlist(read.csv(list.files(full.names = TRUE, recursive = FALSE,
+                                  path = paste0(path_output,"/userlists/"),
+                                  pattern = "-hasNet.csv$"),header=T))
+if("percent_grade" %in% colnames(users)){
+  users$grade <- users$percent_grade
+}
+users <- users[users$id %in% net,]
 
-## Creates fileLists of edX users' learner trajectory network node and edge lists
-if(cohort_sub==T){
-    #Certified Students 
-    while(sub_grp=="cert"){
-      nodeFileList <- paste0(path_output,"/networks/nodes/",users[users$grade > grade,]$id,"-nodes.csv")
-      #edgeFileList <- paste0(path_output,"/networks/edges/",users[users$grade > grade,]$id,"-edges.csv")
-      cohort <-  "Certified"
-    }
-    #Bottom students
-    while(sub_grp=="uncert"){
-     nodeFileList <- paste0(path_output,"/networks/nodes/",users[users$grade < grade,]$id,"-nodes.csv")
-     #edgeFileList <- paste0(path_output,"/networks/edges/",users[users$grade < grade,]$id,"-edges.csv")
-     cohort <-  "Did not Pass"
-    }
-  } else {
+#Loops through groups of users to create a analysis output file
+for(j in 1:length(grps)){
+  message("Processing student group ", j, " of ", length(grps), ", ",paste0(grps[j]))
+  #Student group node lists
+  #Certified
+  if(grps[j]=="cert"){
+    nodeFileList <- paste0(path_output,"/networks/nodes/",users[users$grade > grade,]$id,"-nodes.csv")
+    #edgeFileList <- paste0(path_output,"/networks/edges/",users[users$grade > grade,]$id,"-edges.csv")
+    cohort <-  "Certified"
+  }
+  #Non-certified students
+  if(grps[j]=="uncert"){
+    nodeFileList <- paste0(path_output,"/networks/nodes/",users[users$grade < grade,]$id,"-nodes.csv")
+    #edgeFileList <- paste0(path_output,"/networks/edges/",users[users$grade < grade,]$id,"-edges.csv")
+    cohort <-  "Non Certified"
+  }
+  # Creates fileLists of edX users' learner trajectory network node and edge lists
+  if(grps[j]=="active"){
     nodeFileList <- paste0(path_output,"/networks/nodes/",users$id,"-nodes.csv")
     #edgeFileList <- paste0(path_output,"/networks/edges/",users$id,"-edges.csv")
-    cohort <- "ActiveEnrolls"
+    cohort <- "Active"
   }
+  ## Initial node list is used to combine fields across remaining data
+  mods <- read.csv(nodeFileList[1])[,1:9]
+  
+  #Course Identifier used in file outputs
+  courseID <- mods$courseID[1]
+  
+  #Replace with cohort manual entry window OR from filename of data sets of IDs loaded
+  groupID <- paste0("+GRP-",cohort,"+",length(nodeFileList),"-stds")
+  
+  #### Tabulate node variables via rowsums ####
+  #Identifies the variable column to be read in from a set of learner trajectory node list
+  var_cols = seq(from=10, to=ncol(read.csv(nodeFileList[1])),by=1)
+  
+  #Identifies the name of the module variable being tabulated from a set of learner trajectory node list
+  mod_vars = names(read.csv(nodeFileList[1]))[10:ncol(read.csv(nodeFileList[1]))]
+  
+  #Initial aggregate node row sum tabulations for node variable, for each lower level
+  #module in an edX course structure.
+  mods <- tab.vars(files=nodeFileList,mods=mods,varCols=var_cols,modVars=mod_vars)
+  
+  #### Secondary module use calculations ####
+  #Proportion of student set that vistit a given module
+  mods$prpstu <- 0
+  mods$prpstu <- mods$unq_stu/length(nodeFileList)
+  
+  ##Module Average Events and Temporal Duration Statistics
+  mods$avg_evt_stu <- 0
+  mods[mods$unq_stu!=0,]$avg_evt_stu <- mods[mods$unq_stu!=0,]$events/mods[mods$unq_stu!=0,]$unq_stu
+  #Average time per student
+  mods$avgTimeStu <- 0
+  mods[mods$unq_stu!=0,]$avgTimeStu <- mods[mods$unq_stu!=0,]$totalTime/mods[mods$unq_stu!=0,]$unq_stu
+  #Average time per event
+  mods$avgTimeEvt <- 0
+  mods[mods$unq_stu!=0,]$avgTimeEvt <- mods[mods$unq_stu!=0,]$totalTime/mods[mods$unq_stu!=0,]$events
+  
+  ##Problem Module Statistics
+  #Total Problem Attempts
+  mods[grepl("problem",mods$module.type)==F,]$attempts <- NA
+  #Avg Number of Attempts per student
+  mods$avgAttempts <- NA
+  mods[mods$unq_stu!=0 & grepl("problem",mods$module.type)==T,]$avgAttempts <- mods[mods$unq_stu!=0 & grepl("problem",mods$module.type)==T,]$attempts/mods[mods$unq_stu!=0 & grepl("problem",mods$module.type)==T,]$unq_stu
+  #Average Points per Student Attempting Problem
+  mods$avgPointStu <- NA
+  mods[mods$unq_stu!=0,]$avgPointStu <- mods[mods$unq_stu!=0,]$points/mods[mods$unq_stu!=0,]$unq_stu
+  #Max Points earned per problem
+  mods$maxPointsPrb <- NA
+  mods[grepl("problem",mods$module.type)==T,]$maxPointsPrb <- ifelse(mods[grepl("problem",mods$module.type)==T,]$avgPointStu>2,3,ifelse(mods[grepl("problem",mods$module.type)==T,]$avgPointStu > 1,2,1)) 
+  
+  ##Video Module Stats
+  #Avg Load Events
+  mods$avgLoadEvents <- NA
+  mods[mods$unq_stu!=0,]$avgLoadEvents <- mods[mods$unq_stu!=0,]$loads/mods[mods$unq_stu!=0,]$unq_stu
+  #Avg Load Time
+  mods$avgLoadTime <- NA
+  mods[mods$unq_stu!=0,]$avgLoadEvents <- mods[mods$unq_stu!=0,]$load_time/mods[mods$unq_stu!=0,]$unq_stu
+  #Avg Play Events
+  mods$avgPlayEvents <- NA
+  mods[mods$unq_stu!=0,]$avgPlayEvents <- mods[mods$unq_stu!=0,]$plays/mods[mods$unq_stu!=0,]$unq_stu
+  #Avg Play Time
+  mods$avgPlayTime <- NA
+  mods[mods$unq_stu!=0,]$avgPlayTime <- mods[mods$unq_stu!=0,]$play_time/mods[mods$unq_stu!=0,]$unq_stu
+  #Avg Pause Events and Time
+  mods$avgPauseEvents <- NA
+  mods[mods$unq_stu!=0,]$avgPauseEvents <- mods[mods$unq_stu!=0,]$pauses/mods[mods$unq_stu!=0,]$unq_stu
+  mods$avgPauseTime <- NA
+  mods[mods$unq_stu!=0,]$avgPauseTime <- mods[mods$unq_stu!=0,]$pause_time/mods[mods$unq_stu!=0,]$unq_stu
+  #Seek Events and Time Stats
+  mods$avgSeekEvents <- NA
+  mods[mods$unq_stu!=0,]$avgSeekEvents <- mods[mods$unq_stu!=0,]$seeks/mods[mods$unq_stu!=0,]$unq_stu
+  mods$avgSeekTime <- NA
+  mods[mods$unq_stu!=0,]$avgSeekTime <- mods[mods$unq_stu!=0,]$seek_time/mods[mods$unq_stu!=0,]$unq_stu
+  
+  #### Reorganizes aggregate module analysis ####
+  mods <- mods[,c(1:10,30,11:13,31,14,32:33,15:20,34,21,35:36,22,37,23,38,24,39,25,40,26,41,27,42,28,43,29,44)]
+  
+  #### Exports a CSV file of aggregate module analysis for cohort of students ####
+  write.csv(mods,file=paste0(path_output,"/analysis/modules/",courseID,groupID,"+ModuleUseStats.csv"), row.names = F)
+  
+  #### Figure 4 and 5 dataset creation
+  if(exists("dataE")==F){
+    #Initial group of students
+    #Includes course module metadata and unq_stu, events, totalTime, and avgTimeStu variables for a group
+    dataE <- mods[,c(1:9,10,14,16,17)]
+  } else {
+    #Second group of students for compaison data file
+    #Includes unq_stu, events, totalTime, and avgTimeStu variables for a group
+    dataE <- cbind(dataE,mods[,c(10,14,16,17)])
+  }
+  message("Finished processing student group ", j, " complete.")
+}
 
-#### Create an initial node list for aggregate module use analysis ####
-## Initial node list is used to combine fields across remaining data
-mods <- read.csv(nodeFileList[1])[,1:9]
-
-#### Sets output file identifiers ####
-#Course Identifier
-courseID <- mods$courseID[1]
-
-#Replace with cohort manual entry window OR from filename of data sets of IDs loaded
-groupID <- paste0("+GRP-",cohort,"+",length(nodeFileList),"-stds")
-
-#### Tabulate node variables via rowsums ####
-#Identifies the variable column to be read in from a set of learner trajectory node list
-var_cols = seq(from=10, to=ncol(read.csv(nodeFileList[1])),by=1)
-
-#Identifies the name of the module variable being tabulated from a set of learner trajectory node list
-mod_vars = names(read.csv(nodeFileList[1]))[10:ncol(read.csv(nodeFileList[1]))]
-
-#Initial aggregate node row sum tabulations for node variable, for each lower level
-#module in an edX course structure.
-mods <- tab.vars(files=nodeFileList,mods=mods,varCols=var_cols,modVars=mod_vars)
-
-#### Secondary module use calculations ####
-#Proportion of student set that vistit a given module
-mods$prpstu <- 0
-mods$prpstu <- mods$unq_stu/length(nodeFileList)
-
-##Module Average Events and Temporal Duration Statistics
-mods$avg_evt_stu <- 0
-mods[mods$unq_stu!=0,]$avg_evt_stu <- mods[mods$unq_stu!=0,]$events/mods[mods$unq_stu!=0,]$unq_stu
-
-#Average time per student
-mods$avgTimeStu <- 0
-mods[mods$unq_stu!=0,]$avgTimeStu <- mods[mods$unq_stu!=0,]$totalTime/mods[mods$unq_stu!=0,]$unq_stu
-#Average time per event
-mods$avgTimeEvt <- 0
-mods[mods$unq_stu!=0,]$avgTimeEvt <- mods[mods$unq_stu!=0,]$totalTime/mods[mods$unq_stu!=0,]$events
-
-##Problem Module Statistics
-#Total Problem Attempts
-mods[grepl("problem",mods$module.type)==F,]$attempts <- NA
-#Avg Number of Attempts per student
-mods$avgAttempts <- NA
-mods[mods$unq_stu!=0 & grepl("problem",mods$module.type)==T,]$avgAttempts <- mods[mods$unq_stu!=0 & grepl("problem",mods$module.type)==T,]$attempts/mods[mods$unq_stu!=0 & grepl("problem",mods$module.type)==T,]$unq_stu
-
-#Average Points per Student Attempting Problem
-mods$avgPointStu <- NA
-mods[mods$unq_stu!=0,]$avgPointStu <- mods[mods$unq_stu!=0,]$points/mods[mods$unq_stu!=0,]$unq_stu
-#Max Points earned per problem
-mods$maxPointsPrb <- NA
-mods[grepl("problem",mods$module.type)==T,]$maxPointsPrb <- ifelse(mods[grepl("problem",mods$module.type)==T,]$avgPointStu>2,3,ifelse(mods[grepl("problem",mods$module.type)==T,]$avgPointStu > 1,2,1)) 
-
-##Video Module Stats
-#Avg Load Events
-mods$avgLoadEvents <- NA
-mods[mods$unq_stu!=0,]$avgLoadEvents <- mods[mods$unq_stu!=0,]$loads/mods[mods$unq_stu!=0,]$unq_stu
-#Avg Load Time
-mods$avgLoadTime <- NA
-mods[mods$unq_stu!=0,]$avgLoadEvents <- mods[mods$unq_stu!=0,]$load_time/mods[mods$unq_stu!=0,]$unq_stu
-
-#Avg Play Events
-mods$avgPlayEvents <- NA
-mods[mods$unq_stu!=0,]$avgPlayEvents <- mods[mods$unq_stu!=0,]$plays/mods[mods$unq_stu!=0,]$unq_stu
-#Avg Play Time
-mods$avgPlayTime <- NA
-mods[mods$unq_stu!=0,]$avgPlayTime <- mods[mods$unq_stu!=0,]$play_time/mods[mods$unq_stu!=0,]$unq_stu
-
-#Avg Pause Events and Time
-mods$avgPauseEvents <- NA
-mods[mods$unq_stu!=0,]$avgPauseEvents <- mods[mods$unq_stu!=0,]$pauses/mods[mods$unq_stu!=0,]$unq_stu
-
-mods$avgPauseTime <- NA
-mods[mods$unq_stu!=0,]$avgPauseTime <- mods[mods$unq_stu!=0,]$pause_time/mods[mods$unq_stu!=0,]$unq_stu
-
-#Seek Events and Time Stats
-mods$avgSeekEvents <- NA
-mods[mods$unq_stu!=0,]$avgSeekEvents <- mods[mods$unq_stu!=0,]$seeks/mods[mods$unq_stu!=0,]$unq_stu
-
-mods$avgSeekTime <- NA
-mods[mods$unq_stu!=0,]$avgSeekTime <- mods[mods$unq_stu!=0,]$seek_time/mods[mods$unq_stu!=0,]$unq_stu
-
-#### Reorganizes aggregate module analysis ####
-mods <- mods[,c(1:10,30,11:13,31,14,32:33,15:20,34,21,35:36,22,37,23,38,24,39,25,40,26,41,27,42,28,43,29,44)]
-
+#Reorders columns based on group ordered: active, certified, and uncertified.
+#Includes: 
+dataE <- dataE[,c(1:9,10,14,18,11,15,19,12,16,20,13,17,21)]
+groupID <- paste0("+GRP-CMB+",max(dataE[,c("unq_stu","unq_stu.1","unq_stu.2")]),"-stds")
 #### Exports a CSV file of aggregate module analysis for cohort of students ####
-write.csv(mods,file=paste0(path_output,"/analysis/modules/",courseID,groupID,"+ModuleUseStats.csv"), row.names = F)
+write.csv(dataE,file=paste0(path_output,"/analysis/modules/",courseID,groupID,"+ModuleUseStats.csv"), row.names = F)
 
 #### Finishing details ####
 #Indicate completion
@@ -255,5 +270,5 @@ cat("\n\n\nComplete script processing time details (in minutes):\n")
 print((proc.time()[3] - start[3])/60)
 
 ## Clear environment variables
-rm(mods,mod_vars,users,cohort,cohort_sub,courseID,grade,groupID,i,
-   nodeFileList,path_analysis,start,sub_grp,subDir,var_cols,tab.vars)
+rm(mods,mod_vars,users,cohort,courseID,grade,groupID,i,j,net,
+   nodeFileList,start,grps,subDir,var_cols,tab.vars,dataE)
