@@ -19,7 +19,7 @@ Each figure is a statistical graph was created using [R Studio](https://www.rstu
 ##Sample Data Index
 
 ####Data A
-&Data A* was created by the script  [edX-1-courseStructureMeta.R](https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-1-courseStructureMeta.R). The data is a CSV of the the course structure used to represent the content of the MITxPro course, Architecture of Complex Systems, Fall 2016.
+*Data A* was created by the script  [edX-1-courseStructureMeta.R](https://github.com/cns-iu/edx-learnertrajectorynetpipeline/blob/master/edX-1-courseStructureMeta.R). The data is a CSV of the the course structure used to represent the content of the MITxPro course, Architecture of Complex Systems, Fall 2016.
 
 ```{r dataA, echo=FALSE}
 data <- read.csv(text=getURL("https://raw.githubusercontent.com/cns-iu/edx-learnertrajectorynetpipeline/master/data/dataA.csv", ssl.verifypeer = FALSE), header=T)
