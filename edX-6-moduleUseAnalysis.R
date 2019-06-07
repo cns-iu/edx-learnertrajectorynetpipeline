@@ -154,7 +154,7 @@ for(j in 1:length(grps)){
   if(grps[j]=="uncert"){
     nodeFileList <- paste0(path_output,"/networks/nodes/",users[users$grade < grade,]$id,"-nodes.csv")
     #edgeFileList <- paste0(path_output,"/networks/edges/",users[users$grade < grade,]$id,"-edges.csv")
-    cohort <-  "Non Certified"
+    cohort <-  "Non_Certified"
   }
   # Creates fileLists of edX users' learner trajectory network node and edge lists
   if(grps[j]=="active"){
